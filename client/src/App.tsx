@@ -8,6 +8,7 @@ import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import PortfolioPage from "@/pages/portfolio";
 import SchedulePage from "@/pages/schedule";
+import ScanPage from "@/pages/scan";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/portfolio" component={PortfolioPage} />
       <Route path="/schedule" component={SchedulePage} />
+      <Route path="/scan" component={ScanPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -8,6 +8,7 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - **Dashboard**: Premium Bento grid layout with weather widget, team members, and vendor scrolling
 - **Portfolio/CRM**: Industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes
 - **Order Scheduling**: Calendar-based coffee delivery scheduling with 2-hour minimum lead time
+- **Document Scanner**: Universal OCR scanner for creating and sharing PDFs on-the-go
 
 ## Recent Changes (December 2024)
 - Added Order Scheduling System with calendar view
@@ -15,6 +16,7 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - Added 2-hour lead time validation for guaranteed delivery
 - Created status tracking for orders (scheduled → confirmed → preparing → out_for_delivery → delivered)
 - Added fulfillment tracking for manual DoorDash/Uber Eats entry
+- Added Universal Document Scanner with OCR (Tesseract.js) and PDF generation (jsPDF)
 
 ## Project Architecture
 
@@ -23,6 +25,7 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - `/client/src/pages/dashboard.tsx` - Bento grid home page
 - `/client/src/pages/portfolio.tsx` - CRM notes with industry templates
 - `/client/src/pages/schedule.tsx` - Order scheduling calendar
+- `/client/src/pages/scan.tsx` - Document scanner with OCR and PDF export
 
 ### Backend (Express + TypeScript)
 - `/server/routes.ts` - API endpoints for auth, notes, orders
@@ -54,6 +57,11 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 3. Calendar-based order scheduling
 4. Manual fulfillment tracking (DoorDash/Uber Eats)
 5. Status workflow for orders
+6. Universal document scanner with OCR
+   - Camera capture or file upload
+   - On-device text extraction (Tesseract.js)
+   - Multi-page PDF generation (jsPDF)
+   - Native sharing via Web Share API
 
 ## Future Plans
 - Google Calendar integration (available via Replit integration)

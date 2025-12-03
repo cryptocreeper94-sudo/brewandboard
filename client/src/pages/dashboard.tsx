@@ -8,7 +8,8 @@ import {
   Plus,
   Download,
   Users,
-  Calendar
+  Calendar,
+  Scan
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, TEAM_MEMBERS } from "@/lib/mock-data";
@@ -115,6 +116,25 @@ export default function Dashboard() {
               <div>
                 <h3 className="font-serif text-md leading-none mb-1">Schedule Order</h3>
                 <p className="text-primary-foreground/60 text-[10px]">Coffee delivery</p>
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* Quick Action - Document Scanner */}
+          <Link href="/scan">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform h-32"
+              data-testid="button-scan-documents"
+            >
+              <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center mb-2">
+                <Scan className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="font-serif text-md leading-none mb-1">Scan Document</h3>
+                <p className="text-white/60 text-[10px]">Create & share PDFs</p>
               </div>
             </motion.div>
           </Link>

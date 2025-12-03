@@ -5,26 +5,17 @@ import {
   Plus, 
   Save, 
   Trash2, 
-  Briefcase, 
-  Users, 
   Paintbrush, 
   Wrench, 
   HardHat, 
   Building2,
-  MoreHorizontal,
+  Briefcase,
   PenTool,
   FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -34,10 +25,33 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+type TemplateType = "general" | "painter" | "construction" | "real_estate" | "plumbing";
+
+interface TemplateField {
+  id: string;
+  label: string;
+  type: string;
+}
+
+interface Template {
+  name: string;
+  icon: JSX.Element;
+  fields: TemplateField[];
+}
+
+interface Note {
+  id: number;
+  title: string;
+  date: string;
+  type: TemplateType;
+  preview: string;
+  data: Record<string, string>;
+  freeformNotes?: string;
+}
 
 // Templates for different industries
-const TEMPLATES = {
+const TEMPLATES: Record<TemplateType, Template> = {
   general: {
     name: "General Meeting",
     icon: <Briefcase className="h-4 w-4" />,
@@ -90,14 +104,15 @@ const TEMPLATES = {
 };
 
 export default function PortfolioPage() {
-  const [notes, setNotes] = useState([
+  const [notes, setNotes] = useState<Note[]>([
     { 
       id: 1, 
       title: "Morning Standup", 
       date: "2024-05-20", 
       type: "general", 
       preview: "Discussed the new inventory shipment...",
-      data: {} 
+      data: {},
+      freeformNotes: "Notes from the meeting..."
     },
     { 
       id: 2, 
@@ -105,22 +120,24 @@ export default function PortfolioPage() {
       date: "2024-05-19", 
       type: "painter", 
       preview: "Crew Leader: Mike. Colors: Sherwin Williams Alabaster...",
-      data: { job_number: "4022", crew_leader: "Mike", paint_colors: "SW Alabaster" }
+      data: { job_number: "4022", crew_leader: "Mike", paint_colors: "SW Alabaster" },
+      freeformNotes: ""
     }
   ]);
 
-  const [activeNote, setActiveNote] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState("general");
+  const [activeNote, setActiveNote] = useState<Note | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("general");
   const [isEditing, setIsEditing] = useState(false);
 
   const handleNewNote = () => {
-    const newNote = {
+    const newNote: Note = {
       id: Date.now(),
       title: "New Note",
       date: new Date().toISOString().split('T')[0],
       type: selectedTemplate,
       preview: "No content yet...",
-      data: {}
+      data: {},
+      freeformNotes: ""
     };
     setNotes([newNote, ...notes]);
     setActiveNote(newNote);
@@ -128,16 +145,15 @@ export default function PortfolioPage() {
   };
 
   const handleSave = () => {
-    // In a real app, this would save to the backend
+    if (!activeNote) return;
     setIsEditing(false);
-    // Update the preview text based on the first field or content
     const updatedNotes = notes.map(n => 
       n.id === activeNote.id ? { ...activeNote, preview: "Updated content..." } : n
     );
     setNotes(updatedNotes);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: number) => {
     setNotes(notes.filter(n => n.id !== id));
     if (activeNote && activeNote.id === id) {
       setActiveNote(null);
@@ -173,7 +189,7 @@ export default function PortfolioPage() {
                       key={key}
                       variant={selectedTemplate === key ? "default" : "outline"}
                       className="justify-start h-auto py-3 px-4"
-                      onClick={() => setSelectedTemplate(key)}
+                      onClick={() => setSelectedTemplate(key as TemplateType)}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${selectedTemplate === key ? 'bg-white/20' : 'bg-muted'}`}>
@@ -318,7 +334,8 @@ export default function PortfolioPage() {
                       <Textarea 
                         className="min-h-[300px] p-4 text-lg leading-relaxed bg-transparent border-none resize-none focus-visible:ring-0 shadow-none" 
                         placeholder="Start typing your freeform notes here..."
-                        defaultValue="Notes from the meeting..."
+                        value={activeNote.freeformNotes || ""}
+                        onChange={(e) => setActiveNote({ ...activeNote, freeformNotes: e.target.value })}
                       />
                     </div>
                   </div>

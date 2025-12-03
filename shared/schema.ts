@@ -1,18 +1,224 @@
+import { pgTable, varchar, text, integer, decimal, boolean, timestamp, date, jsonb, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ========================
+// USERS (Business Account Holders)
+// ========================
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  company: text("company"),
+  phone: text("phone"),
+  pin: text("pin").unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
 });
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// ========================
+// CRM NOTES (Portfolio Entries)
+// ========================
+export const crmNotes = pgTable(
+  "crm_notes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    templateType: varchar("template_type", { length: 50 }).notNull(), // general, painter, construction, etc.
+    
+    // Structured data from templates
+    structuredData: jsonb("structured_data").$type<Record<string, string>>(),
+    
+    // Freeform notes
+    freeformNotes: text("freeform_notes"),
+    
+    // Metadata
+    isPinned: boolean("is_pinned").default(false),
+    color: varchar("color", { length: 20 }).default("default"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_crm_notes_user").on(table.userId),
+    templateIdx: index("idx_crm_notes_template").on(table.templateType),
+  })
+);
+
+export const insertCrmNoteSchema = createInsertSchema(crmNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCrmNote = z.infer<typeof insertCrmNoteSchema>;
+export type CrmNote = typeof crmNotes.$inferSelect;
+
+// ========================
+// CLIENTS (CRM Contacts)
+// ========================
+export const clients = pgTable(
+  "clients",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+
+    name: varchar("name", { length: 255 }).notNull(),
+    contactName: varchar("contact_name", { length: 255 }),
+    contactEmail: varchar("contact_email", { length: 255 }),
+    contactPhone: varchar("contact_phone", { length: 20 }),
+    industry: varchar("industry", { length: 100 }),
+
+    addressLine1: varchar("address_line1", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 2 }),
+    zipCode: varchar("zip_code", { length: 10 }),
+
+    status: varchar("status", { length: 50 }).default("active"), // active, inactive
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_clients_user_id").on(table.userId),
+    nameIdx: index("idx_clients_name").on(table.name),
+  })
+);
+
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Client = typeof clients.$inferSelect;
+
+// ========================
+// CRM ACTIVITIES (Timeline Events)
+// ========================
+export const crmActivities = pgTable(
+  "crm_activities",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'client', 'note'
+    entityId: varchar("entity_id").notNull(),
+    
+    activityType: varchar("activity_type", { length: 50 }).notNull(),
+    // Types: 'email', 'call', 'meeting', 'note', 'task'
+    subject: varchar("subject", { length: 255 }),
+    description: text("description"),
+    
+    // Meeting-specific fields
+    meetingStartTime: timestamp("meeting_start_time"),
+    meetingEndTime: timestamp("meeting_end_time"),
+    meetingLocation: varchar("meeting_location", { length: 255 }),
+    
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_crm_activities_user").on(table.userId),
+    entityIdx: index("idx_crm_activities_entity").on(table.entityType, table.entityId),
+  })
+);
+
+export const insertCrmActivitySchema = createInsertSchema(crmActivities).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCrmActivity = z.infer<typeof insertCrmActivitySchema>;
+export type CrmActivity = typeof crmActivities.$inferSelect;
+
+// ========================
+// CRM MEETINGS
+// ========================
+export const crmMeetings = pgTable(
+  "crm_meetings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time").notNull(),
+    
+    locationType: varchar("location_type", { length: 20 }).default("virtual"), // 'virtual', 'in_person'
+    location: varchar("location", { length: 500 }),
+    
+    // Associated portfolio note
+    noteId: varchar("note_id").references(() => crmNotes.id),
+    
+    status: varchar("status", { length: 20 }).default("scheduled"), // 'scheduled', 'completed', 'cancelled'
+    
+    notes: text("notes"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_crm_meetings_user").on(table.userId),
+    startTimeIdx: index("idx_crm_meetings_start").on(table.startTime),
+  })
+);
+
+export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
+export type CrmMeeting = typeof crmMeetings.$inferSelect;
+
+// ========================
+// VENDORS (Coffee Shops)
+// ========================
+export const vendors = pgTable("vendors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  address: text("address").notNull(),
+  neighborhood: text("neighborhood").notNull(),
+  imageUrl: text("image_url"),
+  rating: decimal("rating", { precision: 2, scale: 1 }).default("4.5"),
+  minimumOrder: decimal("minimum_order", { precision: 10, scale: 2 }).default("25.00"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertVendorSchema = createInsertSchema(vendors).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertVendor = z.infer<typeof insertVendorSchema>;
+export type Vendor = typeof vendors.$inferSelect;
+
+// ========================
+// MENU ITEMS
+// ========================
+export const menuItems = pgTable("menu_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull().references(() => vendors.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  isAvailable: boolean("is_available").default(true).notNull(),
+});
+
+export const insertMenuItemSchema = createInsertSchema(menuItems).omit({
+  id: true,
+});
+export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
+export type MenuItem = typeof menuItems.$inferSelect;

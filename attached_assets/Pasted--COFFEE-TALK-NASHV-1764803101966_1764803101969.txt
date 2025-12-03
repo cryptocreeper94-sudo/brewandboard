@@ -1,0 +1,337 @@
+================================================================================
+COFFEE TALK - NASHVILLE COFFEE DELIVERY PLATFORM
+COMPLETE REBUILD INSTRUCTIONS FOR NEW AGENT
+================================================================================
+
+PROJECT OVERVIEW:
+B2B coffee delivery platform connecting Nashville businesses with local artisan 
+coffee shops for meeting catering. Features subscription tiers, Stripe payments,
+demo mode with PIN access, and order management.
+
+TECH STACK:
+- Frontend: React 18 + TypeScript + Vite + Tailwind CSS v4 + shadcn/ui + Framer Motion
+- Backend: Express.js + Node.js
+- Database: PostgreSQL (Neon) + Drizzle ORM
+- Payments: Stripe (subscriptions + checkout)
+- Routing: Wouter
+- State: TanStack Query
+
+================================================================================
+SECTION 1: DATABASE SCHEMA (shared/schema.ts)
+================================================================================
+
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, timestamp, decimal, boolean } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users - Business meeting planners
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  company: text("company"),
+  phone: text("phone"),
+  pin: text("pin").unique(),
+  corporateAccountLimit: decimal("corporate_account_limit", { precision: 10, scale: 2 }).default("5000.00"),
+  currentBalance: decimal("current_balance", { precision: 10, scale: 2 }).default("0.00"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionStatus: text("subscription_status").default("trial"), // trial, active, cancelled, expired
+  subscriptionTier: text("subscription_tier").default("starter"), // starter, professional, enterprise
+  trialEndsAt: timestamp("trial_ends_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+// Coffee Shops / Vendors
+export const vendors = pgTable("vendors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  address: text("address").notNull(),
+  neighborhood: text("neighborhood").notNull(), // e.g., "Downtown Nashville", "The Gulch"
+  imageUrl: text("image_url"),
+  rating: decimal("rating", { precision: 2, scale: 1 }).default("4.5"),
+  distanceMiles: decimal("distance_miles", { precision: 3, scale: 1 }),
+  minimumOrder: decimal("minimum_order", { precision: 10, scale: 2 }).default("25.00"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertVendorSchema = createInsertSchema(vendors).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertVendor = z.infer<typeof insertVendorSchema>;
+export type Vendor = typeof vendors.$inferSelect;
+
+// Menu Items
+export const menuItems = pgTable("menu_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull().references(() => vendors.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // "coffee", "pastry", "tea", etc.
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  isAvailable: boolean("is_available").default(true).notNull(),
+});
+
+export const insertMenuItemSchema = createInsertSchema(menuItems).omit({
+  id: true,
+});
+export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
+export type MenuItem = typeof menuItems.$inferSelect;
+
+// User Favorites
+export const favorites = pgTable("favorites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  vendorId: varchar("vendor_id").notNull().references(() => vendors.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFavoriteSchema = createInsertSchema(favorites).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type Favorite = typeof favorites.$inferSelect;
+
+// Orders
+export const orders = pgTable("orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  vendorId: varchar("vendor_id").notNull().references(() => vendors.id),
+  orderNumber: text("order_number").notNull().unique(),
+  meetingTitle: text("meeting_title").notNull(),
+  deliveryAddress: text("delivery_address").notNull(),
+  deliveryTime: timestamp("delivery_time").notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"), // pending, confirmed, preparing, delivering, delivered, cancelled
+  specialInstructions: text("special_instructions"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  orderNumber: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+// Order Items
+export const orderItems = pgTable("order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  menuItemId: varchar("menu_item_id").notNull().references(() => menuItems.id),
+  quantity: integer("quantity").notNull(),
+  priceAtTime: decimal("price_at_time", { precision: 10, scale: 2 }).notNull(),
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
+  id: true,
+});
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type OrderItem = typeof orderItems.$inferSelect;
+
+================================================================================
+SECTION 2: KEY PAGES TO BUILD
+================================================================================
+
+1. "/" - LOGIN PAGE
+   - Demo PIN access system
+   - Simple form with PIN input
+   - Redirects to /dashboard on success
+
+2. "/welcome" - LANDING/MARKETING PAGE
+   - Hero section with Nashville coffee imagery
+   - Value proposition for businesses
+   - CTA to start trial or login
+   - Features overview
+
+3. "/dashboard" - MAIN APPLICATION
+   - Browse vendors (Nashville coffee shops)
+   - View vendor menus
+   - Place orders for meetings
+   - View order history
+   - Favorites management
+
+4. "/pricing" - SUBSCRIPTION TIERS
+   - Starter: $29/mo - 10 orders/month, 14-day trial
+   - Professional: $79/mo - 50 orders/month, priority scheduling
+   - Enterprise: $199/mo - Unlimited orders, custom features
+   - Stripe Checkout integration
+
+5. "/subscription/success" - POST-PAYMENT
+   - Confirmation message
+   - Redirect to dashboard
+
+================================================================================
+SECTION 3: SUBSCRIPTION TIERS CONFIGURATION
+================================================================================
+
+const SUBSCRIPTION_TIERS = {
+  starter: {
+    name: "Starter",
+    price: 29,
+    ordersPerMonth: 10,
+    trialDays: 14,
+    features: ["10 orders/month", "Email support", "Basic analytics"]
+  },
+  professional: {
+    name: "Professional", 
+    price: 79,
+    ordersPerMonth: 50,
+    trialDays: 14,
+    features: ["50 orders/month", "Priority scheduling", "Phone support", "Advanced analytics"]
+  },
+  enterprise: {
+    name: "Enterprise",
+    price: 199,
+    ordersPerMonth: null, // unlimited
+    trialDays: 14,
+    features: ["Unlimited orders", "Dedicated account manager", "Custom integrations", "SLA guarantee"]
+  }
+};
+
+================================================================================
+SECTION 4: SAMPLE NASHVILLE VENDORS (Seed Data)
+================================================================================
+
+const NASHVILLE_VENDORS = [
+  {
+    name: "Barista Parlor",
+    description: "Specialty coffee in a vintage-industrial space",
+    address: "519 Gallatin Ave, Nashville, TN 37206",
+    neighborhood: "East Nashville",
+    rating: "4.8",
+    minimumOrder: "30.00"
+  },
+  {
+    name: "Crema",
+    description: "Direct-trade coffee roaster with multiple locations",
+    address: "15 Hermitage Ave, Nashville, TN 37210",
+    neighborhood: "Downtown Nashville",
+    rating: "4.7",
+    minimumOrder: "25.00"
+  },
+  {
+    name: "Steadfast Coffee",
+    description: "Quality-focused cafe in The Gulch",
+    address: "603 Taylor St, Nashville, TN 37208",
+    neighborhood: "The Gulch",
+    rating: "4.6",
+    minimumOrder: "35.00"
+  },
+  {
+    name: "Frothy Monkey",
+    description: "Nashville staple with full breakfast menu",
+    address: "2509 12th Ave S, Nashville, TN 37204",
+    neighborhood: "12 South",
+    rating: "4.5",
+    minimumOrder: "25.00"
+  },
+  {
+    name: "Dose Coffee",
+    description: "Minimalist cafe with exceptional espresso",
+    address: "3431 Murphy Rd, Nashville, TN 37203",
+    neighborhood: "Sylvan Park",
+    rating: "4.7",
+    minimumOrder: "20.00"
+  }
+];
+
+================================================================================
+SECTION 5: DESIGN SYSTEM
+================================================================================
+
+Theme: Warm, inviting coffee shop aesthetic
+- Primary: Rich brown (#6F4E37) or warm amber
+- Secondary: Cream/off-white
+- Accent: Nashville gold or coffee copper
+- Dark mode support
+
+Fonts:
+- Headings: Playfair Display (elegant, coffee-shop vibe)
+- Body: Inter (clean, readable)
+
+UI Components: shadcn/ui with Radix primitives
+Animations: Framer Motion for page transitions
+
+================================================================================
+SECTION 6: API ENDPOINTS NEEDED
+================================================================================
+
+// Auth
+POST /api/auth/login - PIN-based demo login
+POST /api/auth/logout - Clear session
+GET /api/auth/me - Get current user
+
+// Vendors
+GET /api/vendors - List all active vendors
+GET /api/vendors/:id - Get vendor details with menu
+
+// Menu
+GET /api/vendors/:id/menu - Get vendor menu items
+
+// Orders
+POST /api/orders - Create new order
+GET /api/orders - List user's orders
+GET /api/orders/:id - Get order details
+
+// Favorites
+GET /api/favorites - List user favorites
+POST /api/favorites - Add favorite
+DELETE /api/favorites/:vendorId - Remove favorite
+
+// Subscriptions (Stripe)
+POST /api/subscriptions/checkout - Create Stripe checkout session
+POST /api/stripe/webhook - Handle Stripe webhooks
+GET /api/subscriptions/status - Get current subscription status
+
+================================================================================
+SECTION 7: ORDER STATUS FLOW
+================================================================================
+
+pending → confirmed → preparing → delivering → delivered
+                ↘ cancelled
+
+================================================================================
+SECTION 8: DEMO MODE
+================================================================================
+
+Demo PIN: "1234" or similar
+Creates a demo user with:
+- Starter subscription (trial mode)
+- Sample order history
+- Access to full dashboard
+
+================================================================================
+INSTRUCTIONS FOR NEW AGENT:
+================================================================================
+
+1. Create the database schema first (shared/schema.ts) - use exact code above
+2. Run npm run db:push to create tables
+3. Set up Stripe integration via Replit Connectors
+4. Build pages in this order: Login → Dashboard → Pricing → Success
+5. Seed Nashville vendor data
+6. Add demo PIN login functionality
+7. Implement Stripe checkout for subscriptions
+8. Polish UI with shadcn/ui components and Framer Motion
+
+The project was almost complete - focus on polishing the UI and ensuring
+all flows work: login → browse vendors → place order → checkout
+
+================================================================================
+END OF COFFEE TALK REBUILD INSTRUCTIONS
+================================================================================

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Book, 
   Plus, 
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 type TemplateType = "general" | "painter" | "construction" | "real_estate" | "plumbing";
 
@@ -41,13 +43,16 @@ interface Template {
 }
 
 interface Note {
-  id: number;
+  id: string;
+  userId: string;
   title: string;
-  date: string;
-  type: TemplateType;
-  preview: string;
-  data: Record<string, string>;
-  freeformNotes?: string;
+  templateType: TemplateType;
+  structuredData: Record<string, string> | null;
+  freeformNotes: string | null;
+  isPinned: boolean;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Templates for different industries
@@ -104,61 +109,117 @@ const TEMPLATES: Record<TemplateType, Template> = {
 };
 
 export default function PortfolioPage() {
-  const [notes, setNotes] = useState<Note[]>([
-    { 
-      id: 1, 
-      title: "Morning Standup", 
-      date: "2024-05-20", 
-      type: "general", 
-      preview: "Discussed the new inventory shipment...",
-      data: {},
-      freeformNotes: "Notes from the meeting..."
-    },
-    { 
-      id: 2, 
-      title: "Job #4022 - West End Reno", 
-      date: "2024-05-19", 
-      type: "painter", 
-      preview: "Crew Leader: Mike. Colors: Sherwin Williams Alabaster...",
-      data: { job_number: "4022", crew_leader: "Mike", paint_colors: "SW Alabaster" },
-      freeformNotes: ""
-    }
-  ]);
-
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("general");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Get current user ID from localStorage
+  const userStr = localStorage.getItem("coffee_user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userId = user?.id;
+
+  // Fetch notes
+  const { data: notes = [] } = useQuery<Note[]>({
+    queryKey: ["notes", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const res = await fetch(`/api/notes?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch notes");
+      return res.json();
+    },
+    enabled: !!userId
+  });
+
+  // Create note mutation
+  const createNoteMutation = useMutation({
+    mutationFn: async (note: Partial<Note>) => {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(note)
+      });
+      if (!res.ok) throw new Error("Failed to create note");
+      return res.json();
+    },
+    onSuccess: (newNote) => {
+      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+      setActiveNote(newNote);
+      setIsDialogOpen(false);
+      toast({ title: "Success", description: "Note created successfully!" });
+    }
+  });
+
+  // Update note mutation
+  const updateNoteMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Note> }) => {
+      const res = await fetch(`/api/notes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error("Failed to update note");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+      toast({ title: "Saved", description: "Note updated successfully!" });
+    }
+  });
+
+  // Delete note mutation
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete note");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+      setActiveNote(null);
+      toast({ title: "Deleted", description: "Note deleted successfully!" });
+    }
+  });
 
   const handleNewNote = () => {
-    const newNote: Note = {
-      id: Date.now(),
+    createNoteMutation.mutate({
+      userId,
       title: "New Note",
-      date: new Date().toISOString().split('T')[0],
-      type: selectedTemplate,
-      preview: "No content yet...",
-      data: {},
-      freeformNotes: ""
-    };
-    setNotes([newNote, ...notes]);
-    setActiveNote(newNote);
-    setIsEditing(true);
+      templateType: selectedTemplate,
+      structuredData: {},
+      freeformNotes: "",
+      isPinned: false,
+      color: "default"
+    });
   };
 
   const handleSave = () => {
     if (!activeNote) return;
-    setIsEditing(false);
-    const updatedNotes = notes.map(n => 
-      n.id === activeNote.id ? { ...activeNote, preview: "Updated content..." } : n
-    );
-    setNotes(updatedNotes);
+    updateNoteMutation.mutate({
+      id: activeNote.id,
+      data: {
+        title: activeNote.title,
+        structuredData: activeNote.structuredData,
+        freeformNotes: activeNote.freeformNotes
+      }
+    });
   };
 
-  const handleDelete = (id: number) => {
-    setNotes(notes.filter(n => n.id !== id));
-    if (activeNote && activeNote.id === id) {
-      setActiveNote(null);
-    }
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id);
   };
+
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-serif mb-4">Please log in to access your portfolio</h2>
+          <Button onClick={() => window.location.href = "/"}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8">
@@ -172,7 +233,7 @@ export default function PortfolioPage() {
             <p className="text-muted-foreground">Meeting notes, job details, and templates.</p>
           </div>
           
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
                 <Plus className="h-4 w-4" /> New Entry
@@ -202,8 +263,8 @@ export default function PortfolioPage() {
                     </Button>
                   ))}
                 </div>
-                <Button onClick={handleNewNote} className="w-full mt-2">
-                  Create Note
+                <Button onClick={handleNewNote} className="w-full mt-2" disabled={createNoteMutation.isPending}>
+                  {createNoteMutation.isPending ? "Creating..." : "Create Note"}
                 </Button>
               </div>
             </DialogContent>
@@ -226,7 +287,7 @@ export default function PortfolioPage() {
                      key={note.id}
                      initial={{ opacity: 0, x: -10 }}
                      animate={{ opacity: 1, x: 0 }}
-                     onClick={() => { setActiveNote(note); setIsEditing(true); }}
+                     onClick={() => setActiveNote(note)}
                      className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
                        activeNote?.id === note.id 
                          ? 'bg-primary/5 border-primary/20 shadow-sm' 
@@ -236,14 +297,14 @@ export default function PortfolioPage() {
                      <div className="flex justify-between items-start mb-1">
                        <h3 className="font-semibold truncate pr-2">{note.title}</h3>
                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-background/50">
-                         {TEMPLATES[note.type]?.name.split(' ')[0]}
+                         {TEMPLATES[note.templateType]?.name.split(' ')[0]}
                        </Badge>
                      </div>
                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                       {note.preview}
+                       {note.freeformNotes || "No content yet..."}
                      </p>
                      <div className="text-[10px] text-muted-foreground/60 flex justify-between items-center">
-                       <span>{note.date}</span>
+                       <span>{new Date(note.createdAt).toLocaleDateString()}</span>
                        <Button 
                           variant="ghost" 
                           size="icon" 
@@ -273,15 +334,15 @@ export default function PortfolioPage() {
                     />
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
-                        {TEMPLATES[activeNote.type]?.icon}
-                        {TEMPLATES[activeNote.type]?.name} Template
+                        {TEMPLATES[activeNote.templateType]?.icon}
+                        {TEMPLATES[activeNote.templateType]?.name} Template
                       </span>
                       <span>•</span>
-                      <span>{activeNote.date}</span>
+                      <span>{new Date(activeNote.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <Button onClick={handleSave} size="sm" className="gap-2">
-                    <Save className="h-4 w-4" /> Save
+                  <Button onClick={handleSave} size="sm" className="gap-2" disabled={updateNoteMutation.isPending}>
+                    <Save className="h-4 w-4" /> {updateNoteMutation.isPending ? "Saving..." : "Save"}
                   </Button>
                 </div>
 
@@ -294,7 +355,7 @@ export default function PortfolioPage() {
                         Structured Data
                       </div>
                       
-                      {TEMPLATES[activeNote.type]?.fields.map((field) => (
+                      {TEMPLATES[activeNote.templateType]?.fields.map((field) => (
                         <div key={field.id} className="space-y-2">
                           <label className="text-sm font-medium text-muted-foreground">
                             {field.label}
@@ -304,20 +365,20 @@ export default function PortfolioPage() {
                               className="bg-background resize-none" 
                               rows={3}
                               placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              value={activeNote.data[field.id] || ''}
+                              value={(activeNote.structuredData && activeNote.structuredData[field.id]) || ''}
                               onChange={(e) => setActiveNote({
                                 ...activeNote,
-                                data: { ...activeNote.data, [field.id]: e.target.value }
+                                structuredData: { ...(activeNote.structuredData || {}), [field.id]: e.target.value }
                               })}
                             />
                           ) : (
                             <Input 
                               className="bg-background"
                               placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              value={activeNote.data[field.id] || ''}
+                              value={(activeNote.structuredData && activeNote.structuredData[field.id]) || ''}
                               onChange={(e) => setActiveNote({
                                 ...activeNote,
-                                data: { ...activeNote.data, [field.id]: e.target.value }
+                                structuredData: { ...(activeNote.structuredData || {}), [field.id]: e.target.value }
                               })}
                             />
                           )}

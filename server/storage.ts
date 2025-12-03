@@ -147,18 +147,25 @@ export class DatabaseStorage implements IStorage {
   // ACTIVITIES
   // ========================
   async getActivities(userId: string, entityType?: string, entityId?: string): Promise<CrmActivity[]> {
-    let query = db.select().from(crmActivities).where(eq(crmActivities.userId, userId));
-    
     if (entityType && entityId) {
-      query = query.where(
-        and(
-          eq(crmActivities.entityType, entityType),
-          eq(crmActivities.entityId, entityId)
+      return await db
+        .select()
+        .from(crmActivities)
+        .where(
+          and(
+            eq(crmActivities.userId, userId),
+            eq(crmActivities.entityType, entityType),
+            eq(crmActivities.entityId, entityId)
+          )
         )
-      ) as any;
+        .orderBy(desc(crmActivities.createdAt));
     }
     
-    return await query.orderBy(desc(crmActivities.createdAt));
+    return await db
+      .select()
+      .from(crmActivities)
+      .where(eq(crmActivities.userId, userId))
+      .orderBy(desc(crmActivities.createdAt));
   }
 
   async createActivity(activity: InsertCrmActivity): Promise<CrmActivity> {

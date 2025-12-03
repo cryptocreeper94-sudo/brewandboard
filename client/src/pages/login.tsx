@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    company: "",
+    phone: "",
     pin: "",
     confirmPin: ""
   });
@@ -30,13 +32,12 @@ export default function LoginPage() {
       if (new Date().getTime() < parseInt(sessionExpiry)) {
         setLocation("/dashboard");
       } else {
-        // Session expired
         localStorage.removeItem("coffee_session_expiry");
       }
     }
   }, [setLocation]);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.pin.length !== 4) {
@@ -50,63 +51,87 @@ export default function LoginPage() {
     }
 
     if (!formData.name || !formData.email) {
-      toast({ title: "Missing Info", description: "Please fill out all fields.", variant: "destructive" });
+      toast({ title: "Missing Info", description: "Please fill out name and email.", variant: "destructive" });
       return;
     }
 
-    // Save user data (mock backend)
-    const user = {
-      name: formData.name,
-      email: formData.email,
-      pin: formData.pin
-    };
-    
-    localStorage.setItem("coffee_user", JSON.stringify(user));
-    localStorage.setItem("user_name", user.name); // For dashboard compatibility
-    
-    handleLoginSuccess();
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          phone: formData.phone,
+          pin: formData.pin
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({ title: "Registration Failed", description: error.error, variant: "destructive" });
+        return;
+      }
+
+      const user = await response.json();
+      localStorage.setItem("coffee_user", JSON.stringify(user));
+      localStorage.setItem("user_name", user.name);
+      handleLoginSuccess();
+      
+      toast({ title: "Success!", description: "Account created successfully." });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to register. Please try again.", variant: "destructive" });
+    }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check against registered user or demo user
-    const storedUserStr = localStorage.getItem("coffee_user");
-    const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
-    
-    const isValidUser = storedUser && storedUser.pin === loginPin;
-    const isDemoUser = loginPin === "1111"; // Fallback demo
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: loginPin })
+      });
 
-    if (isValidUser || isDemoUser) {
-      if (isDemoUser && !storedUser) {
-        localStorage.setItem("user_name", "Only");
+      if (!response.ok) {
+        toast({
+          title: "Access Denied",
+          description: "Invalid PIN. Please try again or register.",
+          variant: "destructive",
+        });
+        setLoginPin("");
+        return;
       }
+
+      const user = await response.json();
+      localStorage.setItem("coffee_user", JSON.stringify(user));
+      localStorage.setItem("user_name", user.name);
       handleLoginSuccess();
-    } else {
+      
       toast({
-        title: "Access Denied",
-        description: "Invalid PIN. Please try again or register.",
+        title: "Welcome Back",
+        description: `Hello, ${user.name}!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Login failed. Please try again.",
         variant: "destructive",
       });
-      setLoginPin("");
     }
   };
 
   const handleLoginSuccess = () => {
     if (rememberMe) {
-      // 30 days
       const expiry = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
       localStorage.setItem("coffee_session_expiry", expiry.toString());
     } else {
-      // Session only (mock 1 hour)
       const expiry = new Date().getTime() + (60 * 60 * 1000);
       localStorage.setItem("coffee_session_expiry", expiry.toString());
     }
     
-    toast({
-      title: "Welcome Back",
-      description: "Successfully logged in.",
-    });
     setLocation("/dashboard");
   };
 
@@ -142,6 +167,7 @@ export default function LoginPage() {
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   placeholder="Jane Doe"
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -152,7 +178,29 @@ export default function LoginPage() {
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   placeholder="jane@company.com"
+                  required
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-white/80">Company (Optional)</Label>
+                  <Input 
+                    value={formData.company}
+                    onChange={(e) => setFormData({...formData, company: e.target.value})}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
+                    placeholder="Acme Inc"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80">Phone (Optional)</Label>
+                  <Input 
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
+                    placeholder="(615) 555-0123"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -164,6 +212,7 @@ export default function LoginPage() {
                     onChange={(e) => setFormData({...formData, pin: e.target.value})}
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest"
                     placeholder="••••"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -175,12 +224,12 @@ export default function LoginPage() {
                     onChange={(e) => setFormData({...formData, confirmPin: e.target.value})}
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest"
                     placeholder="••••"
+                    required
                   />
                 </div>
               </div>
 
               <div className="pt-4 space-y-4">
-                 {/* Persistence Checkbox (Same logic for register) */}
                  <div className="space-y-3 bg-white/5 p-3 rounded-lg border border-white/5">
                   <div className="flex items-center space-x-2">
                     <Checkbox 

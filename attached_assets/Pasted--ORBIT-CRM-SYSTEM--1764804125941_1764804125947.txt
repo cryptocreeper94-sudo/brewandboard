@@ -1,0 +1,643 @@
+================================================================================
+ORBIT CRM SYSTEM - COMPLETE IMPLEMENTATION INSTRUCTIONS
+================================================================================
+
+OVERVIEW:
+HubSpot-competitive CRM with multi-tenant isolation, sales pipeline, activity
+tracking, notes, meetings, and custom fields. Uses PostgreSQL + Drizzle ORM.
+
+================================================================================
+SECTION 1: DATABASE SCHEMA (shared/schema.ts)
+================================================================================
+
+// Required imports
+import { pgTable, varchar, text, integer, decimal, boolean, timestamp, date, jsonb, index } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// ========================
+// CLIENTS TABLE (Core CRM Entity)
+// ========================
+export const clients = pgTable(
+  "clients",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id").notNull(), // Multi-tenant isolation
+    companyId: varchar("company_id"),
+
+    name: varchar("name", { length: 255 }).notNull(),
+    contactName: varchar("contact_name", { length: 255 }),
+    contactEmail: varchar("contact_email", { length: 255 }),
+    contactPhone: varchar("contact_phone", { length: 20 }),
+    industry: varchar("industry", { length: 100 }),
+
+    addressLine1: varchar("address_line1", { length: 255 }),
+    addressLine2: varchar("address_line2", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 2 }),
+    zipCode: varchar("zip_code", { length: 10 }),
+
+    estimatedMonthlySpend: decimal("estimated_monthly_spend", { precision: 10, scale: 2 }),
+    status: varchar("status", { length: 50 }).default("active"), // active, inactive, churned
+
+    // Account ownership
+    accountOwnerId: varchar("account_owner_id"),
+    accountOwnerAssignedDate: timestamp("account_owner_assigned_date"),
+
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_clients_tenant_id").on(table.tenantId),
+    nameIdx: index("idx_clients_name").on(table.name),
+  })
+);
+
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Client = typeof clients.$inferSelect;
+
+// ========================
+// CRM DEALS (Sales Pipeline)
+// ========================
+export const crmDeals = pgTable(
+  "crm_deals",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    
+    // Pipeline stage
+    stage: varchar("stage", { length: 50 }).notNull().default("lead"),
+    // Stages: 'lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'
+    stageOrder: integer("stage_order").default(0),
+    
+    // Deal value
+    value: decimal("value", { precision: 15, scale: 2 }),
+    currency: varchar("currency", { length: 3 }).default("USD"),
+    probability: integer("probability").default(0), // 0-100%
+    
+    // Associated entities
+    clientId: varchar("client_id"),
+    contactName: varchar("contact_name", { length: 255 }),
+    contactEmail: varchar("contact_email", { length: 255 }),
+    contactPhone: varchar("contact_phone", { length: 20 }),
+    
+    // Timeline
+    expectedCloseDate: date("expected_close_date"),
+    actualCloseDate: date("actual_close_date"),
+    
+    // Assignment
+    ownerId: varchar("owner_id"),
+    
+    // Source tracking
+    source: varchar("source", { length: 100 }), // 'website', 'referral', 'cold_call', 'trade_show'
+    
+    // Custom fields (flexible JSON storage)
+    customFields: jsonb("custom_fields"),
+    
+    lostReason: varchar("lost_reason", { length: 255 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_deals_tenant").on(table.tenantId),
+    stageIdx: index("idx_crm_deals_stage").on(table.stage),
+    ownerIdx: index("idx_crm_deals_owner").on(table.ownerId),
+    closeDateIdx: index("idx_crm_deals_close_date").on(table.expectedCloseDate),
+  })
+);
+
+export const insertCrmDealSchema = createInsertSchema(crmDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCrmDeal = z.infer<typeof insertCrmDealSchema>;
+export type CrmDeal = typeof crmDeals.$inferSelect;
+
+// ========================
+// CRM ACTIVITIES (Interaction Timeline)
+// ========================
+export const crmActivities = pgTable(
+  "crm_activities",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    // Polymorphic association - links to any entity
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'client', 'deal', 'lead'
+    entityId: varchar("entity_id").notNull(),
+    
+    // Activity details
+    activityType: varchar("activity_type", { length: 50 }).notNull(),
+    // Types: 'email', 'call', 'meeting', 'note', 'task', 'sms', 'status_change', 'document'
+    subject: varchar("subject", { length: 255 }),
+    description: text("description"),
+    
+    // Email-specific fields
+    emailFrom: varchar("email_from", { length: 255 }),
+    emailTo: varchar("email_to", { length: 255 }),
+    emailOpened: boolean("email_opened").default(false),
+    emailOpenedAt: timestamp("email_opened_at"),
+    emailClicked: boolean("email_clicked").default(false),
+    emailClickedAt: timestamp("email_clicked_at"),
+    
+    // Call-specific fields
+    callDuration: integer("call_duration"), // seconds
+    callOutcome: varchar("call_outcome", { length: 50 }), // 'answered', 'no_answer', 'voicemail', 'busy'
+    callRecordingUrl: varchar("call_recording_url", { length: 500 }),
+    
+    // Meeting-specific fields
+    meetingStartTime: timestamp("meeting_start_time"),
+    meetingEndTime: timestamp("meeting_end_time"),
+    meetingLocation: varchar("meeting_location", { length: 255 }),
+    meetingAttendees: text("meeting_attendees").array(),
+    
+    // Metadata
+    metadata: jsonb("metadata"),
+    createdBy: varchar("created_by"),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_activities_tenant").on(table.tenantId),
+    entityIdx: index("idx_crm_activities_entity").on(table.entityType, table.entityId),
+    typeIdx: index("idx_crm_activities_type").on(table.activityType),
+    createdAtIdx: index("idx_crm_activities_created").on(table.createdAt),
+  })
+);
+
+export const insertCrmActivitySchema = createInsertSchema(crmActivities).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCrmActivity = z.infer<typeof insertCrmActivitySchema>;
+export type CrmActivity = typeof crmActivities.$inferSelect;
+
+// ========================
+// CRM NOTES
+// ========================
+export const crmNotes = pgTable(
+  "crm_notes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'client', 'deal', 'lead'
+    entityId: varchar("entity_id").notNull(),
+    
+    content: text("content").notNull(),
+    isPinned: boolean("is_pinned").default(false),
+    color: varchar("color", { length: 20 }).default("default"), // 'default', 'yellow', 'green', 'blue', 'red'
+    
+    createdBy: varchar("created_by"),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_notes_tenant").on(table.tenantId),
+    entityIdx: index("idx_crm_notes_entity").on(table.entityType, table.entityId),
+    pinnedIdx: index("idx_crm_notes_pinned").on(table.isPinned),
+  })
+);
+
+export const insertCrmNoteSchema = createInsertSchema(crmNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCrmNote = z.infer<typeof insertCrmNoteSchema>;
+export type CrmNote = typeof crmNotes.$inferSelect;
+
+// ========================
+// CRM MEETINGS
+// ========================
+export const crmMeetings = pgTable(
+  "crm_meetings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    
+    // Schedule
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time").notNull(),
+    timezone: varchar("timezone", { length: 50 }).default("America/New_York"),
+    
+    // Location
+    locationType: varchar("location_type", { length: 20 }).default("virtual"), // 'virtual', 'in_person', 'phone'
+    location: varchar("location", { length: 500 }),
+    meetingUrl: varchar("meeting_url", { length: 500 }),
+    
+    // Participants
+    organizerId: varchar("organizer_id"),
+    attendees: jsonb("attendees"), // [{email, name, status: 'pending'|'accepted'|'declined'}]
+    
+    // Associated entities
+    entityType: varchar("entity_type", { length: 50 }),
+    entityId: varchar("entity_id"),
+    dealId: varchar("deal_id"),
+    
+    // Status
+    status: varchar("status", { length: 20 }).default("scheduled"), // 'scheduled', 'completed', 'cancelled', 'rescheduled'
+    
+    // Reminders
+    reminderMinutes: integer("reminder_minutes").default(15),
+    reminderSent: boolean("reminder_sent").default(false),
+    
+    // Notes and outcomes
+    notes: text("notes"),
+    outcome: varchar("outcome", { length: 255 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_meetings_tenant").on(table.tenantId),
+    organizerIdx: index("idx_crm_meetings_organizer").on(table.organizerId),
+    startTimeIdx: index("idx_crm_meetings_start").on(table.startTime),
+    statusIdx: index("idx_crm_meetings_status").on(table.status),
+  })
+);
+
+export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
+export type CrmMeeting = typeof crmMeetings.$inferSelect;
+
+// ========================
+// CRM CUSTOM FIELDS (Flexible Schema Extension)
+// ========================
+export const crmCustomFields = pgTable(
+  "crm_custom_fields",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    entityType: varchar("entity_type", { length: 50 }).notNull(), // 'client', 'deal', 'lead'
+    fieldName: varchar("field_name", { length: 100 }).notNull(),
+    fieldLabel: varchar("field_label", { length: 255 }).notNull(),
+    fieldType: varchar("field_type", { length: 50 }).notNull(),
+    // Types: 'text', 'number', 'date', 'boolean', 'select', 'multiselect', 'url', 'email', 'phone'
+    
+    options: jsonb("options"), // For select/multiselect: [{value, label}]
+    isRequired: boolean("is_required").default(false),
+    defaultValue: text("default_value"),
+    displayOrder: integer("display_order").default(0),
+    isVisible: boolean("is_visible").default(true),
+    section: varchar("section", { length: 100 }), // Group into UI sections
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_custom_fields_tenant").on(table.tenantId),
+    entityTypeIdx: index("idx_crm_custom_fields_entity").on(table.entityType),
+  })
+);
+
+export const crmCustomFieldValues = pgTable(
+  "crm_custom_field_values",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: varchar("tenant_id"),
+    
+    customFieldId: varchar("custom_field_id").notNull(),
+    entityType: varchar("entity_type", { length: 50 }).notNull(),
+    entityId: varchar("entity_id").notNull(),
+    
+    value: text("value"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    tenantIdx: index("idx_crm_field_values_tenant").on(table.tenantId),
+  })
+);
+
+================================================================================
+SECTION 2: STORAGE INTERFACE (server/storage.ts)
+================================================================================
+
+// Add to IStorage interface:
+interface IStorage {
+  // Clients
+  getClient(id: string): Promise<Client | null>;
+  listClients(tenantId: string): Promise<Client[]>;
+  createClient(data: InsertClient): Promise<Client>;
+  updateClient(id: string, data: Partial<InsertClient>): Promise<Client>;
+  deleteClient(id: string): Promise<void>;
+  
+  // Deals
+  getDeal(id: string): Promise<CrmDeal | null>;
+  listDeals(tenantId: string, filters?: { stage?: string; ownerId?: string }): Promise<CrmDeal[]>;
+  createDeal(data: InsertCrmDeal): Promise<CrmDeal>;
+  updateDeal(id: string, data: Partial<InsertCrmDeal>): Promise<CrmDeal>;
+  deleteDeal(id: string): Promise<void>;
+  moveDealToStage(id: string, stage: string): Promise<CrmDeal>;
+  
+  // Activities
+  listActivities(entityType: string, entityId: string): Promise<CrmActivity[]>;
+  createActivity(data: InsertCrmActivity): Promise<CrmActivity>;
+  
+  // Notes
+  listNotes(entityType: string, entityId: string): Promise<CrmNote[]>;
+  createNote(data: InsertCrmNote): Promise<CrmNote>;
+  updateNote(id: string, data: Partial<InsertCrmNote>): Promise<CrmNote>;
+  deleteNote(id: string): Promise<void>;
+  
+  // Meetings
+  getMeeting(id: string): Promise<CrmMeeting | null>;
+  listMeetings(tenantId: string, filters?: { startDate?: Date; endDate?: Date }): Promise<CrmMeeting[]>;
+  createMeeting(data: InsertCrmMeeting): Promise<CrmMeeting>;
+  updateMeeting(id: string, data: Partial<InsertCrmMeeting>): Promise<CrmMeeting>;
+  deleteMeeting(id: string): Promise<void>;
+}
+
+// Implementation examples:
+async getClient(id: string): Promise<Client | null> {
+  const result = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+async listClients(tenantId: string): Promise<Client[]> {
+  return await db
+    .select()
+    .from(clients)
+    .where(eq(clients.tenantId, tenantId))
+    .orderBy(desc(clients.createdAt));
+}
+
+async updateClient(id: string, data: Partial<InsertClient>): Promise<Client> {
+  const result = await db
+    .update(clients)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(clients.id, id))
+    .returning();
+  return result[0];
+}
+
+async listDeals(tenantId: string, filters?: { stage?: string; ownerId?: string }): Promise<CrmDeal[]> {
+  let query = db.select().from(crmDeals).where(eq(crmDeals.tenantId, tenantId));
+  if (filters?.stage) {
+    query = query.where(eq(crmDeals.stage, filters.stage));
+  }
+  return await query.orderBy(crmDeals.stageOrder, desc(crmDeals.createdAt));
+}
+
+async listActivities(entityType: string, entityId: string): Promise<CrmActivity[]> {
+  return await db
+    .select()
+    .from(crmActivities)
+    .where(and(
+      eq(crmActivities.entityType, entityType),
+      eq(crmActivities.entityId, entityId)
+    ))
+    .orderBy(desc(crmActivities.createdAt));
+}
+
+================================================================================
+SECTION 3: API ROUTES (server/routes.ts)
+================================================================================
+
+// CLIENTS
+app.get("/api/clients", async (req, res) => {
+  const tenantId = validateTenantAccess(req, res);
+  if (!tenantId) return;
+  const clients = await storage.listClients(tenantId);
+  res.json(clients);
+});
+
+app.get("/api/clients/:id", async (req, res) => {
+  const client = await storage.getClient(req.params.id);
+  if (!client) return res.status(404).json({ error: "Client not found" });
+  res.json(client);
+});
+
+app.post("/api/clients", async (req, res) => {
+  const tenantId = validateTenantAccess(req, res);
+  if (!tenantId) return;
+  const data = insertClientSchema.parse({ ...req.body, tenantId });
+  const client = await storage.createClient(data);
+  res.status(201).json(client);
+});
+
+app.put("/api/clients/:id", async (req, res) => {
+  const client = await storage.updateClient(req.params.id, req.body);
+  res.json(client);
+});
+
+app.delete("/api/clients/:id", async (req, res) => {
+  await storage.deleteClient(req.params.id);
+  res.status(204).send();
+});
+
+// DEALS (Pipeline)
+app.get("/api/crm/deals", async (req, res) => {
+  const tenantId = validateTenantAccess(req, res);
+  if (!tenantId) return;
+  const { stage, ownerId } = req.query;
+  const deals = await storage.listDeals(tenantId, { stage, ownerId });
+  res.json(deals);
+});
+
+app.post("/api/crm/deals", async (req, res) => {
+  const tenantId = validateTenantAccess(req, res);
+  if (!tenantId) return;
+  const data = insertCrmDealSchema.parse({ ...req.body, tenantId });
+  const deal = await storage.createDeal(data);
+  res.status(201).json(deal);
+});
+
+app.put("/api/crm/deals/:id", async (req, res) => {
+  const deal = await storage.updateDeal(req.params.id, req.body);
+  res.json(deal);
+});
+
+app.patch("/api/crm/deals/:id/stage", async (req, res) => {
+  const { stage } = req.body;
+  const deal = await storage.moveDealToStage(req.params.id, stage);
+  res.json(deal);
+});
+
+// ACTIVITIES
+app.get("/api/crm/activities/:entityType/:entityId", async (req, res) => {
+  const { entityType, entityId } = req.params;
+  const activities = await storage.listActivities(entityType, entityId);
+  res.json(activities);
+});
+
+app.post("/api/crm/activities", async (req, res) => {
+  const data = insertCrmActivitySchema.parse(req.body);
+  const activity = await storage.createActivity(data);
+  res.status(201).json(activity);
+});
+
+// NOTES
+app.get("/api/crm/notes/:entityType/:entityId", async (req, res) => {
+  const { entityType, entityId } = req.params;
+  const notes = await storage.listNotes(entityType, entityId);
+  res.json(notes);
+});
+
+app.post("/api/crm/notes", async (req, res) => {
+  const data = insertCrmNoteSchema.parse(req.body);
+  const note = await storage.createNote(data);
+  res.status(201).json(note);
+});
+
+app.put("/api/crm/notes/:id", async (req, res) => {
+  const note = await storage.updateNote(req.params.id, req.body);
+  res.json(note);
+});
+
+app.delete("/api/crm/notes/:id", async (req, res) => {
+  await storage.deleteNote(req.params.id);
+  res.status(204).send();
+});
+
+// MEETINGS
+app.get("/api/crm/meetings", async (req, res) => {
+  const tenantId = validateTenantAccess(req, res);
+  if (!tenantId) return;
+  const meetings = await storage.listMeetings(tenantId);
+  res.json(meetings);
+});
+
+app.post("/api/crm/meetings", async (req, res) => {
+  const data = insertCrmMeetingSchema.parse(req.body);
+  const meeting = await storage.createMeeting(data);
+  res.status(201).json(meeting);
+});
+
+================================================================================
+SECTION 4: PIPELINE STAGES
+================================================================================
+
+const PIPELINE_STAGES = [
+  { id: 'lead', label: 'Lead', order: 0, color: '#6366f1', probability: 10 },
+  { id: 'qualified', label: 'Qualified', order: 1, color: '#8b5cf6', probability: 25 },
+  { id: 'proposal', label: 'Proposal', order: 2, color: '#a855f7', probability: 50 },
+  { id: 'negotiation', label: 'Negotiation', order: 3, color: '#f59e0b', probability: 75 },
+  { id: 'closed_won', label: 'Closed Won', order: 4, color: '#22c55e', probability: 100 },
+  { id: 'closed_lost', label: 'Closed Lost', order: 5, color: '#ef4444', probability: 0 },
+];
+
+================================================================================
+SECTION 5: ACTIVITY TYPES
+================================================================================
+
+const ACTIVITY_TYPES = [
+  { id: 'email', label: 'Email', icon: 'Mail' },
+  { id: 'call', label: 'Phone Call', icon: 'Phone' },
+  { id: 'meeting', label: 'Meeting', icon: 'Calendar' },
+  { id: 'note', label: 'Note', icon: 'FileText' },
+  { id: 'task', label: 'Task', icon: 'CheckSquare' },
+  { id: 'sms', label: 'SMS', icon: 'MessageSquare' },
+  { id: 'status_change', label: 'Status Change', icon: 'RefreshCw' },
+  { id: 'document', label: 'Document', icon: 'File' },
+];
+
+================================================================================
+SECTION 6: UI COMPONENTS TO BUILD
+================================================================================
+
+1. PIPELINE BOARD (Kanban View)
+   - Drag-and-drop deal cards between stages
+   - Deal value and probability display
+   - Quick actions (edit, delete, move)
+
+2. CLIENT LIST
+   - Table view with search/filter
+   - Quick add client modal
+   - Click to view client detail
+
+3. CLIENT DETAIL PAGE
+   - Contact info section
+   - Activity timeline
+   - Notes section with pinning
+   - Associated deals
+   - Meeting scheduler
+
+4. DEAL DETAIL MODAL
+   - Stage progress indicator
+   - Value and close date
+   - Activity log
+   - Notes
+
+5. ACTIVITY TIMELINE
+   - Chronological feed
+   - Filter by activity type
+   - Quick log activity form
+
+6. MEETING SCHEDULER
+   - Calendar integration
+   - Attendee management
+   - Reminder settings
+
+================================================================================
+SECTION 7: MULTI-TENANT ISOLATION
+================================================================================
+
+CRITICAL: Every query MUST filter by tenantId to ensure data isolation.
+
+// Helper function for routes:
+function validateTenantAccess(req: Request, res: Response): string | null {
+  const tenantId = req.session?.tenantId || req.headers['x-tenant-id'];
+  if (!tenantId) {
+    res.status(401).json({ error: "Tenant ID required" });
+    return null;
+  }
+  return tenantId as string;
+}
+
+// Always include tenantId in WHERE clauses:
+.where(eq(clients.tenantId, tenantId))
+
+================================================================================
+SECTION 8: CRM DASHBOARD METRICS
+================================================================================
+
+// Key metrics to display on dashboard:
+const dashboardMetrics = {
+  totalDeals: "Count of all open deals",
+  pipelineValue: "Sum of all deal values",
+  weightedValue: "Sum of (value * probability) for forecasting",
+  dealsWonThisMonth: "Closed won deals in current month",
+  dealsLostThisMonth: "Closed lost deals in current month",
+  conversionRate: "Won / (Won + Lost) percentage",
+  avgDealSize: "Average value of closed won deals",
+  avgSalesCycle: "Average days from lead to closed won"
+};
+
+================================================================================
+SECTION 9: DATABASE MIGRATION
+================================================================================
+
+After adding schema, run:
+npm run db:push
+
+If schema conflicts occur:
+npm run db:push --force
+
+================================================================================
+END OF CRM SYSTEM INSTRUCTIONS
+================================================================================

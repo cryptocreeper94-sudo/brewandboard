@@ -81,6 +81,24 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
+          {/* Quick Action - Portfolio */}
+          <Link href="/portfolio">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-amber-700 text-white rounded-2xl p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform h-32"
+            >
+              <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center mb-2">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="font-serif text-md leading-none mb-1">My Portfolio</h3>
+                <p className="text-white/60 text-[10px]">Client notes & templates</p>
+              </div>
+            </motion.div>
+          </Link>
+
           {/* Quick Action - Order */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

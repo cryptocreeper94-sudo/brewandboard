@@ -9,14 +9,20 @@ import {
   type InsertCrmActivity,
   type CrmMeeting,
   type InsertCrmMeeting,
+  type ScheduledOrder,
+  type InsertScheduledOrder,
+  type OrderEvent,
+  type InsertOrderEvent,
   users,
   crmNotes,
   clients,
   crmActivities,
-  crmMeetings
+  crmMeetings,
+  scheduledOrders,
+  orderEvents
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -49,6 +55,17 @@ export interface IStorage {
   createMeeting(meeting: InsertCrmMeeting): Promise<CrmMeeting>;
   updateMeeting(id: string, meeting: Partial<InsertCrmMeeting>): Promise<CrmMeeting>;
   deleteMeeting(id: string): Promise<void>;
+  
+  // Scheduled Orders
+  getScheduledOrders(userId: string, startDate?: string, endDate?: string): Promise<ScheduledOrder[]>;
+  getScheduledOrder(id: string): Promise<ScheduledOrder | undefined>;
+  createScheduledOrder(order: InsertScheduledOrder): Promise<ScheduledOrder>;
+  updateScheduledOrder(id: string, order: Partial<InsertScheduledOrder>): Promise<ScheduledOrder>;
+  deleteScheduledOrder(id: string): Promise<void>;
+  
+  // Order Events
+  getOrderEvents(orderId: string): Promise<OrderEvent[]>;
+  createOrderEvent(event: InsertOrderEvent): Promise<OrderEvent>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -205,6 +222,71 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMeeting(id: string): Promise<void> {
     await db.delete(crmMeetings).where(eq(crmMeetings.id, id));
+  }
+
+  // ========================
+  // SCHEDULED ORDERS
+  // ========================
+  async getScheduledOrders(userId: string, startDate?: string, endDate?: string): Promise<ScheduledOrder[]> {
+    if (startDate && endDate) {
+      return await db
+        .select()
+        .from(scheduledOrders)
+        .where(
+          and(
+            eq(scheduledOrders.userId, userId),
+            gte(scheduledOrders.scheduledDate, startDate),
+            lte(scheduledOrders.scheduledDate, endDate)
+          )
+        )
+        .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
+    }
+    
+    return await db
+      .select()
+      .from(scheduledOrders)
+      .where(eq(scheduledOrders.userId, userId))
+      .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
+  }
+
+  async getScheduledOrder(id: string): Promise<ScheduledOrder | undefined> {
+    const [order] = await db.select().from(scheduledOrders).where(eq(scheduledOrders.id, id));
+    return order || undefined;
+  }
+
+  async createScheduledOrder(order: InsertScheduledOrder): Promise<ScheduledOrder> {
+    const [newOrder] = await db.insert(scheduledOrders).values(order).returning();
+    return newOrder;
+  }
+
+  async updateScheduledOrder(id: string, order: Partial<InsertScheduledOrder>): Promise<ScheduledOrder> {
+    const [updated] = await db
+      .update(scheduledOrders)
+      .set({ ...order, updatedAt: new Date() })
+      .where(eq(scheduledOrders.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScheduledOrder(id: string): Promise<void> {
+    await db.delete(orderEvents).where(eq(orderEvents.orderId, id));
+    await db.delete(scheduledOrders).where(eq(scheduledOrders.id, id));
+  }
+
+  // ========================
+  // ORDER EVENTS
+  // ========================
+  async getOrderEvents(orderId: string): Promise<OrderEvent[]> {
+    return await db
+      .select()
+      .from(orderEvents)
+      .where(eq(orderEvents.orderId, orderId))
+      .orderBy(desc(orderEvents.createdAt));
+  }
+
+  async createOrderEvent(event: InsertOrderEvent): Promise<OrderEvent> {
+    const [newEvent] = await db.insert(orderEvents).values(event).returning();
+    return newEvent;
   }
 }
 

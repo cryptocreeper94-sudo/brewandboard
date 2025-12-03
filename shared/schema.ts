@@ -222,3 +222,117 @@ export const insertMenuItemSchema = createInsertSchema(menuItems).omit({
 });
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 export type MenuItem = typeof menuItems.$inferSelect;
+
+// ========================
+// SCHEDULED ORDERS (Coffee Delivery Orders)
+// ========================
+export const scheduledOrders = pgTable(
+  "scheduled_orders",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    // Optional links to CRM
+    clientId: varchar("client_id").references(() => clients.id),
+    meetingId: varchar("meeting_id").references(() => crmMeetings.id),
+    
+    // Vendor selection
+    vendorId: varchar("vendor_id").references(() => vendors.id),
+    vendorName: varchar("vendor_name", { length: 255 }), // Denormalized for display
+    
+    // Delivery details
+    deliveryAddress: text("delivery_address").notNull(),
+    deliveryInstructions: text("delivery_instructions"),
+    contactName: varchar("contact_name", { length: 255 }),
+    contactPhone: varchar("contact_phone", { length: 20 }),
+    
+    // Scheduling
+    scheduledDate: date("scheduled_date").notNull(),
+    scheduledTime: varchar("scheduled_time", { length: 10 }).notNull(), // HH:MM format
+    
+    // Order items (JSON array: [{menuItemId, name, quantity, price, notes}])
+    items: jsonb("items").$type<Array<{
+      menuItemId?: string;
+      name: string;
+      quantity: number;
+      price: string;
+      notes?: string;
+    }>>().notNull(),
+    
+    // Totals
+    subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+    deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("0.00"),
+    total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+    
+    // Order status
+    status: varchar("status", { length: 30 }).default("scheduled").notNull(),
+    // Status values: 'scheduled', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'
+    
+    // Fulfillment tracking (for manual DoorDash/Uber Eats entry)
+    fulfillmentChannel: varchar("fulfillment_channel", { length: 30 }).default("manual"),
+    // Values: 'manual', 'doordash', 'ubereats', 'direct'
+    fulfillmentRef: varchar("fulfillment_ref", { length: 255 }), // External order ID
+    
+    // Special notes
+    specialInstructions: text("special_instructions"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_scheduled_orders_user").on(table.userId),
+    dateIdx: index("idx_scheduled_orders_date").on(table.scheduledDate),
+    statusIdx: index("idx_scheduled_orders_status").on(table.status),
+  })
+);
+
+export const insertScheduledOrderSchema = createInsertSchema(scheduledOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertScheduledOrder = z.infer<typeof insertScheduledOrderSchema>;
+export type ScheduledOrder = typeof scheduledOrders.$inferSelect;
+
+// ========================
+// ORDER EVENTS (Status Timeline)
+// ========================
+export const orderEvents = pgTable(
+  "order_events",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    orderId: varchar("order_id").notNull().references(() => scheduledOrders.id),
+    
+    status: varchar("status", { length: 30 }).notNull(),
+    note: text("note"),
+    
+    // Who made the change
+    changedBy: varchar("changed_by", { length: 100 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    orderIdx: index("idx_order_events_order").on(table.orderId),
+  })
+);
+
+export const insertOrderEventSchema = createInsertSchema(orderEvents).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOrderEvent = z.infer<typeof insertOrderEventSchema>;
+export type OrderEvent = typeof orderEvents.$inferSelect;
+
+// ========================
+// CONSTANTS
+// ========================
+export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;
+export const ORDER_STATUSES = [
+  'scheduled',
+  'confirmed', 
+  'preparing',
+  'out_for_delivery',
+  'delivered',
+  'cancelled'
+] as const;
+export const FULFILLMENT_CHANNELS = ['manual', 'doordash', 'ubereats', 'direct'] as const;

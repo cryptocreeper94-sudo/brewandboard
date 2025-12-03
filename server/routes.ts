@@ -1,7 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertCrmNoteSchema, insertClientSchema, insertCrmActivitySchema, insertCrmMeetingSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertCrmNoteSchema, 
+  insertClientSchema, 
+  insertCrmActivitySchema, 
+  insertCrmMeetingSchema,
+  insertScheduledOrderSchema,
+  insertOrderEventSchema,
+  MINIMUM_ORDER_LEAD_TIME_HOURS
+} from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -259,6 +268,171 @@ export async function registerRoutes(
     try {
       await storage.deleteMeeting(req.params.id);
       res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // SCHEDULED ORDERS ROUTES
+  // ========================
+  
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+      
+      const orders = await storage.getScheduledOrders(userId, startDate, endDate);
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/orders/:id", async (req, res) => {
+    try {
+      const order = await storage.getScheduledOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const validatedData = insertScheduledOrderSchema.parse(req.body);
+      
+      // Validate minimum lead time (2 hours)
+      const scheduledDateTime = new Date(`${validatedData.scheduledDate}T${validatedData.scheduledTime}`);
+      const now = new Date();
+      const hoursUntilDelivery = (scheduledDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilDelivery < MINIMUM_ORDER_LEAD_TIME_HOURS) {
+        return res.status(400).json({ 
+          error: `Orders must be placed at least ${MINIMUM_ORDER_LEAD_TIME_HOURS} hours before delivery time to guarantee on-time delivery.` 
+        });
+      }
+      
+      const order = await storage.createScheduledOrder(validatedData);
+      
+      // Create initial order event
+      await storage.createOrderEvent({
+        orderId: order.id,
+        status: 'scheduled',
+        note: 'Order placed',
+        changedBy: 'system'
+      });
+      
+      res.json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/orders/:id", async (req, res) => {
+    try {
+      // Verify order exists and belongs to user
+      const existingOrder = await storage.getScheduledOrder(req.params.id);
+      if (!existingOrder) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // If updating schedule, validate lead time
+      if (req.body.scheduledDate || req.body.scheduledTime) {
+        const newDate = req.body.scheduledDate || existingOrder.scheduledDate;
+        const newTime = req.body.scheduledTime || existingOrder.scheduledTime;
+        const scheduledDateTime = new Date(`${newDate}T${newTime}`);
+        const now = new Date();
+        const hoursUntilDelivery = (scheduledDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursUntilDelivery < MINIMUM_ORDER_LEAD_TIME_HOURS) {
+          return res.status(400).json({ 
+            error: `Orders must be scheduled at least ${MINIMUM_ORDER_LEAD_TIME_HOURS} hours in advance.` 
+          });
+        }
+      }
+      
+      const order = await storage.updateScheduledOrder(req.params.id, req.body);
+      res.json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/orders/:id/status", async (req, res) => {
+    try {
+      const { status, note, fulfillmentRef, fulfillmentChannel, changedBy } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ error: "status required" });
+      }
+      
+      // Validate status value
+      const validStatuses = ['scheduled', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+      }
+      
+      // Validate fulfillment channel if provided
+      if (fulfillmentChannel) {
+        const validChannels = ['manual', 'doordash', 'ubereats', 'direct'];
+        if (!validChannels.includes(fulfillmentChannel)) {
+          return res.status(400).json({ error: `Invalid fulfillment channel. Must be one of: ${validChannels.join(', ')}` });
+        }
+      }
+      
+      // Verify order exists
+      const existingOrder = await storage.getScheduledOrder(req.params.id);
+      if (!existingOrder) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // Update order status
+      const updateData: any = { status };
+      if (fulfillmentRef) updateData.fulfillmentRef = fulfillmentRef;
+      if (fulfillmentChannel) updateData.fulfillmentChannel = fulfillmentChannel;
+      
+      const order = await storage.updateScheduledOrder(req.params.id, updateData);
+      
+      // Create status event
+      await storage.createOrderEvent({
+        orderId: req.params.id,
+        status,
+        note: note || `Status changed to ${status}`,
+        changedBy: changedBy || 'operator'
+      });
+      
+      res.json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      await storage.deleteScheduledOrder(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // ORDER EVENTS ROUTES
+  // ========================
+  
+  app.get("/api/orders/:id/events", async (req, res) => {
+    try {
+      const events = await storage.getOrderEvents(req.params.id);
+      res.json(events);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

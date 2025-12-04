@@ -15,7 +15,7 @@ import {
   LogIn
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { COFFEE_SHOPS, TEAM_MEMBERS } from "@/lib/mock-data";
+import { COFFEE_SHOPS } from "@/lib/mock-data";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -74,7 +74,7 @@ export default function Dashboard() {
         <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Coffee className="h-5 w-5 text-amber-600" />
-            <span className="text-sm text-muted-foreground">Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {userName}</span>
+            <span className="text-sm font-medium text-foreground">Coffee Talk</span>
           </div>
           <div className="flex items-center gap-3">
             {isGuest && (
@@ -89,11 +89,6 @@ export default function Dashboard() {
                 Sign In
               </Button>
             )}
-            <Avatar className="h-8 w-8 ring-2 ring-primary/10 cursor-pointer" onClick={() => setLocation("/")}>
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {userName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
           </div>
         </div>
       </header>
@@ -214,38 +209,6 @@ export default function Dashboard() {
               </div>
             </motion.div>
           </Link>
-
-          {/* Team Status */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="md:col-span-3 lg:col-span-4 bg-card border border-border/50 rounded-2xl p-6"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-serif text-lg">Team Members</h3>
-              <Button variant="ghost" size="sm" className="h-8 text-xs">Manage Team</Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
-              {TEAM_MEMBERS.map((member) => (
-                <div key={member.id} className="flex flex-col items-center text-center space-y-2 group cursor-pointer">
-                  <Avatar className="h-12 w-12 border-2 border-background shadow-sm group-hover:ring-2 ring-primary/20 transition-all">
-                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">{member.initials}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="text-xs font-medium truncate w-20">{member.name}</div>
-                    <div className="text-[10px] text-muted-foreground truncate w-20">{member.role}</div>
-                  </div>
-                </div>
-              ))}
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className="h-12 w-12 rounded-full border-2 border-dashed border-muted flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary cursor-pointer transition-colors">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <div className="text-xs font-medium text-muted-foreground">Add New</div>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Recent Vendors Scroll */}
           <motion.div 

@@ -1,11 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coffee, Clock, MapPin, Star, ArrowRight, Sparkles } from "lucide-react";
+import { Coffee, Clock, MapPin, Star, ArrowRight, Sparkles, X, CheckCircle } from "lucide-react";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import baristaImage from "@assets/generated_images/professional_barista.png";
 import latteArtImage from "@assets/generated_images/artisan_latte_art.png";
@@ -33,8 +39,73 @@ const shopImages: Record<string, string> = {
   'juice-bar-nashville': frothyMonkeyImage,
 };
 
+interface FeatureDetails {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  description: string;
+  highlights: string[];
+}
+
 export default function LandingPage() {
   const [, setLocation] = useLocation();
+  const [selectedFeature, setSelectedFeature] = useState<FeatureDetails | null>(null);
+
+  const featureDetails: Record<string, FeatureDetails> = {
+    artisan: {
+      id: 'artisan',
+      title: 'Artisan Craft',
+      subtitle: 'Handcrafted with passion',
+      image: latteArtImage,
+      description: 'Every cup tells a story. Our partner roasters are masters of their craft, bringing decades of combined experience to create the perfect pour. From single-origin beans sourced directly from farmers to precision roasting techniques, we deliver coffee that transforms ordinary meetings into memorable experiences.',
+      highlights: [
+        'Single-origin beans from award-winning farms',
+        'Precision roasting for optimal flavor profiles',
+        'Signature latte art by certified baristas',
+        'Fresh roasted within 48 hours of delivery'
+      ]
+    },
+    meeting: {
+      id: 'meeting',
+      title: 'Meeting Ready',
+      subtitle: 'Impress your clients',
+      image: meetingImage,
+      description: 'First impressions matter. Whether you\'re closing a deal, hosting investors, or celebrating a milestone, premium coffee service sets the tone for success. Our concierge team coordinates every detail so you can focus on what matters most - your business.',
+      highlights: [
+        'Seamless scheduling with 2-hour delivery windows',
+        'Professional setup and presentation',
+        'Customizable beverage menus for any occasion',
+        'Branded cups and napkins available'
+      ]
+    },
+    whiteglove: {
+      id: 'whiteglove',
+      title: 'White Glove Service',
+      subtitle: 'Premium concierge experience',
+      image: whiteGloveImage,
+      description: 'Experience coffee service elevated to an art form. Our white glove concierge handles every aspect of your coffee program, from curating the perfect menu to coordinating delivery logistics. Sit back and let us create an experience your guests will remember.',
+      highlights: [
+        'Dedicated account manager for your business',
+        'Custom menu curation and tastings',
+        'Priority scheduling and guaranteed availability',
+        'Post-event feedback and optimization'
+      ]
+    },
+    local: {
+      id: 'local',
+      title: 'Local Roasters',
+      subtitle: 'Nashville\'s finest beans',
+      image: localRoastersImage,
+      description: 'We\'ve partnered with Nashville\'s most celebrated roasters to bring you the best our city has to offer. From The Gulch to 12 South, our network of local artisans ensures every cup represents the vibrant coffee culture that makes Music City special.',
+      highlights: [
+        '12+ curated Nashville roasters and cafes',
+        'Supporting local businesses and communities',
+        'Rotating seasonal selections',
+        'Exclusive access to limited edition roasts'
+      ]
+    }
+  };
 
   useEffect(() => {
     const savedUser = localStorage.getItem("coffee_user");
@@ -238,7 +309,10 @@ export default function LandingPage() {
               <div className="md:hidden overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent -mx-3 px-3">
                 <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
                   {/* Artisan Craft */}
-                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                  <div 
+                    className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d cursor-pointer"
+                    onClick={() => setSelectedFeature(featureDetails.artisan)}
+                  >
                     <img 
                       src={latteArtImage} 
                       alt="Artisan Latte Art" 
@@ -254,7 +328,10 @@ export default function LandingPage() {
                   </div>
 
                   {/* Meeting Ready */}
-                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                  <div 
+                    className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d cursor-pointer"
+                    onClick={() => setSelectedFeature(featureDetails.meeting)}
+                  >
                     <img 
                       src={meetingImage} 
                       alt="Corporate Meeting" 
@@ -270,7 +347,10 @@ export default function LandingPage() {
                   </div>
 
                   {/* White Glove */}
-                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                  <div 
+                    className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d cursor-pointer"
+                    onClick={() => setSelectedFeature(featureDetails.whiteglove)}
+                  >
                     <img 
                       src={whiteGloveImage} 
                       alt="White Glove Service" 
@@ -286,7 +366,10 @@ export default function LandingPage() {
                   </div>
 
                   {/* Local Roasters */}
-                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                  <div 
+                    className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d cursor-pointer"
+                    onClick={() => setSelectedFeature(featureDetails.local)}
+                  >
                     <img 
                       src={localRoastersImage} 
                       alt="Local Roasters" 
@@ -306,7 +389,11 @@ export default function LandingPage() {
               {/* Desktop/Tablet: 4-column Grid */}
               <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
                 {/* Artisan Craft */}
-                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end">
+                <div 
+                  className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
+                  onClick={() => setSelectedFeature(featureDetails.artisan)}
+                  data-testid="card-artisan"
+                >
                   <img 
                     src={latteArtImage} 
                     alt="Artisan Latte Art" 
@@ -322,7 +409,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* Meeting Ready */}
-                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end">
+                <div 
+                  className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
+                  onClick={() => setSelectedFeature(featureDetails.meeting)}
+                  data-testid="card-meeting"
+                >
                   <img 
                     src={meetingImage} 
                     alt="Corporate Meeting" 
@@ -338,7 +429,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* White Glove */}
-                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end">
+                <div 
+                  className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
+                  onClick={() => setSelectedFeature(featureDetails.whiteglove)}
+                  data-testid="card-whiteglove"
+                >
                   <img 
                     src={whiteGloveImage} 
                     alt="White Glove Service" 
@@ -354,7 +449,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* Local Roasters */}
-                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end">
+                <div 
+                  className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
+                  onClick={() => setSelectedFeature(featureDetails.local)}
+                  data-testid="card-local"
+                >
                   <img 
                     src={localRoastersImage} 
                     alt="Local Roasters" 
@@ -533,6 +632,88 @@ export default function LandingPage() {
           {' '}• © 2025
         </p>
       </footer>
+
+      {/* Feature Details Dialog */}
+      <Dialog open={!!selectedFeature} onOpenChange={() => setSelectedFeature(null)}>
+        <DialogContent className="max-w-lg md:max-w-2xl p-0 overflow-hidden border-0 rounded-2xl">
+          {selectedFeature && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Feature Image Header */}
+              <div className="relative h-48 md:h-64 overflow-hidden">
+                <img 
+                  src={selectedFeature.image}
+                  alt={selectedFeature.title}
+                  className="w-full h-full object-cover"
+                />
+                <div 
+                  className="absolute inset-0" 
+                  style={{ background: 'linear-gradient(to top, #1a0f0a 0%, rgba(26, 15, 10, 0.6) 50%, transparent 100%)' }} 
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h2 
+                    className="text-2xl md:text-3xl font-bold text-white"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    {selectedFeature.title}
+                  </h2>
+                  <p className="text-amber-400 text-sm md:text-base mt-1">{selectedFeature.subtitle}</p>
+                </div>
+              </div>
+
+              {/* Feature Content */}
+              <div className="p-6 md:p-8 bg-gradient-to-br from-stone-50 to-stone-100">
+                <p className="text-stone-700 text-sm md:text-base leading-relaxed mb-6">
+                  {selectedFeature.description}
+                </p>
+
+                {/* Highlights */}
+                <div className="space-y-3">
+                  <h3 
+                    className="text-lg font-semibold text-stone-800 mb-4"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    What We Offer
+                  </h3>
+                  {selectedFeature.highlights.map((highlight, index) => (
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ background: 'linear-gradient(135deg, #5c4033, #2d1810)' }}>
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      </div>
+                      <p className="text-stone-600 text-sm md:text-base">{highlight}</p>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <div className="mt-8 flex justify-center">
+                  <Button
+                    onClick={() => {
+                      setSelectedFeature(null);
+                      handleExplore();
+                    }}
+                    className="h-12 px-8 text-white font-medium rounded-full shine-effect"
+                    style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+                    data-testid="button-explore-feature"
+                  >
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    Explore Now
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

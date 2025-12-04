@@ -53,6 +53,32 @@ export default function LandingPage() {
   const [selectedFeature, setSelectedFeature] = useState<FeatureDetails | null>(null);
 
   const featureDetails: Record<string, FeatureDetails> = {
+    delivery: {
+      id: 'delivery',
+      title: '2-Hour Delivery',
+      subtitle: 'Fast, reliable service',
+      image: coffeeShopImage,
+      description: 'Time is money in business. Our streamlined ordering process and dedicated delivery network ensure your premium coffee arrives exactly when you need it. With just 2 hours notice, we coordinate with our partner roasters to prepare and deliver fresh, hot beverages to your location.',
+      highlights: [
+        'Guaranteed delivery within your 2-hour window',
+        'Real-time order tracking and updates',
+        'Temperature-controlled transport containers',
+        'Flexible scheduling for recurring orders'
+      ]
+    },
+    baristas: {
+      id: 'baristas',
+      title: 'Expert Baristas',
+      subtitle: 'Nashville\'s finest talent',
+      image: baristaImage,
+      description: 'Behind every great cup is a skilled artisan. Our partner baristas are trained professionals who take pride in their craft. From perfect espresso extraction to stunning latte art, they bring years of experience and passion to every order we fulfill.',
+      highlights: [
+        'Certified baristas with specialty training',
+        'Award-winning latte art on request',
+        'Personalized drink customization',
+        'Consistent quality across all orders'
+      ]
+    },
     artisan: {
       id: 'artisan',
       title: 'Artisan Craft',
@@ -255,8 +281,10 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="col-span-1 md:col-span-4 lg:col-span-4 rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 flex flex-col justify-between min-h-[140px] md:min-h-[200px] lg:min-h-[220px] hover-3d coffee-glow"
+              className="col-span-1 md:col-span-4 lg:col-span-4 rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 flex flex-col justify-between min-h-[140px] md:min-h-[200px] lg:min-h-[220px] hover-3d coffee-glow cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
+              onClick={() => setSelectedFeature(featureDetails.delivery)}
+              data-testid="card-delivery"
             >
               <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2 md:mb-4">
                 <Clock className="h-5 w-5 md:h-6 md:w-6 text-stone-200" />
@@ -279,7 +307,9 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="col-span-1 md:col-span-4 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[140px] md:min-h-[200px] lg:min-h-[220px] group hover-3d"
+              className="col-span-1 md:col-span-4 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[140px] md:min-h-[200px] lg:min-h-[220px] group hover-3d cursor-pointer"
+              onClick={() => setSelectedFeature(featureDetails.baristas)}
+              data-testid="card-baristas"
             >
               <img 
                 src={baristaImage} 
@@ -635,15 +665,25 @@ export default function LandingPage() {
 
       {/* Feature Details Dialog */}
       <Dialog open={!!selectedFeature} onOpenChange={() => setSelectedFeature(null)}>
-        <DialogContent className="max-w-lg md:max-w-2xl p-0 overflow-hidden border-0 rounded-2xl">
+        <DialogContent className="max-w-lg md:max-w-2xl p-0 overflow-hidden border-0 rounded-2xl max-h-[90vh] flex flex-col">
           {selectedFeature && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
+              className="flex flex-col max-h-[90vh] overflow-hidden"
             >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedFeature(null)}
+                className="absolute top-3 right-3 z-50 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                data-testid="button-close-feature"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               {/* Feature Image Header */}
-              <div className="relative h-48 md:h-64 overflow-hidden">
+              <div className="relative h-40 md:h-52 overflow-hidden flex-shrink-0">
                 <img 
                   src={selectedFeature.image}
                   alt={selectedFeature.title}
@@ -653,27 +693,27 @@ export default function LandingPage() {
                   className="absolute inset-0" 
                   style={{ background: 'linear-gradient(to top, #1a0f0a 0%, rgba(26, 15, 10, 0.6) 50%, transparent 100%)' }} 
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="absolute bottom-0 left-0 right-0 p-5">
                   <h2 
-                    className="text-2xl md:text-3xl font-bold text-white"
+                    className="text-xl md:text-2xl font-bold text-white"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                   >
                     {selectedFeature.title}
                   </h2>
-                  <p className="text-amber-400 text-sm md:text-base mt-1">{selectedFeature.subtitle}</p>
+                  <p className="text-amber-400 text-xs md:text-sm mt-1">{selectedFeature.subtitle}</p>
                 </div>
               </div>
 
-              {/* Feature Content */}
-              <div className="p-6 md:p-8 bg-gradient-to-br from-stone-50 to-stone-100">
-                <p className="text-stone-700 text-sm md:text-base leading-relaxed mb-6">
+              {/* Feature Content - Scrollable */}
+              <div className="p-5 md:p-6 bg-gradient-to-br from-stone-50 to-stone-100 overflow-y-auto flex-1">
+                <p className="text-stone-700 text-sm leading-relaxed mb-5">
                   {selectedFeature.description}
                 </p>
 
                 {/* Highlights */}
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <h3 
-                    className="text-lg font-semibold text-stone-800 mb-4"
+                    className="text-base font-semibold text-stone-800 mb-3"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                   >
                     What We Offer
@@ -684,24 +724,24 @@ export default function LandingPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-start gap-3"
+                      className="flex items-start gap-2.5"
                     >
-                      <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ background: 'linear-gradient(135deg, #5c4033, #2d1810)' }}>
-                        <CheckCircle className="w-3 h-3 text-white" />
+                      <div className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mt-0.5" style={{ background: 'linear-gradient(135deg, #5c4033, #2d1810)' }}>
+                        <CheckCircle className="w-2.5 h-2.5 text-white" />
                       </div>
-                      <p className="text-stone-600 text-sm md:text-base">{highlight}</p>
+                      <p className="text-stone-600 text-sm">{highlight}</p>
                     </motion.div>
                   ))}
                 </div>
 
                 {/* CTA Button */}
-                <div className="mt-8 flex justify-center">
+                <div className="mt-6 flex justify-center">
                   <Button
                     onClick={() => {
                       setSelectedFeature(null);
                       handleExplore();
                     }}
-                    className="h-12 px-8 text-white font-medium rounded-full shine-effect"
+                    className="h-11 px-6 text-white font-medium rounded-full shine-effect"
                     style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
                     data-testid="button-explore-feature"
                   >

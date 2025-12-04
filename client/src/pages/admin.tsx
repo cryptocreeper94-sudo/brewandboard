@@ -165,9 +165,9 @@ export default function AdminPage() {
   const fetchData = async () => {
     setIsRefreshing(true);
     try {
-      const [statsRes, companyRes] = await Promise.all([
+      const [statsRes, searchRes] = await Promise.all([
         fetch('/api/hallmark/stats'),
-        fetch('/api/hallmark/company'),
+        fetch('/api/hallmark/admin/search?limit=100'),
       ]);
       
       if (statsRes.ok) {
@@ -175,9 +175,9 @@ export default function AdminPage() {
         setStats(statsData);
       }
       
-      if (companyRes.ok) {
-        const companyData = await companyRes.json();
-        setHallmarks(companyData);
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        setHallmarks(searchData.hallmarks || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -235,9 +235,17 @@ export default function AdminPage() {
     const matchesSearch = 
       h.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.assetName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.contentHash.toLowerCase().includes(searchQuery.toLowerCase());
+      h.contentHash.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.userId && h.userId.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesType = filterType === "all" || h.assetType === filterType;
+    let matchesType = true;
+    if (filterType === "company") {
+      matchesType = h.isCompanyHallmark === true;
+    } else if (filterType === "user") {
+      matchesType = h.isCompanyHallmark === false;
+    } else if (filterType !== "all") {
+      matchesType = h.assetType === filterType;
+    }
     
     return matchesSearch && matchesType;
   });
@@ -464,7 +472,9 @@ export default function AdminPage() {
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-700">
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="all">All Hallmarks</SelectItem>
+                    <SelectItem value="company">Company Only</SelectItem>
+                    <SelectItem value="user">User Only</SelectItem>
                     <SelectItem value="application">Application</SelectItem>
                     <SelectItem value="founder">Founder</SelectItem>
                     <SelectItem value="app_version">App Version</SelectItem>
@@ -497,6 +507,16 @@ export default function AdminPage() {
                               <code className="font-mono text-sm font-semibold text-emerald-400">
                                 {hallmark.serialNumber}
                               </code>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[10px] ${
+                                  hallmark.isCompanyHallmark 
+                                    ? 'border-amber-500/50 text-amber-400' 
+                                    : 'border-blue-500/50 text-blue-400'
+                                }`}
+                              >
+                                {hallmark.isCompanyHallmark ? 'Company' : 'User'}
+                              </Badge>
                               <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400">
                                 {hallmark.assetType}
                               </Badge>

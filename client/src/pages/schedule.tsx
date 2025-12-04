@@ -22,7 +22,11 @@ import {
   Percent,
   ShoppingCart,
   Minus,
-  Trash2
+  Trash2,
+  Building2,
+  KeyRound,
+  ParkingCircle,
+  DoorOpen
 } from "lucide-react";
 import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -744,15 +748,47 @@ export default function SchedulePage() {
                 />
               </div>
 
-              {/* Delivery Instructions */}
-              <div className="space-y-2">
-                <Label>Delivery Instructions</Label>
+              {/* Building Access Instructions - Critical for secure locations */}
+              <div className="space-y-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-start gap-2">
+                  <Building2 className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <Label className="text-orange-800 font-semibold text-base">Building Access Instructions</Label>
+                    <p className="text-xs text-orange-600 mt-1">
+                      Help us deliver on time! Many Nashville offices have security or restricted access.
+                    </p>
+                  </div>
+                </div>
+                
                 <Textarea
-                  placeholder="Building access codes, where to leave order, etc..."
+                  placeholder="Please provide detailed access instructions:
+
+• Security check-in: Do we need to sign in at a desk? Who should we ask for?
+• Building access: Is there a code, key card, or call box?
+• Parking: Where should our driver park? Visitor lot? Street parking?
+• Floor & Suite: What floor? Suite or room number?
+• Meet location: Lobby? Conference room? Your desk?
+• Contact on arrival: Who should we call when we arrive?"
                   value={newOrder.deliveryInstructions}
                   onChange={(e) => setNewOrder({ ...newOrder, deliveryInstructions: e.target.value })}
+                  className="min-h-[140px] bg-white border-orange-200 focus:border-orange-400 placeholder:text-orange-400/70"
                   data-testid="input-delivery-instructions"
                 />
+                
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                    <KeyRound className="h-3 w-3" /> Access codes
+                  </span>
+                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                    <ParkingCircle className="h-3 w-3" /> Parking info
+                  </span>
+                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                    <DoorOpen className="h-3 w-3" /> Entry point
+                  </span>
+                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                    <Phone className="h-3 w-3" /> On-arrival contact
+                  </span>
+                </div>
               </div>
 
               {/* Order Summary */}

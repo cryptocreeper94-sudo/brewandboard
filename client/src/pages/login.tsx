@@ -92,14 +92,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Main Bento Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4 lg:gap-6">
             
             {/* Hero Card - Large */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="col-span-2 md:col-span-8 md:row-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[280px] md:min-h-[450px] group hover-3d"
+              className="col-span-2 md:col-span-8 lg:col-span-8 md:row-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[280px] md:min-h-[420px] lg:min-h-[480px] group hover-3d"
               style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 100%)' }}
             >
               <img 
@@ -163,7 +163,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="col-span-1 md:col-span-4 rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col justify-between min-h-[140px] md:min-h-[180px] hover-3d coffee-glow"
+              className="col-span-1 md:col-span-4 lg:col-span-4 rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 flex flex-col justify-between min-h-[140px] md:min-h-[200px] lg:min-h-[220px] hover-3d coffee-glow"
               style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
             >
               <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2 md:mb-4">
@@ -171,12 +171,12 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 
-                  className="text-2xl md:text-3xl font-bold text-white mb-1"
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   2 Hours
                 </h3>
-                <p className="text-stone-300 text-xs md:text-sm">
+                <p className="text-stone-300 text-xs md:text-sm lg:text-base">
                   Minimum notice for delivery
                 </p>
               </div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="col-span-1 md:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[140px] md:min-h-[200px] group hover-3d"
+              className="col-span-1 md:col-span-4 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[140px] md:min-h-[200px] lg:min-h-[220px] group hover-3d"
             >
               <img 
                 src={baristaImage} 
@@ -195,14 +195,14 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.9) 0%, rgba(26, 15, 10, 0.3) 50%, transparent 100%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5 lg:p-6">
                 <p 
-                  className="text-base md:text-xl font-bold text-white"
+                  className="text-base md:text-xl lg:text-2xl font-bold text-white"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   Expert Baristas
                 </p>
-                <p className="text-stone-300 text-[10px] md:text-xs">Nashville's finest</p>
+                <p className="text-stone-300 text-[10px] md:text-xs lg:text-sm">Nashville's finest</p>
               </div>
             </motion.div>
 
@@ -211,7 +211,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-1 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[160px] group hover-3d"
+              className="col-span-1 md:col-span-3 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
             >
               <img 
                 src={latteArtImage} 
@@ -219,13 +219,14 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
                 <p 
-                  className="text-sm md:text-lg font-bold text-white"
+                  className="text-sm md:text-xl font-bold text-white"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   Artisan Craft
                 </p>
+                <p className="text-stone-300 text-[10px] md:text-xs hidden md:block">Handcrafted with passion</p>
               </div>
             </motion.div>
 
@@ -234,7 +235,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="col-span-1 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[160px] group hover-3d"
+              className="col-span-1 md:col-span-3 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
             >
               <img 
                 src={meetingImage} 
@@ -242,13 +243,14 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
                 <p 
-                  className="text-sm md:text-lg font-bold text-white"
+                  className="text-sm md:text-xl font-bold text-white"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   Meeting Ready
                 </p>
+                <p className="text-stone-300 text-[10px] md:text-xs hidden md:block">Impress your clients</p>
               </div>
             </motion.div>
 
@@ -257,17 +259,17 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              className="col-span-2 md:col-span-12 pt-6 md:pt-8 pb-2 md:pb-4"
+              className="col-span-2 md:col-span-12 pt-6 md:pt-8 lg:pt-12 pb-2 md:pb-4"
             >
               <div className="flex items-center gap-2 md:gap-3 mb-2">
                 <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, #5c4033, transparent)' }} />
                 <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" style={{ color: '#5c4033' }} />
-                <span className="text-[10px] md:text-sm font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Our Partners</span>
+                <span className="text-[10px] md:text-sm lg:text-base font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Our Partners</span>
                 <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" style={{ color: '#5c4033' }} />
                 <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, #5c4033, transparent)' }} />
               </div>
               <h3 
-                className="text-xl md:text-3xl font-bold text-stone-800 text-center"
+                className="text-xl md:text-3xl lg:text-4xl font-bold text-stone-800 text-center"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Nashville's Finest Roasters
@@ -282,14 +284,14 @@ export default function LandingPage() {
               className="col-span-2 md:col-span-12"
             >
               <ScrollArea className="w-full">
-                <div className="flex gap-3 md:gap-4 pb-4">
+                <div className="flex gap-3 md:gap-4 lg:gap-6 pb-4">
                   {COFFEE_SHOPS.map((shop, index) => (
                     <motion.div
                       key={shop.id}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 + index * 0.1 }}
-                      className="flex-shrink-0 w-[260px] md:w-[320px] bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-stone-200 group hover-3d"
+                      className="flex-shrink-0 w-[260px] md:w-[320px] lg:w-[360px] bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-stone-200 group hover-3d"
                     >
                       {/* Vendor Image */}
                       <div className="relative h-36 md:h-44 overflow-hidden">

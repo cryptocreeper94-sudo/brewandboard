@@ -410,18 +410,25 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="-mx-4 px-4"
         >
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="font-serif text-lg">Curated Roasters</h3>
-            <span className="text-xs font-medium text-muted-foreground hover:text-primary cursor-pointer">View All</span>
+            <span className="text-xs font-medium text-muted-foreground hover:text-primary cursor-pointer flex items-center gap-1">
+              Swipe to explore
+              <ChevronRight className="h-3 w-3" />
+            </span>
           </div>
           
-          <ScrollArea className="w-full whitespace-nowrap rounded-2xl">
-            <div className="flex w-max space-x-4 pb-4">
-              {COFFEE_SHOPS.slice(0, 3).map((shop) => (
-                <div 
-                  key={shop.id} 
-                  className="w-[280px] h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-sm hover:shadow-md transition-all"
+          <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-4" style={{ width: 'max-content' }}>
+              {COFFEE_SHOPS.slice(0, 6).map((shop, index) => (
+                <motion.div 
+                  key={shop.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0"
                 >
                   <img 
                     src={shopImages[shop.id] || shop.image} 
@@ -430,26 +437,25 @@ export default function Dashboard() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                   
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-white">
                     <div className="flex justify-between items-start mb-2">
                       <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-xs">{shop.rating} <Star className="h-3 w-3 ml-1 fill-current" /></Badge>
-                      {shop.id === 'crema' && <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none text-[10px]">Trending</Badge>}
+                      {index === 0 && <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none text-[10px]">Featured</Badge>}
                     </div>
-                    <h3 className="font-serif text-xl font-bold mb-1">{shop.name}</h3>
+                    <h3 className="font-serif text-lg md:text-xl font-bold mb-1">{shop.name}</h3>
                     <p className="text-sm text-white/80 flex items-center gap-1">
                       <MapPin className="h-3 w-3" /> {shop.location}
                     </p>
                     
-                    <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                      <span className="text-xs text-white/80">{shop.specialty}</span>
-                      <Button size="sm" className="h-8 bg-white text-black hover:bg-white/90 font-medium">View Menu</Button>
+                    <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+                      <span className="text-xs text-white/70">{shop.specialty}</span>
+                      <Button size="sm" className="h-7 text-xs bg-white text-black hover:bg-white/90 font-medium">View Menu</Button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
+          </div>
         </motion.div>
 
         {/* Nashville News Section */}

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Code, Lock } from "lucide-react";
-import { useLocation } from "wouter";
+import { Code, Lock, Shield, Coffee, ExternalLink, CheckCircle } from "lucide-react";
+import { useLocation, Link } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,54 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DEVELOPER_PIN = "0424";
+const CURRENT_VERSION = "1.0.0";
+
+interface AppVersion {
+  version: string;
+  changelog: string;
+  releaseNotes?: string;
+  releasedAt: string;
+  isCurrent: boolean;
+  hallmarkId?: string;
+}
 
 export function Footer() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showDevLogin, setShowDevLogin] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
+  const [versions, setVersions] = useState<AppVersion[]>([]);
+  const [currentVersion, setCurrentVersion] = useState<AppVersion | null>(null);
   const [pin, setPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    async function fetchVersions() {
+      try {
+        const [currentRes, historyRes] = await Promise.all([
+          fetch('/api/hallmark/version/current'),
+          fetch('/api/hallmark/version/history')
+        ]);
+        
+        if (currentRes.ok) {
+          const current = await currentRes.json();
+          setCurrentVersion(current);
+        }
+        
+        if (historyRes.ok) {
+          const history = await historyRes.json();
+          setVersions(history);
+        }
+      } catch (error) {
+        console.log('Version info not available');
+      }
+    }
+    
+    fetchVersions();
+  }, []);
 
   const handleDevLogin = () => {
     setIsLoading(true);
@@ -88,6 +127,15 @@ export function Footer() {
             <span>&copy; 2025</span>
             <span className="mx-1">•</span>
             <button
+              onClick={() => setShowChangelog(true)}
+              className="flex items-center gap-1 text-muted-foreground/60 hover:text-amber-600 transition-colors"
+              data-testid="button-version"
+            >
+              <Shield className="h-3 w-3" />
+              <span>v{currentVersion?.version || CURRENT_VERSION}</span>
+            </button>
+            <span className="mx-1">•</span>
+            <button
               onClick={() => setShowDevLogin(true)}
               className="flex items-center gap-1 text-muted-foreground/60 hover:text-amber-600 transition-colors"
               data-testid="button-dev-login"
@@ -130,6 +178,98 @@ export function Footer() {
             >
               {isLoading ? "Verifying..." : "Access Developer Hub"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showChangelog} onOpenChange={setShowChangelog}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coffee className="h-5 w-5 text-amber-600" />
+              Brew & Board Coffee
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-lg">
+                  Version {currentVersion?.version || CURRENT_VERSION}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {currentVersion?.releasedAt 
+                    ? `Released ${new Date(currentVersion.releasedAt).toLocaleDateString()}`
+                    : "Current Release"
+                  }
+                </p>
+              </div>
+              {currentVersion?.hallmarkId && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs">
+                  <Shield className="h-3 w-3" />
+                  <span>Blockchain Verified</span>
+                </div>
+              )}
+            </div>
+            
+            <ScrollArea className="h-[300px] pr-4">
+              {versions.length > 0 ? (
+                <div className="space-y-4">
+                  {versions.map((version, index) => (
+                    <div 
+                      key={version.version} 
+                      className={`p-4 rounded-lg border ${
+                        version.isCurrent 
+                          ? 'bg-amber-500/5 border-amber-500/30' 
+                          : 'bg-muted/30 border-border/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold">v{version.version}</span>
+                          {version.isCurrent && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(version.releasedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {version.changelog}
+                      </div>
+                      {version.hallmarkId && (
+                        <div className="mt-2 pt-2 border-t border-border/30">
+                          <div className="flex items-center gap-1 text-xs text-emerald-600">
+                            <CheckCircle className="h-3 w-3" />
+                            <span>Blockchain hallmarked</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Version {CURRENT_VERSION}</p>
+                  <p className="text-sm mt-1">Changelog not available</p>
+                </div>
+              )}
+            </ScrollArea>
+            
+            <div className="flex justify-between items-center pt-2 border-t">
+              <Link href="/blockchain-tutorial">
+                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setShowChangelog(false)}>
+                  <Shield className="h-3 w-3" />
+                  Learn about Hallmarks
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={() => setShowChangelog(false)}>
+                Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

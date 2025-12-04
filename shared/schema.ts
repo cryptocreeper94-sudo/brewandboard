@@ -474,6 +474,177 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 
 // ========================
+// HALLMARKS (Blockchain Verification)
+// ========================
+export const hallmarks = pgTable(
+  "hallmarks",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // IDENTIFICATION
+    serialNumber: varchar("serial_number", { length: 50 }).notNull().unique(),
+    prefix: varchar("prefix", { length: 30 }).notNull(), // 'BB' for company, 'BB-USERNAME' for subscribers
+    
+    // WHAT IS BEING STAMPED
+    assetType: varchar("asset_type", { length: 50 }).notNull(),
+    // Types: 'app_version', 'company_document', 'user_document', 'portfolio_pdf', 'scanned_document'
+    assetId: varchar("asset_id"), // Reference to the document/note/etc
+    assetName: varchar("asset_name", { length: 255 }),
+    
+    // OWNERSHIP
+    userId: varchar("user_id").references(() => users.id), // null for company hallmarks
+    isCompanyHallmark: boolean("is_company_hallmark").default(false).notNull(),
+    
+    // ISSUANCE INFO
+    issuedBy: varchar("issued_by", { length: 100 }),
+    issuedAt: timestamp("issued_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at"),
+    status: varchar("status", { length: 20 }).default("active").notNull(),
+    // Status: 'active', 'revoked', 'expired'
+    
+    // BLOCKCHAIN ANCHORING
+    contentHash: varchar("content_hash", { length: 128 }),
+    solanaTxSignature: varchar("solana_tx_signature", { length: 128 }),
+    solanaConfirmedAt: timestamp("solana_confirmed_at"),
+    solanaSlot: integer("solana_slot"),
+    solanaNetwork: varchar("solana_network", { length: 20 }).default("mainnet"),
+    
+    // VERIFICATION TRACKING
+    verificationCount: integer("verification_count").default(0),
+    lastVerifiedAt: timestamp("last_verified_at"),
+    
+    // FLEXIBLE METADATA (version info, document details, etc)
+    metadata: jsonb("metadata").$type<Record<string, any>>(),
+  },
+  (table) => ({
+    serialIdx: index("idx_hallmarks_serial").on(table.serialNumber),
+    userIdx: index("idx_hallmarks_user").on(table.userId),
+    companyIdx: index("idx_hallmarks_company").on(table.isCompanyHallmark),
+    assetIdx: index("idx_hallmarks_asset").on(table.assetType, table.assetId),
+  })
+);
+
+export const insertHallmarkSchema = createInsertSchema(hallmarks).omit({
+  id: true,
+  issuedAt: true,
+  verificationCount: true,
+  lastVerifiedAt: true,
+});
+export type InsertHallmark = z.infer<typeof insertHallmarkSchema>;
+export type Hallmark = typeof hallmarks.$inferSelect;
+
+// ========================
+// HALLMARK EVENTS (Audit Trail)
+// ========================
+export const hallmarkEvents = pgTable(
+  "hallmark_events",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    hallmarkId: varchar("hallmark_id").notNull().references(() => hallmarks.id),
+    
+    eventType: varchar("event_type", { length: 30 }).notNull(),
+    // Types: 'issued', 'verified', 'stamped', 'revoked', 'renewed'
+    eventData: jsonb("event_data").$type<Record<string, any>>(),
+    
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    hallmarkIdx: index("idx_hallmark_events_hallmark").on(table.hallmarkId),
+    typeIdx: index("idx_hallmark_events_type").on(table.eventType),
+  })
+);
+
+export const insertHallmarkEventSchema = createInsertSchema(hallmarkEvents).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertHallmarkEvent = z.infer<typeof insertHallmarkEventSchema>;
+export type HallmarkEvent = typeof hallmarkEvents.$inferSelect;
+
+// ========================
+// USER HALLMARK PROFILES (Subscriber Custom Hallmarks)
+// ========================
+export const userHallmarkProfiles = pgTable(
+  "user_hallmark_profiles",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id).unique(),
+    
+    // Custom prefix based on username (e.g., "BB-JOHNSMITH")
+    hallmarkPrefix: varchar("hallmark_prefix", { length: 30 }).notNull().unique(),
+    
+    // Custom avatar for their hallmark badge
+    avatarData: text("avatar_data"), // Base64 encoded image
+    
+    // Minting status
+    isMinted: boolean("is_minted").default(false).notNull(),
+    mintedAt: timestamp("minted_at"),
+    mintTxSignature: varchar("mint_tx_signature", { length: 128 }),
+    
+    // Usage tracking
+    documentsStampedThisMonth: integer("documents_stamped_this_month").default(0),
+    totalDocumentsStamped: integer("total_documents_stamped").default(0),
+    lastResetAt: timestamp("last_reset_at").defaultNow(),
+    
+    // Auto-stamp preference
+    autoStampEnabled: boolean("auto_stamp_enabled").default(false),
+    
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("idx_user_hallmark_profiles_user").on(table.userId),
+    prefixIdx: index("idx_user_hallmark_profiles_prefix").on(table.hallmarkPrefix),
+  })
+);
+
+export const insertUserHallmarkProfileSchema = createInsertSchema(userHallmarkProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertUserHallmarkProfile = z.infer<typeof insertUserHallmarkProfileSchema>;
+export type UserHallmarkProfile = typeof userHallmarkProfiles.$inferSelect;
+
+// ========================
+// APP VERSION HISTORY (For Version Stamping)
+// ========================
+export const appVersions = pgTable(
+  "app_versions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    version: varchar("version", { length: 20 }).notNull().unique(), // e.g., "1.0.0"
+    hallmarkId: varchar("hallmark_id").references(() => hallmarks.id),
+    
+    // Changelog
+    changelog: text("changelog").notNull(),
+    releaseNotes: text("release_notes"),
+    
+    // Release info
+    releasedAt: timestamp("released_at").defaultNow().notNull(),
+    releasedBy: varchar("released_by", { length: 100 }),
+    
+    // Is current version
+    isCurrent: boolean("is_current").default(false).notNull(),
+  },
+  (table) => ({
+    versionIdx: index("idx_app_versions_version").on(table.version),
+    currentIdx: index("idx_app_versions_current").on(table.isCurrent),
+  })
+);
+
+export const insertAppVersionSchema = createInsertSchema(appVersions).omit({
+  id: true,
+  releasedAt: true,
+});
+export type InsertAppVersion = z.infer<typeof insertAppVersionSchema>;
+export type AppVersion = typeof appVersions.$inferSelect;
+
+// ========================
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;
@@ -486,3 +657,24 @@ export const ORDER_STATUSES = [
   'cancelled'
 ] as const;
 export const FULFILLMENT_CHANNELS = ['manual', 'doordash', 'ubereats', 'direct'] as const;
+
+// Hallmark constants
+export const HALLMARK_ASSET_TYPES = [
+  'app_version',
+  'company_document', 
+  'user_document',
+  'portfolio_pdf',
+  'scanned_document'
+] as const;
+
+export const HALLMARK_STATUSES = ['active', 'revoked', 'expired'] as const;
+
+// Subscription tier hallmark limits (per month)
+export const HALLMARK_LIMITS = {
+  starter: 5,
+  professional: 25,
+  enterprise: Infinity, // Unlimited
+} as const;
+
+// Minting fee for subscriber hallmarks
+export const HALLMARK_MINTING_FEE = 199; // $1.99 in cents

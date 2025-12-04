@@ -9,9 +9,11 @@ import {
   insertCrmMeetingSchema,
   insertScheduledOrderSchema,
   insertOrderEventSchema,
-  MINIMUM_ORDER_LEAD_TIME_HOURS
+  MINIMUM_ORDER_LEAD_TIME_HOURS,
+  HALLMARK_MINTING_FEE
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
+import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import Parser from "rss-parser";
 
 export async function registerRoutes(
@@ -21,6 +23,9 @@ export async function registerRoutes(
   
   // Register payment routes (Stripe + Coinbase Commerce)
   registerPaymentRoutes(app);
+  
+  // Register hallmark routes (Blockchain verification)
+  registerHallmarkRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

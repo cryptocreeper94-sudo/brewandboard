@@ -13,6 +13,9 @@ import ScanPage from "@/pages/scan";
 import DevelopersPage from "@/pages/developers";
 import PricingPage from "@/pages/pricing";
 import PaymentSuccessPage from "@/pages/payment-success";
+import VerifyPage from "@/pages/verify";
+import BlockchainTutorialPage from "@/pages/blockchain-tutorial";
+import HallmarkSuccessPage from "@/pages/hallmark-success";
 import { MascotButton } from "@/components/MascotButton";
 import { MascotPopover } from "@/components/MascotPopover";
 import { Footer } from "@/components/Footer";
@@ -29,6 +32,9 @@ function Router() {
       <Route path="/developers" component={DevelopersPage} />
       <Route path="/pricing" component={PricingPage} />
       <Route path="/payment-success" component={PaymentSuccessPage} />
+      <Route path="/verify/:code" component={VerifyPage} />
+      <Route path="/blockchain-tutorial" component={BlockchainTutorialPage} />
+      <Route path="/hallmark-success" component={HallmarkSuccessPage} />
       <Route component={NotFound} />
     </Switch>
   );

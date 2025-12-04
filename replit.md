@@ -122,6 +122,63 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 - `subscriptions` - User subscription status, Stripe IDs, tier info
 - `payments` - Payment records for orders (Stripe + Coinbase)
 
+## Blockchain Hallmark System (IMPLEMENTED)
+
+### Overview
+Two-tier blockchain verification system for document authenticity:
+1. **Company Hallmarks** (BB-0000000001 format) - For official releases, transmissions, and version stamps
+2. **Subscriber Hallmarks** (BB-USERNAME-000001 format) - Personalized document verification for subscribers
+
+### Technology
+- **Blockchain**: Solana (via Helius RPC for reliability)
+- **Anchoring**: SHA-256 document hash stored in Solana memo program
+- **Cost**: ~$0.00025 per hallmark (Solana transaction fee)
+
+### Subscriber Hallmarks
+- **Format**: BB-{USERNAME}-{6-digit sequence} (e.g., BB-JOHNDOE-000001)
+- **Minting Fee**: $1.99 one-time fee per hallmark
+- **Tier Limits**:
+  - Starter: 5 hallmarks/month
+  - Professional: 25 hallmarks/month
+  - Enterprise: Unlimited (minting fee absorbed)
+- **Features**:
+  - Custom avatar upload for personalized badges
+  - QR code verification linking to /verify page
+  - Full blockchain proof with transaction signature
+
+### Company Hallmarks
+- **Format**: BB-{10-digit sequence} (e.g., BB-0000000001)
+- **Capacity**: 10 billion unique hallmarks
+- **Use Cases**: Version releases, official documents, system updates
+
+### API Endpoints
+- `POST /api/hallmark/issue` - Issue new hallmark
+- `GET /api/hallmark/verify/:code` - Verify hallmark authenticity
+- `POST /api/hallmark/revoke/:code` - Revoke hallmark (admin)
+- `GET /api/hallmark/user/:userId` - Get user's hallmarks
+- `GET /api/hallmark/version/current` - Current app version
+- `GET /api/hallmark/version/history` - Version changelog
+
+### Frontend Components
+- `/client/src/components/HallmarkBadge.tsx` - Visual badge with QR code
+- `/client/src/pages/verify.tsx` - Public verification page
+- `/client/src/pages/blockchain-tutorial.tsx` - Educational explainer
+- `/client/src/pages/hallmark-success.tsx` - Post-mint confirmation
+
+### Database Tables
+- `hallmarks` - All hallmarks (company + subscriber)
+- `hallmark_events` - Audit trail (create, revoke, verify events)
+- `user_hallmarks` - Per-user hallmark stats and avatars
+
+### Required Secrets
+- `HELIUS_API_KEY` - Solana RPC provider (already configured)
+- `SOLANA_WALLET_PRIVATE_KEY` - For signing transactions (add when going live)
+
+### Footer Version Display
+- Clickable version number in footer opens changelog dialog
+- Shows blockchain verification status for each release
+- Links to blockchain tutorial for education
+
 ## Future Plans
 - Google Calendar integration (available via Replit integration)
 - DoorDash/Uber Eats API integration for auto-dispatch

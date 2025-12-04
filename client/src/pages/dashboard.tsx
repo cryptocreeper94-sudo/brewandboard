@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Web3Search } from "@/components/Web3Search";
 
 export default function Dashboard() {
   const userName = localStorage.getItem("user_name") || "Only";
@@ -62,6 +63,20 @@ export default function Dashboard() {
       </header>
 
       <main className="container max-w-5xl mx-auto px-4 py-8 space-y-8">
+        
+        {/* Web3 Research Search Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-2"
+        >
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="font-medium">Web3 Research</span>
+            <span className="text-muted-foreground/60">• Search tokens, contracts, URLs</span>
+          </div>
+          <Web3Search />
+        </motion.div>
         
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">

@@ -127,22 +127,22 @@ export default function Dashboard() {
 
   const quickActions = [
     {
+      id: "schedule",
+      title: "Create Order",
+      subtitle: "Premium coffee delivery",
+      href: "/schedule",
+      icon: Calendar,
+      gradient: "from-amber-800 via-amber-700 to-amber-600",
+      shadowColor: "shadow-amber-800/40"
+    },
+    {
       id: "portfolio",
       title: "My Portfolio",
       subtitle: "Client notes & templates",
       href: "/portfolio",
       icon: Users,
-      gradient: "from-violet-600 via-purple-600 to-indigo-600",
-      shadowColor: "shadow-purple-500/25"
-    },
-    {
-      id: "schedule",
-      title: "Schedule Order",
-      subtitle: "Premium coffee delivery",
-      href: "/schedule",
-      icon: Calendar,
-      gradient: "from-orange-500 via-amber-500 to-yellow-500",
-      shadowColor: "shadow-amber-500/25"
+      gradient: "from-stone-800 via-stone-700 to-stone-600",
+      shadowColor: "shadow-stone-800/40"
     },
     {
       id: "scan",
@@ -150,8 +150,8 @@ export default function Dashboard() {
       subtitle: "Create & share PDFs",
       href: "/scan",
       icon: Scan,
-      gradient: "from-emerald-600 via-teal-600 to-cyan-600",
-      shadowColor: "shadow-teal-500/25"
+      gradient: "from-yellow-900 via-yellow-800 to-amber-700",
+      shadowColor: "shadow-yellow-900/40"
     }
   ];
 

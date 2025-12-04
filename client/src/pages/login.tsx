@@ -34,7 +34,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 luxury-pattern">
+    <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100">
       
       {/* Elegant Header - Mobile Optimized */}
       <header className="pt-4 pb-3 px-4 md:px-8 safe-area-top">
@@ -44,14 +44,14 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 md:gap-3"
           >
-            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-lg glow-pulse">
-              <Coffee className="h-5 w-5 md:h-6 md:w-6 text-amber-100" />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center shadow-lg coffee-glow" style={{ background: 'linear-gradient(135deg, #2d1810 0%, #1a0f0a 100%)' }}>
+              <Coffee className="h-5 w-5 md:h-6 md:w-6 text-stone-200" />
             </div>
             <div>
               <h1 className="font-serif text-xl md:text-2xl font-bold text-stone-800 tracking-tight">
                 Coffee Talk
               </h1>
-              <p className="text-[10px] md:text-xs text-amber-700 font-medium tracking-widest uppercase">Nashville Concierge</p>
+              <p className="text-[10px] md:text-xs font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Nashville Concierge</p>
             </div>
           </motion.div>
 
@@ -62,7 +62,8 @@ export default function LandingPage() {
           >
             <Button
               onClick={handleExplore}
-              className="btn-premium text-white rounded-full px-4 md:px-6 h-9 md:h-10 text-sm shine-effect"
+              className="text-white rounded-full px-4 md:px-6 h-9 md:h-10 text-sm shine-effect"
+              style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
               data-testid="button-explore-header"
             >
               Enter
@@ -84,14 +85,15 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="col-span-2 md:col-span-8 md:row-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden bg-stone-900 min-h-[280px] md:min-h-[450px] group hover-3d"
+              className="col-span-2 md:col-span-8 md:row-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[280px] md:min-h-[450px] group hover-3d"
+              style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 100%)' }}
             >
               <img 
                 src={coffeeShopImage} 
                 alt="Nashville Coffee Shop" 
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
               
               <div className="absolute inset-0 p-5 md:p-10 flex flex-col justify-end">
                 <motion.div
@@ -99,9 +101,9 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <div className="inline-flex items-center gap-1.5 md:gap-2 bg-amber-600/90 backdrop-blur-sm rounded-full px-3 py-1 md:px-4 md:py-1.5 mb-4 md:mb-6 sparkle-container">
-                    <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-amber-100" />
-                    <span className="text-amber-50 text-[10px] md:text-sm font-medium tracking-wide">Nashville's Premier Service</span>
+                  <div className="inline-flex items-center gap-1.5 md:gap-2 backdrop-blur-sm rounded-full px-3 py-1 md:px-4 md:py-1.5 mb-4 md:mb-6 sparkle-container" style={{ background: 'rgba(61, 36, 24, 0.9)' }}>
+                    <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-stone-300" />
+                    <span className="text-stone-200 text-[10px] md:text-sm font-medium tracking-wide">Nashville's Premier Service</span>
                   </div>
                   
                   <h2 
@@ -109,7 +111,7 @@ export default function LandingPage() {
                     style={{ fontFamily: "'Playfair Display', serif" }}
                   >
                     Artisan Coffee,<br />
-                    <span className="text-amber-300 italic">Delivered with Grace</span>
+                    <span className="italic" style={{ color: '#d4c4b0' }}>Delivered with Grace</span>
                   </h2>
                   
                   <p className="text-sm md:text-base text-stone-300 max-w-lg mb-5 md:mb-8 leading-relaxed hidden sm:block">
@@ -121,7 +123,8 @@ export default function LandingPage() {
                     <Button
                       onClick={handleExplore}
                       size="lg"
-                      className="h-11 md:h-14 px-5 md:px-8 btn-premium text-white text-sm md:text-lg font-medium rounded-full shadow-xl hover:shadow-2xl transition-all shine-effect"
+                      className="h-11 md:h-14 px-5 md:px-8 text-white text-sm md:text-lg font-medium rounded-full shadow-xl hover:shadow-2xl transition-all shine-effect"
+                      style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
                       data-testid="button-explore"
                     >
                       View Our Vendors
@@ -146,10 +149,11 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="col-span-1 md:col-span-4 bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col justify-between min-h-[140px] md:min-h-[180px] hover-3d glow-pulse"
+              className="col-span-1 md:col-span-4 rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col justify-between min-h-[140px] md:min-h-[180px] hover-3d coffee-glow"
+              style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
             >
-              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 md:mb-4">
-                <Clock className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-2 md:mb-4">
+                <Clock className="h-5 w-5 md:h-6 md:w-6 text-stone-200" />
               </div>
               <div>
                 <h3 
@@ -158,7 +162,7 @@ export default function LandingPage() {
                 >
                   2 Hours
                 </h3>
-                <p className="text-amber-100 text-xs md:text-sm">
+                <p className="text-stone-300 text-xs md:text-sm">
                   Minimum notice for delivery
                 </p>
               </div>
@@ -176,7 +180,7 @@ export default function LandingPage() {
                 alt="Nashville Barista" 
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.9) 0%, rgba(26, 15, 10, 0.3) 50%, transparent 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
                 <p 
                   className="text-base md:text-xl font-bold text-white"
@@ -184,7 +188,7 @@ export default function LandingPage() {
                 >
                   Expert Baristas
                 </p>
-                <p className="text-amber-200 text-[10px] md:text-xs">Nashville's finest</p>
+                <p className="text-stone-300 text-[10px] md:text-xs">Nashville's finest</p>
               </div>
             </motion.div>
 
@@ -200,7 +204,7 @@ export default function LandingPage() {
                 alt="Artisan Latte Art" 
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
                 <p 
                   className="text-sm md:text-lg font-bold text-white"
@@ -223,7 +227,7 @@ export default function LandingPage() {
                 alt="Corporate Meeting" 
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
                 <p 
                   className="text-sm md:text-lg font-bold text-white"
@@ -242,11 +246,11 @@ export default function LandingPage() {
               className="col-span-2 md:col-span-12 pt-6 md:pt-8 pb-2 md:pb-4"
             >
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
-                <Star className="h-4 w-4 md:h-5 md:w-5 text-amber-600 fill-amber-600" />
-                <span className="text-[10px] md:text-sm font-medium text-amber-700 tracking-widest uppercase">Our Partners</span>
-                <Star className="h-4 w-4 md:h-5 md:w-5 text-amber-600 fill-amber-600" />
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+                <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, #5c4033, transparent)' }} />
+                <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" style={{ color: '#5c4033' }} />
+                <span className="text-[10px] md:text-sm font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Our Partners</span>
+                <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" style={{ color: '#5c4033' }} />
+                <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, #5c4033, transparent)' }} />
               </div>
               <h3 
                 className="text-xl md:text-3xl font-bold text-stone-800 text-center"
@@ -271,7 +275,7 @@ export default function LandingPage() {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 + index * 0.1 }}
-                      className="flex-shrink-0 w-[260px] md:w-[320px] bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-stone-100 group hover-3d"
+                      className="flex-shrink-0 w-[260px] md:w-[320px] bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-stone-200 group hover-3d"
                     >
                       {/* Vendor Image */}
                       <div className="relative h-36 md:h-44 overflow-hidden">
@@ -282,7 +286,7 @@ export default function LandingPage() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute top-2 left-2 md:top-3 md:left-3">
-                          <Badge className="bg-amber-500 text-white border-none shadow-lg text-[10px] md:text-xs">
+                          <Badge className="text-white border-none shadow-lg text-[10px] md:text-xs" style={{ background: '#3d2418' }}>
                             <Star className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 fill-current" />
                             {shop.rating}
                           </Badge>
@@ -300,7 +304,7 @@ export default function LandingPage() {
                         <p className="text-[10px] md:text-xs text-stone-500 flex items-center gap-1 mb-1">
                           <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3" /> {shop.location}
                         </p>
-                        <p className="text-amber-700 font-medium text-[10px] md:text-xs mb-3">{shop.specialty}</p>
+                        <p className="font-medium text-[10px] md:text-xs mb-3" style={{ color: '#5c4033' }}>{shop.specialty}</p>
 
                         {/* Menu Preview */}
                         <div className="space-y-1.5 border-t border-stone-100 pt-3">
@@ -308,14 +312,15 @@ export default function LandingPage() {
                           {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
                             <div key={item.id} className="flex justify-between items-center">
                               <span className="text-stone-700 text-[11px] md:text-xs">{item.name}</span>
-                              <span className="text-amber-700 font-semibold text-[11px] md:text-xs">${item.price.toFixed(2)}</span>
+                              <span className="font-semibold text-[11px] md:text-xs" style={{ color: '#5c4033' }}>${item.price.toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
 
                         <Button 
                           onClick={handleExplore}
-                          className="w-full mt-3 md:mt-4 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-xs md:text-sm h-9 md:h-10 shine-effect"
+                          className="w-full mt-3 md:mt-4 text-white rounded-full text-xs md:text-sm h-9 md:h-10 shine-effect"
+                          style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
                           data-testid={`button-view-menu-${shop.id}`}
                         >
                           View Full Menu
@@ -334,10 +339,11 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="col-span-2 md:col-span-12 bg-gradient-to-r from-stone-800 via-stone-900 to-stone-800 rounded-2xl md:rounded-3xl p-6 md:p-10 text-center relative overflow-hidden"
+              className="col-span-2 md:col-span-12 rounded-2xl md:rounded-3xl p-6 md:p-10 text-center relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 50%, #1a0f0a 100%)' }}
             >
               {/* Decorative glow */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,119,6,0.15),transparent_70%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(92,64,51,0.2),transparent_70%)]" />
               
               <div className="relative z-10">
                 <h3 
@@ -352,7 +358,8 @@ export default function LandingPage() {
                 <Button
                   onClick={handleExplore}
                   size="lg"
-                  className="h-11 md:h-14 px-8 md:px-10 btn-premium text-white text-sm md:text-lg font-medium rounded-full shine-effect sparkle-container"
+                  className="h-11 md:h-14 px-8 md:px-10 text-white text-sm md:text-lg font-medium rounded-full shine-effect sparkle-container"
+                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
                   data-testid="button-get-started"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
@@ -373,7 +380,7 @@ export default function LandingPage() {
             href="https://darkwavestudios.io" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="font-serif font-semibold text-stone-700 hover:text-amber-600 transition-colors"
+            className="font-serif font-semibold text-stone-700 hover:text-stone-900 transition-colors"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Darkwave Studios, LLC

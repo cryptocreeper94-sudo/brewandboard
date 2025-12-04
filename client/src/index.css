@@ -168,8 +168,17 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(217, 119, 6, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(217, 119, 6, 0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(61, 36, 24, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(61, 36, 24, 0.7); }
+}
+
+/* Coffee Glow Effect */
+.coffee-glow {
+  box-shadow: 0 0 30px rgba(45, 24, 16, 0.4);
+}
+
+.coffee-glow:hover {
+  box-shadow: 0 0 50px rgba(45, 24, 16, 0.6);
 }
 
 @keyframes gradient-shift {
@@ -211,7 +220,7 @@
   transform: translateY(-8px) rotateX(5deg) rotateY(-5deg);
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 30px rgba(217, 119, 6, 0.15);
+    0 0 30px rgba(45, 24, 16, 0.2);
 }
 
 /* Shine Effect Overlay */
@@ -239,20 +248,20 @@
 
 /* Premium Button with Glow */
 .btn-premium {
-  background: linear-gradient(135deg, #d97706 0%, #ea580c 50%, #d97706 100%);
+  background: linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%);
   background-size: 200% 200%;
   animation: gradient-shift 3s ease infinite;
   box-shadow: 
-    0 4px 15px rgba(217, 119, 6, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 4px 15px rgba(45, 24, 16, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
 }
 
 .btn-premium:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    0 8px 25px rgba(217, 119, 6, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 8px 25px rgba(45, 24, 16, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Sparkle Overlay */
@@ -283,7 +292,7 @@
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #ea580c 100%);
+  background: linear-gradient(135deg, #1a0f0a 0%, #3d2418 50%, #5c4033 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

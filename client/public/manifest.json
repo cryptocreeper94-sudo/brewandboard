@@ -4,27 +4,33 @@
   "description": "Premium coffee delivery for business meetings in Nashville",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f97316",
-  "theme_color": "#ea580c",
+  "background_color": "#1a0f09",
+  "theme_color": "#b45309",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/mascot.png",
+      "src": "/favicon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/mascot.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
-      "sizes": "192x192",
+      "src": "/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/mascot.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "categories": ["business", "food", "productivity"],

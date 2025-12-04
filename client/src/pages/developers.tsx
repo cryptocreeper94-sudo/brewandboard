@@ -278,6 +278,38 @@ export default function DevelopersPage() {
   const [email, setEmail] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('bb_dev_tasks');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const toggleTask = (taskId: string) => {
+    setCheckedTasks(prev => {
+      const updated = { ...prev, [taskId]: !prev[taskId] };
+      localStorage.setItem('bb_dev_tasks', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const TaskCheckbox = ({ id, label, isPreChecked = false }: { id: string; label: string; isPreChecked?: boolean }) => {
+    const isChecked = isPreChecked || checkedTasks[id];
+    return (
+      <div 
+        className={`flex items-center gap-3 text-sm cursor-pointer group ${isPreChecked ? 'opacity-75' : ''}`}
+        onClick={() => !isPreChecked && toggleTask(id)}
+        data-testid={`task-${id}`}
+      >
+        {isChecked ? (
+          <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+        ) : (
+          <Circle className="h-4 w-4 text-gray-400 group-hover:text-amber-500 flex-shrink-0 transition-colors" />
+        )}
+        <span className={isChecked ? "text-emerald-700 line-through" : "group-hover:text-amber-700 transition-colors"}>
+          {label}
+        </span>
+      </div>
+    );
+  };
   const [health, setHealth] = useState<SystemHealth>({
     api: 'checking',
     database: 'checking',
@@ -1153,30 +1185,12 @@ export default function DevelopersPage() {
                   </AccordionTrigger>
                   <AccordionContent className="pb-4">
                     <div className="ml-16 space-y-3">
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Register for DoorDash Drive developer account</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Obtain API credentials (sandbox + production)</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Implement delivery quote endpoint</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Create delivery dispatch on order confirmation</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Webhook integration for real-time tracking</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Driver ETA and status updates to customer</span>
-                      </div>
+                      <TaskCheckbox id="doordash-register" label="Register for DoorDash Drive developer account" />
+                      <TaskCheckbox id="doordash-credentials" label="Obtain API credentials (sandbox + production)" />
+                      <TaskCheckbox id="doordash-quote" label="Implement delivery quote endpoint" />
+                      <TaskCheckbox id="doordash-dispatch" label="Create delivery dispatch on order confirmation" />
+                      <TaskCheckbox id="doordash-webhook" label="Webhook integration for real-time tracking" />
+                      <TaskCheckbox id="doordash-eta" label="Driver ETA and status updates to customer" />
                       <a href="https://developer.doordash.com/en-US/docs/drive/reference/drive-api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
                         View Documentation <ExternalLink className="h-3 w-3" />
                       </a>
@@ -1201,26 +1215,11 @@ export default function DevelopersPage() {
                   </AccordionTrigger>
                   <AccordionContent className="pb-4">
                     <div className="ml-16 space-y-3">
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Apply for Uber Direct API access</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Set up OAuth2 authentication flow</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Implement delivery quote and creation</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Real-time delivery tracking integration</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Proof of delivery handling</span>
-                      </div>
+                      <TaskCheckbox id="uber-apply" label="Apply for Uber Direct API access" />
+                      <TaskCheckbox id="uber-oauth" label="Set up OAuth2 authentication flow" />
+                      <TaskCheckbox id="uber-quote" label="Implement delivery quote and creation" />
+                      <TaskCheckbox id="uber-tracking" label="Real-time delivery tracking integration" />
+                      <TaskCheckbox id="uber-proof" label="Proof of delivery handling" />
                       <a href="https://developer.uber.com/docs/deliveries/overview" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
                         View Documentation <ExternalLink className="h-3 w-3" />
                       </a>

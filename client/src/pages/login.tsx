@@ -427,32 +427,34 @@ export default function LandingPage() {
                       </div>
 
                       {/* Vendor Info */}
-                      <div className="p-4 md:p-5">
-                        <h4 
-                          className="text-lg md:text-xl font-bold text-stone-800 mb-1"
-                          style={{ fontFamily: "'Playfair Display', serif" }}
-                        >
-                          {shop.name}
-                        </h4>
-                        <p className="text-[10px] md:text-xs text-stone-500 flex items-center gap-1 mb-1">
-                          <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3" /> {shop.location}
-                        </p>
-                        <p className="font-medium text-[10px] md:text-xs mb-3" style={{ color: '#5c4033' }}>{shop.specialty}</p>
+                      <div className="p-4 md:p-5 flex flex-col h-[220px] md:h-[240px]">
+                        <div className="flex-1">
+                          <h4 
+                            className="text-lg md:text-xl font-bold text-stone-800 mb-1 line-clamp-1"
+                            style={{ fontFamily: "'Playfair Display', serif" }}
+                          >
+                            {shop.name}
+                          </h4>
+                          <p className="text-[10px] md:text-xs text-stone-500 flex items-center gap-1 mb-1">
+                            <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3" /> {shop.location}
+                          </p>
+                          <p className="font-medium text-[10px] md:text-xs mb-3" style={{ color: '#5c4033' }}>{shop.specialty}</p>
 
-                        {/* Menu Preview */}
-                        <div className="space-y-1.5 border-t border-stone-100 pt-3">
-                          <p className="text-[9px] md:text-[10px] text-stone-400 uppercase tracking-wider font-medium">Featured</p>
-                          {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
-                            <div key={item.id} className="flex justify-between items-center">
-                              <span className="text-stone-700 text-[11px] md:text-xs">{item.name}</span>
-                              <span className="font-semibold text-[11px] md:text-xs" style={{ color: '#5c4033' }}>${item.price.toFixed(2)}</span>
-                            </div>
-                          ))}
+                          {/* Menu Preview */}
+                          <div className="space-y-1.5 border-t border-stone-100 pt-3">
+                            <p className="text-[9px] md:text-[10px] text-stone-400 uppercase tracking-wider font-medium">Featured</p>
+                            {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
+                              <div key={item.id} className="flex justify-between items-center">
+                                <span className="text-stone-700 text-[11px] md:text-xs line-clamp-1">{item.name}</span>
+                                <span className="font-semibold text-[11px] md:text-xs flex-shrink-0 ml-2" style={{ color: '#5c4033' }}>${item.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
                         <Button 
                           onClick={handleExplore}
-                          className="w-full mt-3 md:mt-4 text-white rounded-full text-xs md:text-sm h-9 md:h-10 shine-effect"
+                          className="w-full mt-3 md:mt-4 text-white rounded-full text-xs md:text-sm h-9 md:h-10 shine-effect flex-shrink-0"
                           style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
                           data-testid={`button-view-menu-${shop.id}`}
                         >

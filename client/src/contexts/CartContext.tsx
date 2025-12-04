@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Shop } from '@/lib/mock-data';
+import { Product, Shop, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES } from '@/lib/mock-data';
 
 export interface CartItem {
   vendorId: string;
@@ -12,15 +12,22 @@ export interface CartItem {
   category: string;
 }
 
+export interface VendorLocation {
+  lat: number;
+  lng: number;
+}
+
 interface CartContextType {
   items: CartItem[];
   vendorId: string | null;
   vendorName: string | null;
+  vendorLocation: VendorLocation | null;
   addItem: (vendor: Shop, product: Product) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   getItemQuantity: (itemId: string) => number;
+  calculateDeliveryFee: (deliveryLat: number, deliveryLng: number) => { baseFee: number; extendedFee: number; distance: number; isExtended: boolean };
   subtotal: number;
   itemCount: number;
   serviceFee: number;
@@ -34,10 +41,22 @@ const CART_STORAGE_KEY = 'brewboard_cart';
 const SERVICE_FEE_RATE = 0.15;
 const DELIVERY_FEE = 5.00;
 
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [vendorName, setVendorName] = useState<string | null>(null);
+  const [vendorLocation, setVendorLocation] = useState<VendorLocation | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
@@ -47,6 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems(parsed.items || []);
         setVendorId(parsed.vendorId || null);
         setVendorName(parsed.vendorName || null);
+        setVendorLocation(parsed.vendorLocation || null);
       } catch (e) {
         console.error('Failed to parse cart:', e);
       }
@@ -57,9 +77,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
       items,
       vendorId,
-      vendorName
+      vendorName,
+      vendorLocation
     }));
-  }, [items, vendorId, vendorName]);
+  }, [items, vendorId, vendorName, vendorLocation]);
 
   const addItem = (vendor: Shop, product: Product) => {
     if (vendorId && vendorId !== vendor.id) {
@@ -71,6 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setVendorId(vendor.id);
     setVendorName(vendor.name);
+    setVendorLocation({ lat: vendor.lat, lng: vendor.lng });
 
     setItems(prev => {
       const existing = prev.find(item => item.itemId === product.id);
@@ -121,11 +143,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
     setVendorId(null);
     setVendorName(null);
+    setVendorLocation(null);
   };
 
   const getItemQuantity = (itemId: string) => {
     const item = items.find(i => i.itemId === itemId);
     return item?.quantity || 0;
+  };
+
+  const calculateDeliveryFee = (deliveryLat: number, deliveryLng: number) => {
+    if (!vendorLocation) {
+      return { baseFee: DELIVERY_FEE, extendedFee: 0, distance: 0, isExtended: false };
+    }
+    const distance = calculateDistance(vendorLocation.lat, vendorLocation.lng, deliveryLat, deliveryLng);
+    const isExtended = distance > EXTENDED_DELIVERY_RADIUS_MILES;
+    return {
+      baseFee: DELIVERY_FEE,
+      extendedFee: isExtended ? EXTENDED_DELIVERY_PREMIUM : 0,
+      distance,
+      isExtended
+    };
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -139,11 +176,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items,
       vendorId,
       vendorName,
+      vendorLocation,
       addItem,
       removeItem,
       updateQuantity,
       clearCart,
       getItemQuantity,
+      calculateDeliveryFee,
       subtotal,
       itemCount,
       serviceFee,

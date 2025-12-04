@@ -9,10 +9,12 @@ import {
   Navigation,
   Phone,
   Clock,
-  ShoppingCart
+  ShoppingCart,
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 import { Link } from "wouter";
-import { COFFEE_SHOPS, Shop } from "@/lib/mock-data";
+import { COFFEE_SHOPS, Shop, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +75,7 @@ export default function FindBaristasPage() {
   const { addItem, getItemQuantity, itemCount } = useCart();
   const { toast } = useToast();
 
-  const nearbyShops = useMemo(() => {
+  const allShopsWithDistance = useMemo(() => {
     if (!searchedZip || !NASHVILLE_ZIP_COORDS[searchedZip]) return [];
     
     const coords = NASHVILLE_ZIP_COORDS[searchedZip];
@@ -81,11 +83,14 @@ export default function FindBaristasPage() {
     return COFFEE_SHOPS
       .map(shop => ({
         ...shop,
-        distance: calculateDistance(coords.lat, coords.lng, shop.lat, shop.lng)
+        distance: calculateDistance(coords.lat, coords.lng, shop.lat, shop.lng),
+        isExtendedDelivery: calculateDistance(coords.lat, coords.lng, shop.lat, shop.lng) > EXTENDED_DELIVERY_RADIUS_MILES
       }))
-      .filter(shop => shop.distance <= 10)
       .sort((a, b) => a.distance - b.distance);
   }, [searchedZip]);
+
+  const nearbyShops = useMemo(() => allShopsWithDistance.filter(s => !s.isExtendedDelivery), [allShopsWithDistance]);
+  const extendedShops = useMemo(() => allShopsWithDistance.filter(s => s.isExtendedDelivery), [allShopsWithDistance]);
 
   const handleSearch = () => {
     if (zipcode.length === 5 && /^\d{5}$/.test(zipcode)) {
@@ -127,7 +132,7 @@ export default function FindBaristasPage() {
           </Link>
           <div>
             <h1 className="font-serif text-3xl text-amber-100">Find Baristas</h1>
-            <p className="text-amber-200/60 text-sm">Discover coffee shops within 10 miles</p>
+            <p className="text-amber-200/60 text-sm">Coffee shops, bakeries & more near you</p>
           </div>
           {itemCount > 0 && (
             <Link href="/schedule" className="ml-auto">
@@ -184,18 +189,25 @@ export default function FindBaristasPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-amber-100 font-serif text-xl">
-                {nearbyShops.length} Baristas Near {searchedZip}
+                {allShopsWithDistance.length} Vendors Near {searchedZip}
               </h2>
-              <Badge variant="outline" className="border-amber-600/50 text-amber-400">
-                Within 10 miles
-              </Badge>
+              <div className="flex gap-2">
+                <Badge variant="outline" className="border-amber-600/50 text-amber-400">
+                  {nearbyShops.length} nearby
+                </Badge>
+                {extendedShops.length > 0 && (
+                  <Badge variant="outline" className="border-orange-600/50 text-orange-400">
+                    {extendedShops.length} extended
+                  </Badge>
+                )}
+              </div>
             </div>
 
-            {nearbyShops.length === 0 ? (
+            {nearbyShops.length === 0 && extendedShops.length === 0 ? (
               <Card className="bg-black/20 border-amber-800/30">
                 <CardContent className="p-8 text-center">
                   <Coffee className="h-12 w-12 text-amber-600/50 mx-auto mb-4" />
-                  <p className="text-amber-200/60">No coffee shops found within 10 miles of this ZIP code.</p>
+                  <p className="text-amber-200/60">No coffee shops found near this ZIP code.</p>
                   <p className="text-amber-200/40 text-sm mt-2">Try a different Nashville area ZIP code.</p>
                 </CardContent>
               </Card>
@@ -207,7 +219,7 @@ export default function FindBaristasPage() {
                       key={shop.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                     >
                       <Card 
                         className="bg-gradient-to-r from-[#2d1810] to-[#1a0f09] border-amber-800/30 hover:border-amber-600/50 transition-all cursor-pointer overflow-hidden"
@@ -259,6 +271,85 @@ export default function FindBaristasPage() {
                       </Card>
                     </motion.div>
                   ))}
+                  
+                  {extendedShops.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-3 mt-8 mb-4 pt-6 border-t border-amber-800/30">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-orange-400" />
+                          <h3 className="text-amber-100 font-serif text-lg">Extended Delivery</h3>
+                        </div>
+                        <Badge className="bg-orange-600/80 text-white border-none text-xs">
+                          +${EXTENDED_DELIVERY_PREMIUM.toFixed(2)} Premium
+                        </Badge>
+                      </div>
+                      <p className="text-amber-200/50 text-xs mb-4">
+                        These vendors are more than {EXTENDED_DELIVERY_RADIUS_MILES} miles away and require an additional ${EXTENDED_DELIVERY_PREMIUM.toFixed(2)} delivery fee.
+                      </p>
+                      
+                      {extendedShops.map((shop, index) => (
+                        <motion.div
+                          key={shop.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: (nearbyShops.length + index) * 0.05 }}
+                        >
+                          <Card 
+                            className="bg-gradient-to-r from-[#2d1810] to-[#1a0f09] border-orange-800/40 hover:border-orange-600/50 transition-all cursor-pointer overflow-hidden relative"
+                            data-testid={`card-shop-${shop.id}`}
+                          >
+                            <div className="absolute top-0 right-0 bg-orange-600 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-medium flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              +${EXTENDED_DELIVERY_PREMIUM.toFixed(2)}
+                            </div>
+                            <CardContent className="p-0">
+                              <div className="flex">
+                                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
+                                  <img 
+                                    src={shop.image} 
+                                    alt={shop.name}
+                                    className="w-full h-full object-cover opacity-90"
+                                  />
+                                </div>
+                                <div className="flex-1 p-4">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <h3 className="text-amber-100 font-medium">{shop.name}</h3>
+                                      <p className="text-amber-200/50 text-sm">{shop.location}</p>
+                                    </div>
+                                    <Badge className="bg-amber-500 text-white border-none flex-shrink-0">
+                                      {shop.rating} <Star className="h-3 w-3 ml-0.5 fill-current" />
+                                    </Badge>
+                                  </div>
+                                  
+                                  <p className="text-amber-200/40 text-xs mt-1 flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {shop.address}
+                                  </p>
+                                  
+                                  <div className="flex items-center justify-between mt-3">
+                                    <div className="flex items-center gap-2 text-orange-400 text-sm">
+                                      <Navigation className="h-4 w-4" />
+                                      <span>{shop.distance.toFixed(1)} mi</span>
+                                    </div>
+                                    <Button 
+                                      size="sm" 
+                                      className="bg-orange-600 hover:bg-orange-700"
+                                      onClick={() => openMenu(shop)}
+                                      data-testid={`button-order-${shop.id}`}
+                                    >
+                                      <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
+                                      Order
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </>
+                  )}
                 </div>
               </ScrollArea>
             )}

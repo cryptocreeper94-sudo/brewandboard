@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Coffee, 
@@ -11,7 +11,8 @@ import {
   Calendar,
   Scan,
   Code2,
-  Sparkles
+  Sparkles,
+  LogIn
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, TEAM_MEMBERS } from "@/lib/mock-data";
@@ -21,42 +22,99 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Web3Search } from "@/components/Web3Search";
+import { RegistrationPopup } from "@/components/RegistrationPopup";
+import { LoginPopup } from "@/components/LoginPopup";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function Dashboard() {
-  const userName = localStorage.getItem("user_name") || "Only";
+  const userName = localStorage.getItem("user_name") || "Guest";
+  const isGuest = localStorage.getItem("is_guest") === "true";
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [showRegister, setShowRegister] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
-    // Simulate "Add to Home Screen" prompt
-    const hasSeenPrompt = localStorage.getItem("has_seen_install_prompt");
-    if (!hasSeenPrompt) {
-      setTimeout(() => {
-        toast({
-          title: "Install App",
-          description: "Add Coffee Talk to your home screen for quick access.",
-          action: (
-            <Button variant="outline" size="sm" className="ml-auto gap-2" onClick={() => console.log("Install clicked")}>
-              <Download className="h-4 w-4" /> Install
-            </Button>
-          ),
-          duration: 6000,
-        });
-        localStorage.setItem("has_seen_install_prompt", "true");
-      }, 2000);
+    if (isGuest) {
+      const hasSeenRegister = localStorage.getItem("has_seen_register_prompt");
+      if (!hasSeenRegister) {
+        setTimeout(() => {
+          setShowRegister(true);
+          localStorage.setItem("has_seen_register_prompt", "true");
+        }, 2000);
+      }
     }
-  }, [toast]);
+  }, [isGuest]);
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Coffee Banner with Cream Swirl */}
+      <div className="relative h-24 bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 overflow-hidden">
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 100" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="creamGradientDash" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,248,240,0.8)" />
+              <stop offset="50%" stopColor="rgba(255,243,224,0.6)" />
+              <stop offset="100%" stopColor="rgba(255,248,240,0.3)" />
+            </linearGradient>
+          </defs>
+          <motion.path
+            d="M0,50 Q300,20 600,50 T1200,40"
+            fill="none"
+            stroke="url(#creamGradientDash)"
+            strokeWidth="40"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M-100,70 Q400,30 800,70 T1400,60"
+            fill="none"
+            stroke="url(#creamGradientDash)"
+            strokeWidth="25"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.3 }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h1 className="font-serif text-2xl md:text-3xl text-white font-bold tracking-tight drop-shadow-lg">
+            Coffee Talk
+          </h1>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1200 20" className="w-full h-4 fill-background">
+            <path d="M0,20 L0,10 Q300,0 600,10 T1200,10 L1200,20 Z" />
+          </svg>
+        </div>
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="container max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="font-serif text-xl font-bold tracking-tight">Coffee Talk</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline-block">Good Morning, {userName}</span>
+        <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coffee className="h-5 w-5 text-amber-600" />
+            <span className="text-sm text-muted-foreground">Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {userName}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {isGuest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLogin(true)}
+                className="gap-2 text-xs"
+                data-testid="button-login"
+              >
+                <LogIn className="h-3 w-3" />
+                Sign In
+              </Button>
+            )}
             <Avatar className="h-8 w-8 ring-2 ring-primary/10 cursor-pointer" onClick={() => setLocation("/")}>
-              <AvatarFallback className="bg-primary text-primary-foreground">O</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {userName.charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -260,6 +318,27 @@ export default function Dashboard() {
           </motion.div>
         </div>
       </main>
+
+      {/* Registration Popup for Guests */}
+      <RegistrationPopup
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSuccess={() => window.location.reload()}
+      />
+
+      {/* Login Popup */}
+      <LoginPopup
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSuccess={() => window.location.reload()}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+      />
+
+      {/* Install App Prompt */}
+      <InstallPrompt />
     </div>
   );
 }

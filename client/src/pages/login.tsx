@@ -1,29 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, UserPlus, LogIn } from "lucide-react";
+import { Coffee, Sparkles, ArrowRight, Star } from "lucide-react";
 
-export default function LoginPage() {
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    phone: "",
-    pin: "",
-    confirmPin: ""
-  });
-  const [loginPin, setLoginPin] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+export default function LandingPage() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
 
-  // Check for existing session
   useEffect(() => {
     const savedUser = localStorage.getItem("coffee_user");
     const sessionExpiry = localStorage.getItem("coffee_session_expiry");
@@ -37,314 +20,160 @@ export default function LoginPage() {
     }
   }, [setLocation]);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.pin.length !== 4) {
-      toast({ title: "Invalid PIN", description: "PIN must be 4 digits.", variant: "destructive" });
-      return;
-    }
-    
-    if (formData.pin !== formData.confirmPin) {
-      toast({ title: "Mismatch", description: "PINs do not match.", variant: "destructive" });
-      return;
-    }
-
-    if (!formData.name || !formData.email) {
-      toast({ title: "Missing Info", description: "Please fill out name and email.", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          company: formData.company,
-          phone: formData.phone,
-          pin: formData.pin
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        toast({ title: "Registration Failed", description: error.error, variant: "destructive" });
-        return;
-      }
-
-      const user = await response.json();
-      localStorage.setItem("coffee_user", JSON.stringify(user));
-      localStorage.setItem("user_name", user.name);
-      handleLoginSuccess();
-      
-      toast({ title: "Success!", description: "Account created successfully." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to register. Please try again.", variant: "destructive" });
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: loginPin })
-      });
-
-      if (!response.ok) {
-        toast({
-          title: "Access Denied",
-          description: "Invalid PIN. Please try again or register.",
-          variant: "destructive",
-        });
-        setLoginPin("");
-        return;
-      }
-
-      const user = await response.json();
-      localStorage.setItem("coffee_user", JSON.stringify(user));
-      localStorage.setItem("user_name", user.name);
-      handleLoginSuccess();
-      
-      toast({
-        title: "Welcome Back",
-        description: `Hello, ${user.name}!`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Login failed. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleLoginSuccess = () => {
-    if (rememberMe) {
-      const expiry = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
-      localStorage.setItem("coffee_session_expiry", expiry.toString());
-    } else {
-      const expiry = new Date().getTime() + (60 * 60 * 1000);
-      localStorage.setItem("coffee_session_expiry", expiry.toString());
-    }
-    
+  const handleExplore = () => {
+    localStorage.setItem("is_guest", "true");
     setLocation("/dashboard");
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[url('/attached_assets/generated_images/premium_nashville_coffee_shop_interior.png')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      
-      <motion.div 
-        layout
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 w-full max-w-md p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
-      >
-        <div className="text-center mb-8">
-          <h1 className="font-serif text-4xl text-white mb-2">Coffee Talk</h1>
-          <p className="text-white/70 font-light text-sm">Nashville's Premium Meeting Catering</p>
+    <div className="min-h-screen w-full flex flex-col relative overflow-hidden">
+      {/* Coffee Banner with Cream Swirl */}
+      <div className="relative h-48 md:h-64 bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 overflow-hidden">
+        {/* Cream Swirl Effects */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="creamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,248,240,0.9)" />
+              <stop offset="50%" stopColor="rgba(255,243,224,0.7)" />
+              <stop offset="100%" stopColor="rgba(255,248,240,0.4)" />
+            </linearGradient>
+          </defs>
+          <motion.path
+            d="M0,150 Q200,50 400,150 T800,150 T1200,100"
+            fill="none"
+            stroke="url(#creamGradient)"
+            strokeWidth="80"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M-100,200 Q300,100 600,200 T1000,180 T1400,220"
+            fill="none"
+            stroke="url(#creamGradient)"
+            strokeWidth="60"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.7 }}
+            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.3 }}
+          />
+          <motion.path
+            d="M100,80 Q400,180 700,80 T1100,120"
+            fill="none"
+            stroke="url(#creamGradient)"
+            strokeWidth="40"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.5 }}
+            transition={{ duration: 2, ease: "easeInOut", delay: 0.6 }}
+          />
+        </svg>
+        
+        {/* Coffee steam effect */}
+        <div className="absolute right-8 top-4 opacity-30">
+          <motion.div
+            animate={{ y: [-10, -30, -10], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="text-white/50"
+          >
+            <Coffee className="h-24 w-24" />
+          </motion.div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {isRegistering ? (
-            <motion.form
-              key="register"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              onSubmit={handleRegister}
-              className="space-y-4"
+        {/* Logo/Title in banner */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-center"
+          >
+            <h1 className="font-serif text-5xl md:text-6xl text-white font-bold tracking-tight drop-shadow-lg">
+              Coffee Talk
+            </h1>
+            <p className="text-amber-100/90 text-lg mt-2 font-light">
+              Nashville's Premium Meeting Catering
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Decorative bottom wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1200 50" className="w-full h-12 fill-background">
+            <path d="M0,50 L0,25 Q300,0 600,25 T1200,25 L1200,50 Z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 bg-background flex flex-col items-center justify-center px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="max-w-lg text-center space-y-8"
+        >
+          {/* Feature highlights */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            {[
+              { icon: Coffee, label: "Premium Coffee" },
+              { icon: Star, label: "Top Vendors" },
+              { icon: Sparkles, label: "Easy Ordering" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 + i * 0.1 }}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card/50 border border-border/30"
+              >
+                <div className="p-3 rounded-full bg-amber-500/10">
+                  <item.icon className="h-6 w-6 text-amber-600" />
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="font-serif text-3xl font-bold text-foreground">
+              Elevate Your Meetings
+            </h2>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Connect with Nashville's finest coffee shops and bring premium coffee service to your business meetings.
+            </p>
+          </div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            <Button
+              onClick={handleExplore}
+              size="lg"
+              className="w-full max-w-xs h-14 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all group"
+              data-testid="button-explore"
             >
-              <div className="space-y-2">
-                <Label className="text-white/80">Full Name</Label>
-                <Input 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                  placeholder="Jane Doe"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-white/80">Email Address</Label>
-                <Input 
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                  placeholder="jane@company.com"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white/80">Company (Optional)</Label>
-                  <Input 
-                    value={formData.company}
-                    onChange={(e) => setFormData({...formData, company: e.target.value})}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                    placeholder="Acme Inc"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">Phone (Optional)</Label>
-                  <Input 
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                    placeholder="(615) 555-0123"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white/80">Create PIN</Label>
-                  <Input 
-                    type="password"
-                    maxLength={4}
-                    value={formData.pin}
-                    onChange={(e) => setFormData({...formData, pin: e.target.value})}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest"
-                    placeholder="••••"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">Confirm PIN</Label>
-                  <Input 
-                    type="password"
-                    maxLength={4}
-                    value={formData.confirmPin}
-                    onChange={(e) => setFormData({...formData, confirmPin: e.target.value})}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest"
-                    placeholder="••••"
-                    required
-                  />
-                </div>
-              </div>
+              Explore What We Offer
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </motion.div>
 
-              <div className="pt-4 space-y-4">
-                 <div className="space-y-3 bg-white/5 p-3 rounded-lg border border-white/5">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="persist-reg" 
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked === true)}
-                      className="border-white/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                    />
-                    <label
-                      htmlFor="persist-reg"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white/90"
-                    >
-                      Keep me logged in for 30 days
-                    </label>
-                  </div>
-                  
-                  {rememberMe && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="flex items-start gap-2 text-amber-200/90 text-xs bg-amber-900/20 p-2 rounded"
-                    >
-                      <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span>Warning: If you choose this option your account will be available to anyone who uses this device.</span>
-                    </motion.div>
-                  )}
-                </div>
+          <p className="text-xs text-muted-foreground/60 pt-4">
+            Free to browse • No account required to explore
+          </p>
+        </motion.div>
+      </div>
 
-                <Button type="submit" className="w-full h-12 bg-amber-700 hover:bg-amber-600 text-white font-medium tracking-wide">
-                  CREATE ACCOUNT
-                </Button>
-                
-                <div className="text-center">
-                  <button 
-                    type="button"
-                    onClick={() => setIsRegistering(false)}
-                    className="text-sm text-white/60 hover:text-white underline decoration-white/30 underline-offset-4 transition-colors"
-                  >
-                    Already have a PIN? Log In
-                  </button>
-                </div>
-              </div>
-            </motion.form>
-          ) : (
-            <motion.form
-              key="login"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 20, opacity: 0 }}
-              onSubmit={handleLogin}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-widest text-white/50 font-semibold text-center block">Enter PIN</Label>
-                <Input 
-                  type="password" 
-                  maxLength={4}
-                  value={loginPin}
-                  onChange={(e) => setLoginPin(e.target.value)}
-                  className="text-center text-3xl tracking-[1em] h-20 bg-white/5 border-white/10 text-white placeholder:text-white/10 focus:border-amber-500/50 focus:ring-amber-500/20 transition-all font-serif"
-                  placeholder="••••"
-                  autoFocus
-                />
-              </div>
-              
-              <div className="space-y-3 bg-white/5 p-3 rounded-lg border border-white/5">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="persist" 
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    className="border-white/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <label
-                    htmlFor="persist"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white/90"
-                  >
-                    Keep me logged in for 30 days
-                  </label>
-                </div>
-                
-                {rememberMe && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="flex items-start gap-2 text-amber-200/90 text-xs bg-amber-900/20 p-2 rounded"
-                  >
-                    <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <span>Warning: If you choose this option your account will be available to anyone who uses this device.</span>
-                  </motion.div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 bg-white text-black hover:bg-white/90 font-medium tracking-wide transition-all"
-                >
-                  <LogIn className="mr-2 h-4 w-4" /> ACCESS DASHBOARD
-                </Button>
-                
-                <div className="text-center">
-                  <button 
-                    type="button"
-                    onClick={() => setIsRegistering(true)}
-                    className="text-sm text-amber-400/80 hover:text-amber-300 transition-colors flex items-center justify-center w-full gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" /> New User? Register Here
-                  </button>
-                </div>
-              </div>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      {/* Bottom branding */}
+      <div className="py-4 text-center text-xs text-muted-foreground border-t border-border/30 bg-card/30">
+        <span>Powered by </span>
+        <span className="font-serif font-semibold text-foreground">Darkwave Studios, LLC</span>
+        <span> • &copy; 2025</span>
+      </div>
     </div>
   );
 }

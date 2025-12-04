@@ -17,7 +17,10 @@ import {
   Sun,
   CloudRain,
   X,
-  Radar
+  Radar,
+  Newspaper,
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
@@ -37,6 +40,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+interface NewsItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  description: string;
+  image: string | null;
+}
+
 export default function Dashboard() {
   const userName = localStorage.getItem("user_name") || "Guest";
   const isGuest = localStorage.getItem("is_guest") === "true";
@@ -45,6 +56,9 @@ export default function Dashboard() {
   const [showRegister, setShowRegister] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showWeatherRadar, setShowWeatherRadar] = useState(false);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState(false);
 
   useEffect(() => {
     if (isGuest) {
@@ -57,6 +71,26 @@ export default function Dashboard() {
       }
     }
   }, [isGuest]);
+
+  const fetchNews = async () => {
+    setNewsLoading(true);
+    setNewsError(false);
+    try {
+      const response = await fetch('/api/news/nashville');
+      if (!response.ok) throw new Error('Failed to fetch news');
+      const data = await response.json();
+      setNewsItems(data.items || []);
+    } catch (error) {
+      setNewsError(true);
+      console.error('Error fetching news:', error);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNews();
+  }, []);
 
   const quickActions = [
     {
@@ -260,6 +294,90 @@ export default function Dashboard() {
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
           </ScrollArea>
+        </motion.div>
+
+        {/* Nashville News Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Newspaper className="h-5 w-5 text-amber-600" />
+              <h3 className="font-serif text-lg">Nashville News</h3>
+              <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">WKRN</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchNews}
+              disabled={newsLoading}
+              className="h-7 px-2 text-xs"
+              data-testid="button-refresh-news"
+            >
+              <RefreshCw className={`h-3 w-3 ${newsLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+
+          {newsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-card border rounded-xl p-4 animate-pulse">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : newsError ? (
+            <div className="bg-card border rounded-xl p-6 text-center text-muted-foreground">
+              <Newspaper className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Unable to load news</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchNews}
+                className="mt-3"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {newsItems.slice(0, 6).map((item, index) => (
+                <a
+                  key={index}
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-card border rounded-xl p-4 hover:border-amber-500/50 hover:shadow-md transition-all"
+                  data-testid={`news-item-${index}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-amber-600 transition-colors">
+                        {item.title}
+                      </h4>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                          {item.description}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground/70 mt-2">
+                        {new Date(item.pubDate).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
         </motion.div>
       </main>
 

@@ -7,7 +7,8 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 
 ## Current State
 - **Authentication**: Custom PIN-based login/registration with optional 30-day persistence
-- **Dashboard**: Premium Bento grid layout with weather widget, team members, vendor scrolling, and quick web search
+- **Dashboard**: Premium Bento grid layout with weather widget, team members, vendor scrolling, quick web search, and Nashville news
+- **Nashville News**: Live news feed from WKRN with 5-minute caching, displays 6 articles on dashboard
 - **Portfolio/CRM**: Industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes and voice recording
 - **Order Scheduling**: Calendar-based coffee delivery scheduling with 2-hour minimum lead time
 - **Document Scanner**: Universal OCR scanner for creating and sharing PDFs on-the-go

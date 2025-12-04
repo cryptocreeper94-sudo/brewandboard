@@ -13,16 +13,19 @@ import {
   type InsertScheduledOrder,
   type OrderEvent,
   type InsertOrderEvent,
+  type ScannedDocument,
+  type InsertScannedDocument,
   users,
   crmNotes,
   clients,
   crmActivities,
   crmMeetings,
   scheduledOrders,
-  orderEvents
+  orderEvents,
+  scannedDocuments
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -66,6 +69,14 @@ export interface IStorage {
   // Order Events
   getOrderEvents(orderId: string): Promise<OrderEvent[]>;
   createOrderEvent(event: InsertOrderEvent): Promise<OrderEvent>;
+  
+  // Scanned Documents
+  getScannedDocuments(userId: string, options?: { category?: string; clientId?: string; search?: string; limit?: number }): Promise<ScannedDocument[]>;
+  getScannedDocument(id: string): Promise<ScannedDocument | undefined>;
+  createScannedDocument(doc: InsertScannedDocument): Promise<ScannedDocument>;
+  updateScannedDocument(id: string, doc: Partial<InsertScannedDocument>): Promise<ScannedDocument>;
+  deleteScannedDocument(id: string): Promise<void>;
+  searchScannedDocuments(userId: string, query: string): Promise<ScannedDocument[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -287,6 +298,84 @@ export class DatabaseStorage implements IStorage {
   async createOrderEvent(event: InsertOrderEvent): Promise<OrderEvent> {
     const [newEvent] = await db.insert(orderEvents).values(event).returning();
     return newEvent;
+  }
+
+  // ========================
+  // SCANNED DOCUMENTS
+  // ========================
+  async getScannedDocuments(
+    userId: string, 
+    options?: { category?: string; clientId?: string; search?: string; limit?: number }
+  ): Promise<ScannedDocument[]> {
+    let query = db.select().from(scannedDocuments).where(eq(scannedDocuments.userId, userId));
+    
+    const conditions = [eq(scannedDocuments.userId, userId)];
+    
+    if (options?.category) {
+      conditions.push(eq(scannedDocuments.category, options.category));
+    }
+    
+    if (options?.clientId) {
+      conditions.push(eq(scannedDocuments.clientId, options.clientId));
+    }
+    
+    if (options?.search) {
+      conditions.push(
+        or(
+          ilike(scannedDocuments.title, `%${options.search}%`),
+          ilike(scannedDocuments.extractedText, `%${options.search}%`)
+        )!
+      );
+    }
+    
+    const results = await db
+      .select()
+      .from(scannedDocuments)
+      .where(and(...conditions))
+      .orderBy(desc(scannedDocuments.createdAt))
+      .limit(options?.limit || 100);
+    
+    return results;
+  }
+
+  async getScannedDocument(id: string): Promise<ScannedDocument | undefined> {
+    const [doc] = await db.select().from(scannedDocuments).where(eq(scannedDocuments.id, id));
+    return doc || undefined;
+  }
+
+  async createScannedDocument(doc: InsertScannedDocument): Promise<ScannedDocument> {
+    const [newDoc] = await db.insert(scannedDocuments).values(doc).returning();
+    return newDoc;
+  }
+
+  async updateScannedDocument(id: string, doc: Partial<InsertScannedDocument>): Promise<ScannedDocument> {
+    const [updated] = await db
+      .update(scannedDocuments)
+      .set({ ...doc, updatedAt: new Date() })
+      .where(eq(scannedDocuments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScannedDocument(id: string): Promise<void> {
+    await db.delete(scannedDocuments).where(eq(scannedDocuments.id, id));
+  }
+
+  async searchScannedDocuments(userId: string, query: string): Promise<ScannedDocument[]> {
+    return await db
+      .select()
+      .from(scannedDocuments)
+      .where(
+        and(
+          eq(scannedDocuments.userId, userId),
+          or(
+            ilike(scannedDocuments.title, `%${query}%`),
+            ilike(scannedDocuments.extractedText, `%${query}%`)
+          )
+        )
+      )
+      .orderBy(desc(scannedDocuments.createdAt))
+      .limit(50);
   }
 }
 

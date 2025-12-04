@@ -324,6 +324,73 @@ export type InsertOrderEvent = z.infer<typeof insertOrderEventSchema>;
 export type OrderEvent = typeof orderEvents.$inferSelect;
 
 // ========================
+// SCANNED DOCUMENTS
+// ========================
+export const scannedDocuments = pgTable(
+  "scanned_documents",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    category: varchar("category", { length: 50 }).default("general"),
+    
+    extractedText: text("extracted_text"),
+    
+    pageCount: integer("page_count").default(1),
+    
+    imageData: text("image_data"),
+    thumbnailData: text("thumbnail_data"),
+    
+    clientId: varchar("client_id").references(() => clients.id),
+    noteId: varchar("note_id").references(() => crmNotes.id),
+    meetingId: varchar("meeting_id").references(() => crmMeetings.id),
+    
+    tags: text("tags").array(),
+    
+    language: varchar("language", { length: 10 }).default("eng"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_scanned_documents_user").on(table.userId),
+    categoryIdx: index("idx_scanned_documents_category").on(table.category),
+    clientIdx: index("idx_scanned_documents_client").on(table.clientId),
+  })
+);
+
+export const insertScannedDocumentSchema = createInsertSchema(scannedDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertScannedDocument = z.infer<typeof insertScannedDocumentSchema>;
+export type ScannedDocument = typeof scannedDocuments.$inferSelect;
+
+// Document categories
+export const DOCUMENT_CATEGORIES = [
+  'general',
+  'receipt',
+  'contract',
+  'invoice',
+  'business_card',
+  'meeting_notes',
+  'proposal',
+  'other'
+] as const;
+
+// Supported OCR languages
+export const OCR_LANGUAGES = [
+  { code: 'eng', name: 'English' },
+  { code: 'spa', name: 'Spanish' },
+  { code: 'fra', name: 'French' },
+  { code: 'deu', name: 'German' },
+  { code: 'ita', name: 'Italian' },
+  { code: 'por', name: 'Portuguese' },
+] as const;
+
+// ========================
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;

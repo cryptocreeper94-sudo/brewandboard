@@ -438,5 +438,110 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // SCANNED DOCUMENTS ROUTES
+  // ========================
+
+  app.get("/api/documents", async (req, res) => {
+    try {
+      const { userId, category, clientId, search, limit } = req.query;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      
+      const documents = await storage.getScannedDocuments(
+        userId as string,
+        {
+          category: category as string | undefined,
+          clientId: clientId as string | undefined,
+          search: search as string | undefined,
+          limit: limit ? parseInt(limit as string) : undefined
+        }
+      );
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/documents/:id", async (req, res) => {
+    try {
+      const document = await storage.getScannedDocument(req.params.id);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json(document);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/documents", async (req, res) => {
+    try {
+      const { userId, title, category, extractedText, pageCount, imageData, thumbnailData, clientId, noteId, meetingId, tags, language } = req.body;
+      
+      if (!userId || !title) {
+        return res.status(400).json({ error: "userId and title are required" });
+      }
+      
+      const document = await storage.createScannedDocument({
+        userId,
+        title,
+        category: category || "general",
+        extractedText,
+        pageCount: pageCount || 1,
+        imageData,
+        thumbnailData,
+        clientId,
+        noteId,
+        meetingId,
+        tags,
+        language: language || "eng"
+      });
+      
+      res.status(201).json(document);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/documents/:id", async (req, res) => {
+    try {
+      const existingDoc = await storage.getScannedDocument(req.params.id);
+      if (!existingDoc) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      const document = await storage.updateScannedDocument(req.params.id, req.body);
+      res.json(document);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/documents/:id", async (req, res) => {
+    try {
+      await storage.deleteScannedDocument(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/documents/search/:userId", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: "Search query (q) is required" });
+      }
+      
+      const documents = await storage.searchScannedDocuments(req.params.userId, q as string);
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

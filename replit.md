@@ -14,6 +14,13 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - **Pricing**: Concierge pricing with 15% service fee on one-off orders, subscription tiers for discounts
 
 ## Recent Changes (December 2024)
+- **Developer Hub Protection**: Added PIN-based authentication (PIN: 0424) for /developers page
+  - "Developer" link in footer opens PIN entry dialog
+  - Auth stored in localStorage (coffee_dev_auth)
+  - Logout button in Developer Hub header
+- **Demo Mode for Portfolio**: "Try Demo" button on login page for testing without database
+  - Demo notes stored in localStorage only
+  - Orange banner shows demo mode status with exit button
 - Added back navigation buttons to Portfolio, Schedule, and Developers pages
 - Expanded vendor catalog to 12 vendors (Nashville coffee shops + smoothie places)
 - Added Smoothie King, Tropical Smoothie Cafe, Jamba, and more coffee shops

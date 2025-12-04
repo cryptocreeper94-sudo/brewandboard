@@ -4,6 +4,7 @@ import {
   Coffee, 
   MapPin, 
   ChevronRight,
+  ChevronLeft,
   Star,
   Plus,
   Download,
@@ -78,6 +79,117 @@ interface NewsItem {
   pubDate: string;
   description: string;
   image: string | null;
+}
+
+function CuratedRoastersCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const shops = COFFEE_SHOPS.slice(0, 8);
+  
+  const goNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % shops.length);
+  };
+  
+  const goPrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + shops.length) % shops.length);
+  };
+  
+  const shop = shops[currentIndex];
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h3 className="font-serif text-lg">Curated Roasters</h3>
+        <span className="text-xs font-medium text-muted-foreground">
+          {currentIndex + 1} of {shops.length}
+        </span>
+      </div>
+      
+      <div className="relative">
+        {/* Left Arrow */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goPrev}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-0"
+          data-testid="button-carousel-prev"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        
+        {/* Right Arrow */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goNext}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-0"
+          data-testid="button-carousel-next"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+        
+        {/* Card */}
+        <motion.div
+          key={shop.id}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+          className="w-full h-[320px] md:h-[360px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg"
+        >
+          <img 
+            src={shopImages[shop.id] || shop.image} 
+            alt={shop.name} 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+          
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+            <div className="flex justify-between items-start mb-3">
+              <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-sm px-3 py-1">
+                {shop.rating} <Star className="h-3.5 w-3.5 ml-1 fill-current" />
+              </Badge>
+              {currentIndex === 0 && (
+                <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none">
+                  Featured
+                </Badge>
+              )}
+            </div>
+            <h3 className="font-serif text-2xl md:text-3xl font-bold mb-2">{shop.name}</h3>
+            <p className="text-base text-white/80 flex items-center gap-2 mb-4">
+              <MapPin className="h-4 w-4" /> {shop.location}
+            </p>
+            
+            <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <span className="text-sm text-white/70">{shop.specialty}</span>
+              <Button size="sm" className="bg-white text-black hover:bg-white/90 font-medium">
+                View Menu
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Dots indicator */}
+        <div className="flex justify-center gap-2 mt-4">
+          {shops.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx === currentIndex 
+                  ? 'bg-amber-600 w-6' 
+                  : 'bg-amber-600/30 hover:bg-amber-600/50'
+              }`}
+              data-testid={`button-carousel-dot-${idx}`}
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export default function Dashboard() {
@@ -384,59 +496,8 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Curated Roasters - Horizontal Carousel */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="font-serif text-lg">Curated Roasters</h3>
-            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <ChevronRight className="h-3 w-3" />
-              Scroll to explore
-            </span>
-          </div>
-        </motion.div>
-        
-        {/* Carousel container using ScrollArea */}
-        <ScrollArea className="w-full whitespace-nowrap pb-4">
-          <div className="flex gap-4 w-max">
-            {COFFEE_SHOPS.slice(0, 8).map((shop, index) => (
-              <motion.div 
-                key={shop.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index }}
-                className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0"
-              >
-                <img 
-                  src={shopImages[shop.id] || shop.image} 
-                  alt={shop.name} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-white">
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-xs">{shop.rating} <Star className="h-3 w-3 ml-1 fill-current" /></Badge>
-                    {index === 0 && <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none text-[10px]">Featured</Badge>}
-                  </div>
-                  <h3 className="font-serif text-lg md:text-xl font-bold mb-1">{shop.name}</h3>
-                  <p className="text-sm text-white/80 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> {shop.location}
-                  </p>
-                  
-                  <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
-                    <span className="text-xs text-white/70">{shop.specialty}</span>
-                    <Button size="sm" className="h-7 text-xs bg-white text-black hover:bg-white/90 font-medium">View Menu</Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        {/* Curated Roasters - Single Panel Carousel with Arrows */}
+        <CuratedRoastersCarousel />
 
         {/* Nashville News Section */}
         <motion.div 

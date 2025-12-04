@@ -123,7 +123,7 @@ export function MascotButton({
   };
 
   return (
-    <div className={`fixed bottom-24 right-4 z-50 ${className}`}>
+    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
       <AnimatePresence>
         {showSpeechBubble && (
           <motion.div
@@ -251,9 +251,9 @@ export function MascotButton({
         <img
           src={mascotImage}
           alt="Happy Coffee - Your AI Assistant"
-          className="w-20 h-20 object-contain"
+          className="w-40 h-40 object-contain"
           style={{ 
-            filter: 'drop-shadow(0 0 18px rgba(251,191,36,0.55)) drop-shadow(0 4px 8px rgba(180,83,9,0.3))'
+            filter: 'drop-shadow(0 0 24px rgba(251,191,36,0.55)) drop-shadow(0 6px 12px rgba(180,83,9,0.3))'
           }}
         />
 

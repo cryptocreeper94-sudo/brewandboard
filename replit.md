@@ -5,10 +5,12 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 
 ## Current State
 - **Authentication**: Custom PIN-based login/registration with optional 30-day persistence
-- **Dashboard**: Premium Bento grid layout with weather widget, team members, and vendor scrolling
-- **Portfolio/CRM**: Industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes
+- **Dashboard**: Premium Bento grid layout with weather widget, team members, vendor scrolling, and Web3 search
+- **Portfolio/CRM**: Industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes and voice recording
 - **Order Scheduling**: Calendar-based coffee delivery scheduling with 2-hour minimum lead time
 - **Document Scanner**: Universal OCR scanner for creating and sharing PDFs on-the-go
+- **Web3 Research**: Quick search bar for crypto tokens, contract addresses, and URLs
+- **AI Mascot**: "Happy Coffee" floating mascot button with breathing animation
 
 ## Recent Changes (December 2024)
 - Added Order Scheduling System with calendar view
@@ -17,6 +19,11 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - Created status tracking for orders (scheduled → confirmed → preparing → out_for_delivery → delivered)
 - Added fulfillment tracking for manual DoorDash/Uber Eats entry
 - Added Universal Document Scanner with OCR (Tesseract.js) and PDF generation (jsPDF)
+- Added "Happy Coffee" AI mascot with floating button and breathing animations
+- Implemented speech-to-text voice note recording in Portfolio (Web Speech API)
+- Created Developers page with API documentation
+- Added Web3 Research search bar (CoinGecko API) on Dashboard and Portfolio pages
+- Premium UI enhancements: sparkle effects, 3D hover transforms, glassmorphism
 
 ## Project Architecture
 
@@ -26,6 +33,10 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - `/client/src/pages/portfolio.tsx` - CRM notes with industry templates
 - `/client/src/pages/schedule.tsx` - Order scheduling calendar
 - `/client/src/pages/scan.tsx` - Document scanner with OCR and PDF export
+- `/client/src/pages/developers.tsx` - API documentation page
+- `/client/src/components/Web3Search.tsx` - Web3 research search bar
+- `/client/src/components/MascotButton.tsx` - AI mascot floating button
+- `/client/src/hooks/useSpeechToText.ts` - Voice recording hook
 
 ### Backend (Express + TypeScript)
 - `/server/routes.ts` - API endpoints for auth, notes, orders

@@ -18,9 +18,15 @@ interface TokenResult {
   total_volume: number;
 }
 
-interface SearchResult {
-  type: "token" | "web" | "contract";
-  data: TokenResult | { title: string; url: string; snippet: string };
+interface ContractResult {
+  address: string;
+  chain: string;
+  explorerUrl: string;
+}
+
+interface WebResult {
+  url: string;
+  domain: string;
 }
 
 function detectSearchMode(query: string): SearchMode {
@@ -54,7 +60,9 @@ export function Web3Search() {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<TokenResult[]>([]);
+  const [tokenResults, setTokenResults] = useState<TokenResult[]>([]);
+  const [contractResult, setContractResult] = useState<ContractResult | null>(null);
+  const [webResult, setWebResult] = useState<WebResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,24 +80,58 @@ export function Web3Search() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const clearResults = () => {
+    setTokenResults([]);
+    setContractResult(null);
+    setWebResult(null);
+  };
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     
     if (!query.trim() || query.length < 2) {
-      setResults([]);
+      clearResults();
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    clearResults();
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const searchQuery = query.toLowerCase().trim();
+        const searchQuery = query.trim();
+        const currentMode = detectSearchMode(searchQuery);
+        
+        if (currentMode === "web") {
+          try {
+            const url = new URL(searchQuery);
+            setWebResult({
+              url: searchQuery,
+              domain: url.hostname
+            });
+            setIsOpen(true);
+          } catch {
+            setError("Invalid URL format");
+          }
+          setIsLoading(false);
+          return;
+        }
+        
+        if (currentMode === "contract") {
+          setContractResult({
+            address: searchQuery,
+            chain: "Ethereum",
+            explorerUrl: `https://etherscan.io/address/${searchQuery}`
+          });
+          setIsOpen(true);
+          setIsLoading(false);
+          return;
+        }
         
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchQuery)}`
+          `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchQuery.toLowerCase())}`
         );
         
         if (!response.ok) throw new Error("Search failed");
@@ -98,8 +140,9 @@ export function Web3Search() {
         const coinIds = searchData.coins?.slice(0, 5).map((c: any) => c.id) || [];
         
         if (coinIds.length === 0) {
-          setResults([]);
+          clearResults();
           setIsLoading(false);
+          setIsOpen(true);
           return;
         }
 
@@ -110,12 +153,12 @@ export function Web3Search() {
         if (!marketResponse.ok) throw new Error("Failed to fetch market data");
         
         const marketData = await marketResponse.json();
-        setResults(marketData);
+        setTokenResults(marketData);
         setIsOpen(true);
       } catch (err) {
         console.error("Search error:", err);
         setError("Search failed. Try again.");
-        setResults([]);
+        clearResults();
       } finally {
         setIsLoading(false);
       }
@@ -165,7 +208,7 @@ export function Web3Search() {
             placeholder="Search tokens, contracts, URLs..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => results.length > 0 && setIsOpen(true)}
+            onFocus={() => (tokenResults.length > 0 || contractResult || webResult) && setIsOpen(true)}
             className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-sm"
             data-testid="input-web3-search"
           />
@@ -183,7 +226,7 @@ export function Web3Search() {
               className="h-8 w-8 mr-1"
               onClick={() => {
                 setQuery("");
-                setResults([]);
+                clearResults();
                 setIsOpen(false);
               }}
               data-testid="button-clear-search"
@@ -195,7 +238,7 @@ export function Web3Search() {
       </div>
 
       <AnimatePresence>
-        {isOpen && (results.length > 0 || error) && (
+        {isOpen && (tokenResults.length > 0 || contractResult || webResult || error) && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -209,7 +252,7 @@ export function Web3Search() {
                   <Search className="h-3 w-3" />
                   <span>Web3 Research Results</span>
                   <Badge variant="outline" className="ml-auto text-[10px]">
-                    {results.length} found
+                    {getModeLabel()}
                   </Badge>
                 </div>
               </div>
@@ -220,7 +263,58 @@ export function Web3Search() {
                 </div>
               ) : (
                 <div className="max-h-80 overflow-y-auto">
-                  {results.map((token) => (
+                  {/* Web/URL Result */}
+                  {webResult && (
+                    <motion.a
+                      href={webResult.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer group/item"
+                      whileHover={{ x: 4 }}
+                      data-testid="result-web-url"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                        <Globe className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">Open URL</span>
+                          <Badge variant="secondary" className="text-[10px]">Web</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{webResult.domain}</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                    </motion.a>
+                  )}
+                  
+                  {/* Contract Result */}
+                  {contractResult && (
+                    <motion.a
+                      href={contractResult.explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer group/item"
+                      whileHover={{ x: 4 }}
+                      data-testid="result-contract"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                        <FileCode className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">View on Etherscan</span>
+                          <Badge variant="secondary" className="text-[10px]">{contractResult.chain}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">
+                          {contractResult.address.slice(0, 10)}...{contractResult.address.slice(-8)}
+                        </p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                    </motion.a>
+                  )}
+                  
+                  {/* Token Results */}
+                  {tokenResults.map((token) => (
                     <motion.a
                       key={token.id}
                       href={`https://www.coingecko.com/en/coins/${token.id}`}

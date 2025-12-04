@@ -75,6 +75,98 @@ interface ScannedPage {
   ocrProgress: number;
 }
 
+interface ExtractedContact {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  title: string;
+  website: string;
+  address: string;
+}
+
+function extractContactInfo(text: string): ExtractedContact {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  
+  const emailRegex = /[\w.-]+@[\w.-]+\.\w+/gi;
+  const phoneRegex = /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/g;
+  const urlRegex = /(?:www\.|https?:\/\/)?[\w.-]+\.\w{2,}(?:\/\S*)?/gi;
+  
+  const emails = text.match(emailRegex) || [];
+  const phones = text.match(phoneRegex) || [];
+  const urls = text.match(urlRegex) || [];
+  
+  const cleanUrls = urls.filter(u => !u.includes('@'));
+  
+  const titlePatterns = [
+    /\b(CEO|CTO|CFO|COO|CMO|President|Director|Manager|VP|Vice President|Owner|Founder|Partner|Attorney|Consultant|Agent|Realtor|Contractor|Plumber|Electrician)\b/i,
+    /\b(Sales|Marketing|Engineering|Operations|Business Development|Account|Project)\s+(Manager|Director|Executive|Lead|Representative)\b/i,
+  ];
+  
+  let foundTitle = '';
+  for (const pattern of titlePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      foundTitle = match[0];
+      break;
+    }
+  }
+  
+  let foundName = '';
+  let foundCompany = '';
+  
+  for (const line of lines.slice(0, 5)) {
+    if (line.match(emailRegex) || line.match(phoneRegex) || line.match(urlRegex)) continue;
+    if (line.length > 50) continue;
+    
+    const words = line.split(/\s+/);
+    if (words.length >= 2 && words.length <= 4 && !foundName) {
+      const isAllCaps = line === line.toUpperCase();
+      const hasCommonFirstName = /^(John|James|Michael|Robert|David|William|Richard|Joseph|Thomas|Charles|Mary|Patricia|Jennifer|Linda|Elizabeth|Barbara|Susan|Jessica|Sarah|Karen|Steve|Bob|Bill|Mike|Tom|Jim|Joe|Dan|Chris|Matt|Jeff|Mark|Paul|Brian|Tim|Scott|Eric|Jason|Adam|Kevin|Ryan|Greg|Tony|Andrew|Aaron|Alex|Nick|Jake|Luke|Zach|Ben|Sam|Jack|Henry|Frank|Ray|Gary|Larry|Jerry|Dennis|Randy|Roy|Carl|Wayne|Eugene|Terry|Roger|Keith|Louis|Henry|Howard|Victor|Walter|Todd|Donald|Peter|Harold|Douglas|George|Stephen|Kenneth|Edward|Ronald|Anthony|Jose|Daniel|Matthew|Joshua|Christopher|Anthony|Travis|Nicole|Michelle|Amanda|Melissa|Stephanie|Laura|Ashley|Julie|Kelly|Christina|Heather|Kimberly|Crystal|Amber|Angela|Rachel|Emily|Megan|Lauren|Tiffany|Sara|Andrea|Brittany|Danielle|Victoria|Courtney|Cynthia|Nancy|Diana|Rebecca|Amy|Leslie|Tammy|Tracy|Jacqueline|April|Carrie|Pamela|Brenda|Dorothy|Frances|Carolyn|Diane|Marie|Janet|Ruth|Debra|Annie|Evelyn|Martha|Theresa|Virginia|Alice|Jean|Judy|Maria|Gloria|Katherine|Susan|Linda)/i.test(words[0]);
+      
+      if (isAllCaps || hasCommonFirstName || words.every(w => /^[A-Z][a-z]+$/.test(w))) {
+        foundName = line;
+      }
+    }
+    
+    if (!foundCompany && line.length > 3) {
+      const companyPatterns = [
+        /\b(LLC|Inc\.|Corp\.|Corporation|Company|Co\.|Ltd\.|Group|Services|Solutions|Enterprises|Associates|Partners|Agency|Studio|Firm|Industries)\b/i,
+        /\b(Construction|Painting|Plumbing|Electric|Roofing|HVAC|Landscaping|Realty|Real Estate|Properties|Consulting|Development|Design|Media|Tech|Technologies)\b/i,
+      ];
+      
+      for (const pattern of companyPatterns) {
+        if (pattern.test(line)) {
+          foundCompany = line;
+          break;
+        }
+      }
+    }
+  }
+  
+  let foundAddress = '';
+  for (const line of lines) {
+    if (/\d+\s+[\w\s]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Ln|Lane|Way|Ct|Court|Pl|Place)/i.test(line)) {
+      foundAddress = line;
+      break;
+    }
+    if (/\b[A-Z]{2}\s+\d{5}(?:-\d{4})?\b/.test(line)) {
+      foundAddress = line;
+      break;
+    }
+  }
+  
+  return {
+    name: foundName,
+    email: emails[0] || '',
+    phone: phones[0] || '',
+    company: foundCompany,
+    title: foundTitle,
+    website: cleanUrls[0] || '',
+    address: foundAddress,
+  };
+}
+
 const CATEGORY_ICONS: Record<string, any> = {
   general: FileText,
   receipt: Receipt,
@@ -123,6 +215,13 @@ export default function ScanPage() {
   
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const [showBusinessCardDialog, setShowBusinessCardDialog] = useState(false);
+  const [extractedContact, setExtractedContact] = useState<ExtractedContact | null>(null);
+  const [editableContact, setEditableContact] = useState<ExtractedContact>({
+    name: '', email: '', phone: '', company: '', title: '', website: '', address: ''
+  });
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
   
   const ocrWorkerRef = useRef<Worker | null>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
@@ -229,6 +328,110 @@ export default function ScanPage() {
       toast({ title: "Document Deleted" });
     },
   });
+
+  const createClientMutation = useMutation({
+    mutationFn: async (data: {
+      name: string;
+      contactName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      industry?: string;
+      addressLine1?: string;
+    }) => {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          ...data,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create client");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      toast({
+        title: "Contact Added",
+        description: "New client has been created from business card.",
+      });
+      setShowBusinessCardDialog(false);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to Create Client",
+        description: "Could not add this contact. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const extractBusinessCard = () => {
+    if (pages.length === 0) {
+      toast({
+        title: "No Pages",
+        description: "Please scan a business card first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const allText = pages.map(p => p.extractedText).join('\n');
+    const contact = extractContactInfo(allText);
+    setExtractedContact(contact);
+    setEditableContact(contact);
+    setShowBusinessCardDialog(true);
+  };
+
+  const saveContactAsClient = async () => {
+    if (!editableContact.name && !editableContact.company) {
+      toast({
+        title: "Name Required",
+        description: "Please enter at least a name or company.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsCreatingClient(true);
+    
+    try {
+      await createClientMutation.mutateAsync({
+        name: editableContact.company || editableContact.name,
+        contactName: editableContact.name,
+        contactEmail: editableContact.email,
+        contactPhone: editableContact.phone,
+        industry: editableContact.title,
+        addressLine1: editableContact.address,
+      });
+    } catch (error) {
+      console.error("Failed to create client:", error);
+    } finally {
+      setIsCreatingClient(false);
+    }
+  };
+
+  const emailDocument = async () => {
+    if (pages.length === 0) {
+      toast({
+        title: "No Pages",
+        description: "Please scan at least one document first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const allText = pages.map(p => p.extractedText).join('\n\n');
+    const subject = encodeURIComponent(documentName);
+    const body = encodeURIComponent(`Here is the scanned document "${documentName}":\n\n${allText.substring(0, 1000)}${allText.length > 1000 ? '...\n\n(Document text truncated. Please see attached PDF for full content.)' : ''}`);
+    
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    
+    toast({
+      title: "Email Ready",
+      description: "Your email client should open. You can attach the downloaded PDF.",
+    });
+  };
 
   const stopCameraStream = useCallback(() => {
     if (cameraStreamRef.current) {
@@ -886,6 +1089,126 @@ export default function ScanPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showBusinessCardDialog} onOpenChange={setShowBusinessCardDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Business Card Contact
+            </DialogTitle>
+            <DialogDescription>
+              Review and edit the extracted contact information
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editableContact.name}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Contact name"
+                  className="mt-1"
+                  data-testid="input-contact-name"
+                />
+              </div>
+              <div>
+                <Label>Company</Label>
+                <Input
+                  value={editableContact.company}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, company: e.target.value }))}
+                  placeholder="Company name"
+                  className="mt-1"
+                  data-testid="input-contact-company"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  value={editableContact.email}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@example.com"
+                  className="mt-1"
+                  data-testid="input-contact-email"
+                />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input
+                  value={editableContact.phone}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                  className="mt-1"
+                  data-testid="input-contact-phone"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={editableContact.title}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Job title"
+                  className="mt-1"
+                  data-testid="input-contact-title"
+                />
+              </div>
+              <div>
+                <Label>Website</Label>
+                <Input
+                  value={editableContact.website}
+                  onChange={(e) => setEditableContact(prev => ({ ...prev, website: e.target.value }))}
+                  placeholder="www.example.com"
+                  className="mt-1"
+                  data-testid="input-contact-website"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Address</Label>
+              <Input
+                value={editableContact.address}
+                onChange={(e) => setEditableContact(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Street address"
+                className="mt-1"
+                data-testid="input-contact-address"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowBusinessCardDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={saveContactAsClient}
+              disabled={isCreatingClient || (!editableContact.name && !editableContact.company)}
+              className="gap-2"
+              data-testid="button-save-contact"
+            >
+              {isCreatingClient ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <User className="h-4 w-4" />
+                  Add to Clients
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -1213,6 +1536,30 @@ export default function ScanPage() {
                         <Share2 className="h-4 w-4" />
                         Share PDF
                       </Button>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={extractBusinessCard}
+                          disabled={pages.length === 0 || pages.some(p => p.isProcessing)}
+                          className="gap-1.5 text-sm"
+                          data-testid="button-extract-card"
+                        >
+                          <User className="h-3.5 w-3.5" />
+                          Business Card
+                        </Button>
+                        
+                        <Button
+                          variant="secondary"
+                          onClick={emailDocument}
+                          disabled={pages.length === 0}
+                          className="gap-1.5 text-sm"
+                          data-testid="button-email-doc"
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          Email
+                        </Button>
+                      </div>
 
                       {pages.length > 0 && (
                         <Button

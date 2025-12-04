@@ -120,10 +120,12 @@ export default function AdminPage() {
     blockchain: 'checking',
   });
   const [hallmarks, setHallmarks] = useState<Hallmark[]>([]);
+  const [totalHallmarks, setTotalHallmarks] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedHallmark, setSelectedHallmark] = useState<Hallmark | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const adminAuth = localStorage.getItem("coffee_admin_auth");
@@ -162,12 +164,25 @@ export default function AdminPage() {
     setPin("");
   };
 
-  const fetchData = async () => {
+  const fetchData = async (query?: string, type?: string) => {
     setIsRefreshing(true);
     try {
+      const searchParams = new URLSearchParams();
+      searchParams.set('limit', '200');
+      if (query && query.trim()) {
+        searchParams.set('q', query.trim());
+      }
+      if (type && type !== 'all') {
+        if (type === 'company' || type === 'user') {
+          searchParams.set('type', type);
+        } else {
+          searchParams.set('assetType', type);
+        }
+      }
+      
       const [statsRes, searchRes] = await Promise.all([
         fetch('/api/hallmark/stats'),
-        fetch('/api/hallmark/admin/search?limit=100'),
+        fetch(`/api/hallmark/admin/search?${searchParams.toString()}`),
       ]);
       
       if (statsRes.ok) {
@@ -178,12 +193,29 @@ export default function AdminPage() {
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         setHallmarks(searchData.hallmarks || []);
+        setTotalHallmarks(searchData.total || 0);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
       setIsRefreshing(false);
     }
+  };
+  
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    const timeout = setTimeout(() => {
+      fetchData(query, filterType);
+    }, 300);
+    setSearchTimeout(timeout);
+  };
+  
+  const handleFilterChange = (type: string) => {
+    setFilterType(type);
+    fetchData(searchQuery, type);
   };
 
   const checkHealth = async () => {
@@ -231,24 +263,6 @@ export default function AdminPage() {
     setHealth(newHealth);
   };
 
-  const filteredHallmarks = hallmarks.filter(h => {
-    const matchesSearch = 
-      h.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.assetName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.contentHash.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (h.userId && h.userId.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    let matchesType = true;
-    if (filterType === "company") {
-      matchesType = h.isCompanyHallmark === true;
-    } else if (filterType === "user") {
-      matchesType = h.isCompanyHallmark === false;
-    } else if (filterType !== "all") {
-      matchesType = h.assetType === filterType;
-    }
-    
-    return matchesSearch && matchesType;
-  });
 
   if (!isAuthenticated) {
     return (
@@ -459,14 +473,14 @@ export default function AdminPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search by serial number, name, or hash..."
+                    placeholder="Search by serial number, name, hash, or user ID..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
                     data-testid="input-hallmark-search"
                   />
                 </div>
-                <Select value={filterType} onValueChange={setFilterType}>
+                <Select value={filterType} onValueChange={handleFilterChange}>
                   <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by type" />
@@ -483,17 +497,22 @@ export default function AdminPage() {
                 </Select>
               </div>
 
+              {/* Results count */}
+              <div className="text-sm text-slate-400 mb-4">
+                Showing {hallmarks.length} of {totalHallmarks} hallmarks
+              </div>
+              
               {/* Hallmarks List */}
               <ScrollArea className="h-[400px]">
                 <div className="space-y-3">
-                  {filteredHallmarks.length === 0 ? (
+                  {hallmarks.length === 0 ? (
                     <div className="text-center py-12 text-slate-400">
                       <Hash className="h-12 w-12 mx-auto mb-4 opacity-30" />
                       <p>No hallmarks found</p>
                       <p className="text-sm">Try adjusting your search or filters</p>
                     </div>
                   ) : (
-                    filteredHallmarks.map((hallmark) => (
+                    hallmarks.map((hallmark) => (
                       <motion.div
                         key={hallmark.id}
                         initial={{ opacity: 0 }}

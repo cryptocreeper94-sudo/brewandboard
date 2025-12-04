@@ -36,6 +36,13 @@ import {
   WifiOff,
   Bitcoin,
   RefreshCw,
+  Wallet,
+  Hash,
+  FileCheck,
+  Search,
+  Eye,
+  QrCode,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,7 +50,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { BusinessCardPreview } from "@/components/BusinessCard";
+
+interface HallmarkStats {
+  totalCompanyHallmarks: number;
+  totalUserHallmarks: number;
+  totalVerifications: number;
+  activeProfiles: number;
+  blockchain: {
+    configured: boolean;
+    network: string;
+    currentSlot: number;
+    walletBalance: number;
+    walletAddress: string;
+    rpcEndpoint: string;
+  };
+}
+
+interface CompanyHallmark {
+  id: number;
+  serialNumber: string;
+  assetType: string;
+  assetName?: string;
+  contentHash: string;
+  status: string;
+  solanaTxSignature?: string;
+  verificationCount: number;
+  issuedAt: string;
+}
 
 const API_ENDPOINTS = [
   {
@@ -248,6 +284,10 @@ export default function DevelopersPage() {
     coinbase: 'checking',
     lastChecked: null
   });
+  const [hallmarkStats, setHallmarkStats] = useState<HallmarkStats | null>(null);
+  const [companyHallmarks, setCompanyHallmarks] = useState<CompanyHallmark[]>([]);
+  const [hallmarkSearch, setHallmarkSearch] = useState("");
+  const [isSeeding, setIsSeeding] = useState(false);
   
   useEffect(() => {
     const devAuth = localStorage.getItem("coffee_dev_auth");
@@ -257,6 +297,52 @@ export default function DevelopersPage() {
       window.location.href = "/";
     }
   }, []);
+  
+  const fetchHallmarkData = async () => {
+    try {
+      const [statsRes, hallmarksRes] = await Promise.all([
+        fetch('/api/hallmark/stats'),
+        fetch('/api/hallmark/company'),
+      ]);
+      
+      if (statsRes.ok) {
+        const stats = await statsRes.json();
+        setHallmarkStats(stats);
+      }
+      
+      if (hallmarksRes.ok) {
+        const hallmarks = await hallmarksRes.json();
+        setCompanyHallmarks(hallmarks);
+      }
+    } catch (error) {
+      console.error('Failed to fetch hallmark data:', error);
+    }
+  };
+  
+  const seedInitialHallmarks = async () => {
+    setIsSeeding(true);
+    try {
+      const res = await fetch('/api/hallmark/seed', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        toast({
+          title: "Hallmarks Seeded",
+          description: `App: ${data.app?.hallmark?.serialNumber}, Dev: ${data.developer?.hallmark?.serialNumber}`
+        });
+        fetchHallmarkData();
+      }
+    } catch (error) {
+      toast({ title: "Seeding Failed", variant: "destructive" });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchHallmarkData();
+    }
+  }, [isAuthenticated]);
 
   const checkHealth = async () => {
     setIsRefreshing(true);
@@ -678,6 +764,287 @@ export default function DevelopersPage() {
                     <span className="flex items-center gap-1">
                       <StatusLight status="offline" size="sm" /> Offline
                     </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Blockchain Hallmark Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.28 }}
+          className="mb-12"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-purple-500/5" />
+            <CardHeader className="relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                      <Wallet className="h-5 w-5 text-white" />
+                    </div>
+                    Blockchain Hallmarks
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    Solana-verified document authenticity system
+                    <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                      {hallmarkStats?.blockchain?.configured ? 'Connected' : 'Configuring'}
+                    </Badge>
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchHallmarkData}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  {companyHallmarks.length === 0 && (
+                    <Button
+                      size="sm"
+                      onClick={seedInitialHallmarks}
+                      disabled={isSeeding}
+                      className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                    >
+                      {isSeeding ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      Seed Initial Hallmarks
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              {/* Blockchain Stats Grid */}
+              <div className="grid md:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                      <Coffee className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">Company</span>
+                  </div>
+                  <p className="text-2xl font-bold">{hallmarkStats?.totalCompanyHallmarks || 0}</p>
+                  <p className="text-xs text-muted-foreground">Official hallmarks</p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                      <Hash className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">Subscriber</span>
+                  </div>
+                  <p className="text-2xl font-bold">{hallmarkStats?.totalUserHallmarks || 0}</p>
+                  <p className="text-xs text-muted-foreground">User hallmarks</p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <Eye className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">Verifications</span>
+                  </div>
+                  <p className="text-2xl font-bold">{hallmarkStats?.totalVerifications || 0}</p>
+                  <p className="text-xs text-muted-foreground">Total lookups</p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                      <FileCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">Profiles</span>
+                  </div>
+                  <p className="text-2xl font-bold">{hallmarkStats?.activeProfiles || 0}</p>
+                  <p className="text-xs text-muted-foreground">Minted prefixes</p>
+                </div>
+              </div>
+
+              {/* Solana Network Info */}
+              {hallmarkStats?.blockchain && (
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 mb-6">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <StatusLight status={hallmarkStats.blockchain.configured ? "healthy" : "offline"} size="lg" />
+                      <div>
+                        <p className="font-semibold text-emerald-700">Solana {hallmarkStats.blockchain.network}</p>
+                        <p className="text-xs text-emerald-600">
+                          Slot: {hallmarkStats.blockchain.currentSlot?.toLocaleString() || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 text-xs">
+                      <div className="text-right">
+                        <p className="text-muted-foreground">Wallet Balance</p>
+                        <p className="font-mono font-semibold">{hallmarkStats.blockchain.walletBalance?.toFixed(4) || '0'} SOL</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground">Cost per Hallmark</p>
+                        <p className="font-mono font-semibold">~$0.00025</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Company Hallmarks List */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Company Hallmarks (BB-000...)
+                  </h3>
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search hallmarks..."
+                      value={hallmarkSearch}
+                      onChange={(e) => setHallmarkSearch(e.target.value)}
+                      className="pl-10 h-9"
+                    />
+                  </div>
+                </div>
+                
+                {companyHallmarks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No company hallmarks issued yet</p>
+                    <p className="text-xs">Click "Seed Initial Hallmarks" to create BB-0000000001 and BB-0000000002</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2">
+                      {companyHallmarks
+                        .filter(h => 
+                          h.serialNumber.toLowerCase().includes(hallmarkSearch.toLowerCase()) ||
+                          h.assetName?.toLowerCase().includes(hallmarkSearch.toLowerCase())
+                        )
+                        .map((hallmark) => (
+                          <div
+                            key={hallmark.id}
+                            className="flex items-center justify-between p-3 rounded-lg bg-white/50 border border-gray-100 hover:border-emerald-200 transition-all"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                                <Shield className="h-4 w-4 text-white" />
+                              </div>
+                              <div>
+                                <code className="font-mono text-sm font-semibold text-emerald-700">
+                                  {hallmark.serialNumber}
+                                </code>
+                                <p className="text-xs text-muted-foreground">{hallmark.assetName || 'Untitled'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right text-xs">
+                                <p className="text-muted-foreground">{hallmark.verificationCount} views</p>
+                                <p className="text-muted-foreground">{new Date(hallmark.issuedAt).toLocaleDateString()}</p>
+                              </div>
+                              {hallmark.solanaTxSignature && (
+                                <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  On-Chain
+                                </Badge>
+                              )}
+                              <Link href={`/verify/${hallmark.serialNumber}`}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <QrCode className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
+
+              {/* Quick Links */}
+              <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t">
+                <Link href="/my-hallmarks">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Hash className="h-4 w-4" />
+                    My Hallmarks
+                  </Button>
+                </Link>
+                <Link href="/verify">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Search className="h-4 w-4" />
+                    Verify Hallmark
+                  </Button>
+                </Link>
+                <Link href="/blockchain-tutorial">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Tutorial
+                  </Button>
+                </Link>
+                <Link href="/admin">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Shield className="h-4 w-4" />
+                    Admin Panel
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Digital Business Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.29 }}
+          className="mb-12"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-900/5 via-amber-500/5 to-orange-500/5" />
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-gray-800 to-gray-900">
+                  <Coffee className="h-5 w-5 text-amber-500" />
+                </div>
+                Digital Business Card
+              </CardTitle>
+              <CardDescription>
+                Your blockchain-verified business identity. Export as PDF or share digitally.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <BusinessCardPreview />
+                <div className="flex-1 space-y-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+                    <h4 className="font-semibold text-emerald-700 flex items-center gap-2 mb-2">
+                      <Shield className="h-4 w-4" />
+                      Blockchain Verified
+                    </h4>
+                    <p className="text-sm text-emerald-600">
+                      Your business card includes a verifiable hallmark that links to your on-chain identity. 
+                      Recipients can scan the QR code to verify your credentials.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 rounded-lg bg-white/50 border border-gray-100">
+                      <p className="font-medium">PDF Export</p>
+                      <p className="text-xs text-muted-foreground">Standard 3.5" x 2" format</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/50 border border-gray-100">
+                      <p className="font-medium">Digital Share</p>
+                      <p className="text-xs text-muted-foreground">Native sharing or clipboard</p>
+                    </div>
                   </div>
                 </div>
               </div>

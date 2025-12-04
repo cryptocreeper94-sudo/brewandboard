@@ -16,6 +16,8 @@ import PaymentSuccessPage from "@/pages/payment-success";
 import VerifyPage from "@/pages/verify";
 import BlockchainTutorialPage from "@/pages/blockchain-tutorial";
 import HallmarkSuccessPage from "@/pages/hallmark-success";
+import AdminPage from "@/pages/admin";
+import MyHallmarksPage from "@/pages/my-hallmarks";
 import { MascotButton } from "@/components/MascotButton";
 import { MascotPopover } from "@/components/MascotPopover";
 import { Footer } from "@/components/Footer";
@@ -35,6 +37,8 @@ function Router() {
       <Route path="/verify/:code" component={VerifyPage} />
       <Route path="/blockchain-tutorial" component={BlockchainTutorialPage} />
       <Route path="/hallmark-success" component={HallmarkSuccessPage} />
+      <Route path="/admin" component={AdminPage} />
+      <Route path="/my-hallmarks" component={MyHallmarksPage} />
       <Route component={NotFound} />
     </Switch>
   );

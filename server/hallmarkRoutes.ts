@@ -366,4 +366,73 @@ export function registerHallmarkRoutes(app: Express) {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // ========================
+  // SEED INITIAL HALLMARKS
+  // ========================
+  
+  app.post('/api/hallmark/seed', async (req: Request, res: Response) => {
+    try {
+      const results = {
+        app: null as any,
+        developer: null as any
+      };
+      
+      // Check if app hallmark (BB-0000000001) already exists
+      const existingApp = await hallmarkService.getHallmarkBySerial('BB-0000000001');
+      if (!existingApp) {
+        // Issue BB-0000000001 for the app itself
+        results.app = await hallmarkService.issueCompanyHallmark({
+          assetType: 'application',
+          assetId: 'brew-and-board-v1',
+          assetName: 'Brew & Board Coffee Platform',
+          issuedBy: 'Darkwave Studios, LLC',
+          metadata: {
+            version: '1.0.0',
+            domain: 'brewandboard.coffee',
+            launchDate: '2024-12-01',
+            description: 'B2B Coffee Delivery Platform for Nashville'
+          }
+        });
+      } else {
+        results.app = { hallmark: existingApp, existing: true };
+      }
+      
+      // Check if developer hallmark (BB-0000000002) already exists
+      const existingDev = await hallmarkService.getHallmarkBySerial('BB-0000000002');
+      if (!existingDev) {
+        // Issue BB-0000000002 for the developer
+        results.developer = await hallmarkService.issueCompanyHallmark({
+          assetType: 'founder',
+          assetId: 'developer-01',
+          assetName: 'Founder & Lead Developer',
+          issuedBy: 'Brew & Board Coffee',
+          metadata: {
+            role: 'Founder & Lead Developer',
+            company: 'Darkwave Studios, LLC',
+            issueDate: new Date().toISOString()
+          }
+        });
+      } else {
+        results.developer = { hallmark: existingDev, existing: true };
+      }
+      
+      res.json({
+        success: true,
+        ...results
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+  
+  // Get the primary app hallmark (BB-0000000001)
+  app.get('/api/hallmark/app', async (req: Request, res: Response) => {
+    try {
+      const hallmark = await hallmarkService.getHallmarkBySerial('BB-0000000001');
+      res.json(hallmark);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 }

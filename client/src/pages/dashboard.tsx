@@ -20,7 +20,8 @@ import {
   Radar,
   Newspaper,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
@@ -158,9 +159,20 @@ export default function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-5 w-5 text-amber-600" />
-            <span className="text-sm font-medium text-foreground">Brew & Board</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Coffee className="h-5 w-5 text-amber-600" />
+              <span className="text-sm font-medium text-foreground">Brew & Board</span>
+            </div>
+            <Link href="/verify">
+              <Badge 
+                className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 border-emerald-200 hover:from-emerald-500/20 hover:to-teal-500/20 cursor-pointer transition-all text-[10px] py-0.5 gap-1"
+                data-testid="badge-solana-certified"
+              >
+                <Shield className="h-2.5 w-2.5" />
+                Solana Certified
+              </Badge>
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             {/* Weather Button - Clickable */}

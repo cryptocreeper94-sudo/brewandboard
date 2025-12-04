@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Web3Search } from "@/components/Web3Search";
+import { WebSearch } from "@/components/WebSearch";
 import { RegistrationPopup } from "@/components/RegistrationPopup";
 import { LoginPopup } from "@/components/LoginPopup";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -159,7 +159,7 @@ export default function Dashboard() {
 
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
         
-        {/* Web3 Research Search Bar */}
+        {/* Quick Search Bar */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,10 +167,10 @@ export default function Dashboard() {
         >
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
             <Sparkles className="h-3 w-3 text-primary" />
-            <span className="font-medium">Web3 Research</span>
-            <span className="text-muted-foreground/60">• Search tokens, contracts, URLs</span>
+            <span className="font-medium">Quick Search</span>
+            <span className="text-muted-foreground/60">• Search the web or visit URLs</span>
           </div>
-          <Web3Search />
+          <WebSearch />
         </motion.div>
         
         {/* Quick Actions - Horizontal Carousel */}

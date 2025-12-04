@@ -34,7 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Web3Search } from "@/components/Web3Search";
+import { WebSearch } from "@/components/WebSearch";
 
 type TemplateType = "general" | "painter" | "construction" | "real_estate" | "plumbing";
 
@@ -535,7 +535,7 @@ export default function PortfolioPage() {
           </div>
         </header>
 
-        {/* Web3 Research Quick Search */}
+        {/* Quick Search */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -543,10 +543,10 @@ export default function PortfolioPage() {
         >
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <Sparkles className="h-3 w-3 text-primary" />
-            <span className="font-medium">Web3 Research</span>
-            <span className="text-muted-foreground/60">• Quick lookup while working</span>
+            <span className="font-medium">Quick Search</span>
+            <span className="text-muted-foreground/60">• Search the web while working</span>
           </div>
-          <Web3Search />
+          <WebSearch />
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[600px]">

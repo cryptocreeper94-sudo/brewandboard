@@ -7,11 +7,11 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 
 ## Current State
 - **Authentication**: Custom PIN-based login/registration with optional 30-day persistence
-- **Dashboard**: Premium Bento grid layout with weather widget, team members, vendor scrolling, and Web3 search
+- **Dashboard**: Premium Bento grid layout with weather widget, team members, vendor scrolling, and quick web search
 - **Portfolio/CRM**: Industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes and voice recording
 - **Order Scheduling**: Calendar-based coffee delivery scheduling with 2-hour minimum lead time
 - **Document Scanner**: Universal OCR scanner for creating and sharing PDFs on-the-go
-- **Web3 Research**: Quick search bar for crypto tokens, contract addresses, and URLs
+- **Quick Search**: Search bar for web searches and visiting URLs
 - **AI Mascot**: "Happy Coffee" floating mascot button with breathing animation
 - **Pricing**: Concierge pricing with 15% service fee on one-off orders, subscription tiers for discounts
 
@@ -47,7 +47,7 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 - `/client/src/pages/developers.tsx` - API documentation + integration roadmap
 - `/client/src/pages/pricing.tsx` - Concierge pricing with subscription tiers
 - `/client/src/lib/mock-data.ts` - Vendors, menus, pricing constants, subscription tiers
-- `/client/src/components/Web3Search.tsx` - Web3 research search bar
+- `/client/src/components/WebSearch.tsx` - Quick web search bar
 - `/client/src/components/MascotButton.tsx` - AI mascot floating button
 
 ### Backend (Express + TypeScript)

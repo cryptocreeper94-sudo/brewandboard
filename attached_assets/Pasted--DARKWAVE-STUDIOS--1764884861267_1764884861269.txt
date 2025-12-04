@@ -1,0 +1,228 @@
+================================================================================
+DARKWAVE STUDIOS - NEW PRODUCT SLIDESHOW BUILDER INSTRUCTIONS
+================================================================================
+
+TASK: Add a new product to the DarkWave Studios products gallery with presentation slides and optional rich slideshow.
+
+================================================================================
+FILE STRUCTURE
+================================================================================
+
+client/src/data/slideContent.ts     → Presentation slides (required)
+client/src/data/slidesData.ts       → Rich slideshow slides (optional)
+client/src/pages/ProductsGallery.tsx → Product registration
+
+================================================================================
+STEP 1: ADD PRESENTATION SLIDES
+================================================================================
+
+FILE: client/src/data/slideContent.ts
+
+Find the slideContent object and add your new product. Example:
+
+"YOUR_PRODUCT_NAME": [
+  {
+    title: "Product Name",
+    subtitle: "Your Tagline Here",
+    content: "Introduction paragraph describing what the product does.",
+    category: "INTRODUCTION"
+  },
+  {
+    title: "Core Mission",
+    content: "Problem this product solves and why it matters.",
+    category: "VISION"
+  },
+  {
+    title: "Feature Name",
+    content: "Description of this feature and its benefits.",
+    category: "FEATURE"
+  },
+  {
+    title: "Another Feature",
+    content: "Description of another feature.",
+    category: "AUTOMATION"
+  },
+  {
+    title: "Ready to Get Started",
+    content: "Call to action paragraph.",
+    category: "CALL TO ACTION"
+  }
+],
+
+CATEGORY OPTIONS: INTRODUCTION, VISION, FEATURE, AUTOMATION, COMPLIANCE, SECURITY, ANALYTICS, INTEGRATION, MOBILE, ROADMAP, CALL TO ACTION
+
+================================================================================
+STEP 2: ADD RICH SLIDESHOW (OPTIONAL)
+================================================================================
+
+FILE: client/src/data/slidesData.ts
+
+Add new export at end of file:
+
+export const yourProductSlides: Slide[] = [
+  {
+    id: 1,
+    title: "Product Name",
+    section: "Opening & Hook",
+    duration: 8,
+    content: {
+      type: 'hero',
+      headline: 'Product Name',
+      subheadline: 'Your tagline here'
+    }
+  },
+  {
+    id: 2,
+    title: "The Challenge",
+    section: "Problem Statement",
+    duration: 8,
+    content: {
+      type: 'problem',
+      headline: 'The Problem',
+      bullets: [
+        'Pain point 1',
+        'Pain point 2',
+        'Pain point 3'
+      ]
+    }
+  },
+  {
+    id: 3,
+    title: "The Solution",
+    section: "Solution Overview",
+    duration: 8,
+    content: {
+      type: 'solution',
+      headline: 'Product Name - The Solution',
+      bullets: [
+        'Solution benefit 1',
+        'Solution benefit 2',
+        'Solution benefit 3'
+      ]
+    }
+  },
+  {
+    id: 4,
+    title: "Feature Name",
+    section: "Core Features",
+    duration: 8,
+    content: {
+      type: 'feature',
+      headline: 'Feature Headline',
+      subheadline: 'Feature tagline',
+      description: 'Detailed feature description.',
+      bullets: [
+        'Bullet 1',
+        'Bullet 2',
+        'Bullet 3'
+      ]
+    }
+  },
+  {
+    id: 5,
+    title: "Get Started",
+    section: "Call to Action",
+    duration: 8,
+    content: {
+      type: 'cta',
+      headline: 'Ready to Transform Your Business?',
+      subheadline: 'Contact us today'
+    }
+  }
+];
+
+CONTENT TYPE OPTIONS: hero, problem, solution, feature, comparison, cta, closing
+
+================================================================================
+STEP 3: REGISTER PRODUCT IN GALLERY
+================================================================================
+
+FILE: client/src/pages/ProductsGallery.tsx
+
+A) Add import at top (if rich slideshow created):
+
+import { yourProductSlides } from '@/data/slidesData';
+
+B) Add to products array (around line 15):
+
+{
+  id: 'YourProductID',
+  name: 'Your Product Name',
+  tagline: 'Your Product Tagline',
+  description: 'One paragraph description for the card.',
+  color: 'from-green-500 to-emerald-600',
+  slides: slideContent['YOUR_PRODUCT_NAME'],
+  slideshowData: yourProductSlides,
+},
+
+COLOR OPTIONS:
+- from-cyan-500 to-blue-600
+- from-purple-500 to-pink-600
+- from-amber-500 to-orange-600
+- from-green-500 to-emerald-600
+- from-red-500 to-rose-600
+- from-indigo-500 to-violet-600
+
+C) Add slideshow handler (around line 200, inside the showSlideshow conditional block):
+
+{showSlideshow === 'YourProductID' && (
+  <HomeSlideshow 
+    slides={yourProductSlides as any} 
+    product="Your Product Name"
+    title="Your Product Name Slideshow"
+  />
+)}
+
+================================================================================
+INTERFACE REFERENCE
+================================================================================
+
+Slide interface for slideContent.ts:
+{
+  title: string;      // Required - slide headline
+  subtitle?: string;  // Optional - secondary text
+  content: string;    // Required - main paragraph
+  category?: string;  // Optional - badge above title
+}
+
+Slide interface for slidesData.ts:
+{
+  id: number;
+  title: string;
+  section: string;
+  duration: number;
+  content: {
+    type: 'hero' | 'problem' | 'solution' | 'feature' | 'comparison' | 'cta' | 'closing';
+    headline: string;
+    subheadline?: string;
+    description?: string;
+    bullets?: string[];
+  };
+}
+
+================================================================================
+CHECKLIST
+================================================================================
+
+[ ] Added slides to client/src/data/slideContent.ts
+[ ] (Optional) Added rich slideshow to client/src/data/slidesData.ts
+[ ] Added import to ProductsGallery.tsx
+[ ] Added product object to products array
+[ ] Added slideshow render handler
+[ ] Test at /products-gallery
+
+================================================================================
+ASK USER FOR
+================================================================================
+
+1. Product Name
+2. Tagline
+3. Short Description (1-2 sentences)
+4. Color Theme (cyan/purple/amber/green/red/indigo)
+5. List of 8-15 Features with descriptions
+6. Problem Statement
+7. Target Audience
+
+================================================================================
+END OF INSTRUCTIONS
+================================================================================

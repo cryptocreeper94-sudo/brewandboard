@@ -154,6 +154,16 @@ export default function FindBaristasPage() {
           <p className="text-amber-200/50 text-xs mt-3">
             Serving Nashville metro area: Downtown, The Gulch, 12 South, East Nashville, Franklin, and more
           </p>
+          
+          <div className="mt-4 p-3 bg-amber-900/20 rounded-lg border border-amber-700/30">
+            <h3 className="text-amber-300 text-sm font-medium mb-2">How It Works</h3>
+            <ul className="text-amber-200/70 text-xs space-y-1">
+              <li>1. Enter your delivery ZIP code above</li>
+              <li>2. Browse nearby vendors (within 10 miles) - standard $5 delivery</li>
+              <li>3. Extended delivery vendors (10+ miles) have a +$7.50 premium</li>
+              <li>4. Tap "Order" to add items to your cart, then schedule delivery</li>
+            </ul>
+          </div>
         </motion.div>
 
         {searchedZip && (

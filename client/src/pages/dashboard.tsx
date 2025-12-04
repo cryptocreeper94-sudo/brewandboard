@@ -399,17 +399,16 @@ export default function Dashboard() {
           </div>
         </motion.div>
         
-        {/* Carousel container with proper overflow handling */}
-        <div className="relative overflow-x-auto overflow-y-visible -mx-4 px-4 pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-          <div className="flex gap-4 snap-x snap-mandatory w-max">
+        {/* Carousel container using ScrollArea */}
+        <ScrollArea className="w-full whitespace-nowrap pb-4">
+          <div className="flex gap-4 w-max">
             {COFFEE_SHOPS.slice(0, 8).map((shop, index) => (
               <motion.div 
                 key={shop.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 * index }}
-                className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0 snap-start"
+                className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0"
               >
                 <img 
                   src={shopImages[shop.id] || shop.image} 
@@ -436,7 +435,8 @@ export default function Dashboard() {
               </motion.div>
             ))}
           </div>
-        </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         {/* Nashville News Section */}
         <motion.div 

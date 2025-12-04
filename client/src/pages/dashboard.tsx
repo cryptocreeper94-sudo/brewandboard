@@ -156,7 +156,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50/30 to-background dark:from-amber-950/30 dark:via-background dark:to-background text-foreground pb-20 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50/30 to-background dark:from-amber-950/30 dark:via-background dark:to-background text-foreground pb-20 overflow-x-hidden">
       {/* Floating Coffee Beans Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingBean delay={0} duration={15} x={10} size={24} />
@@ -410,53 +410,61 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="-mx-4 px-4"
         >
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="font-serif text-lg">Curated Roasters</h3>
-            <span className="text-xs font-medium text-muted-foreground hover:text-primary cursor-pointer flex items-center gap-1">
-              Swipe to explore
+            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
               <ChevronRight className="h-3 w-3" />
+              Scroll to explore
             </span>
           </div>
-          
-          <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-4" style={{ width: 'max-content' }}>
-              {COFFEE_SHOPS.slice(0, 6).map((shop, index) => (
-                <motion.div 
-                  key={shop.id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0"
-                >
-                  <img 
-                    src={shopImages[shop.id] || shop.image} 
-                    alt={shop.name} 
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  
-                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-white">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-xs">{shop.rating} <Star className="h-3 w-3 ml-1 fill-current" /></Badge>
-                      {index === 0 && <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none text-[10px]">Featured</Badge>}
-                    </div>
-                    <h3 className="font-serif text-lg md:text-xl font-bold mb-1">{shop.name}</h3>
-                    <p className="text-sm text-white/80 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {shop.location}
-                    </p>
-                    
-                    <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
-                      <span className="text-xs text-white/70">{shop.specialty}</span>
-                      <Button size="sm" className="h-7 text-xs bg-white text-black hover:bg-white/90 font-medium">View Menu</Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
         </motion.div>
+        
+        {/* Carousel container - breaks out of parent padding for full-width scroll */}
+        <div className="relative -mx-4 md:-mx-8 lg:-mx-12">
+          <div 
+            className="flex gap-4 overflow-x-auto px-4 md:px-8 lg:px-12 pb-4 snap-x snap-mandatory"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            <style>{`.snap-x::-webkit-scrollbar { display: none; }`}</style>
+            {COFFEE_SHOPS.slice(0, 8).map((shop, index) => (
+              <motion.div 
+                key={shop.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index }}
+                className="w-[260px] md:w-[280px] h-[300px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg hover:shadow-xl transition-all flex-shrink-0 snap-start"
+              >
+                <img 
+                  src={shopImages[shop.id] || shop.image} 
+                  alt={shop.name} 
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-white">
+                  <div className="flex justify-between items-start mb-2">
+                    <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-xs">{shop.rating} <Star className="h-3 w-3 ml-1 fill-current" /></Badge>
+                    {index === 0 && <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none text-[10px]">Featured</Badge>}
+                  </div>
+                  <h3 className="font-serif text-lg md:text-xl font-bold mb-1">{shop.name}</h3>
+                  <p className="text-sm text-white/80 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {shop.location}
+                  </p>
+                  
+                  <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+                    <span className="text-xs text-white/70">{shop.specialty}</span>
+                    <Button size="sm" className="h-7 text-xs bg-white text-black hover:bg-white/90 font-medium">View Menu</Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
 
         {/* Nashville News Section */}
         <motion.div 

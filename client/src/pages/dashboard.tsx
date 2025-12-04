@@ -109,28 +109,6 @@ function CuratedRoastersCarousel() {
       </div>
       
       <div className="relative">
-        {/* Left Arrow */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={goPrev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-0"
-          data-testid="button-carousel-prev"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        
-        {/* Right Arrow */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={goNext}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-0"
-          data-testid="button-carousel-next"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-        
         {/* Card */}
         <motion.div
           key={shop.id}
@@ -164,9 +142,26 @@ function CuratedRoastersCarousel() {
             </p>
             
             <div className="flex items-center justify-between pt-4 border-t border-white/20">
-              <span className="text-sm text-white/70">{shop.specialty}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 border-white/30"
+                data-testid="button-carousel-prev"
+              >
+                <ChevronLeft className="h-5 w-5 text-white" />
+              </Button>
               <Button size="sm" className="bg-white text-black hover:bg-white/90 font-medium">
                 View Menu
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 border-white/30"
+                data-testid="button-carousel-next"
+              >
+                <ChevronRight className="h-5 w-5 text-white" />
               </Button>
             </div>
           </div>

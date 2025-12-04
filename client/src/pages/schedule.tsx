@@ -303,10 +303,13 @@ export default function SchedulePage() {
         {/* Lead Time Disclaimer */}
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-          <div>
+          <div className="space-y-2">
             <p className="text-amber-800 font-medium text-sm">Delivery Lead Time Notice</p>
             <p className="text-amber-700 text-sm">
-              Orders must be placed at least <strong>{MINIMUM_ORDER_LEAD_TIME_HOURS} hours</strong> before your requested delivery time to guarantee on-time delivery.
+              Orders must be placed at least <strong>{MINIMUM_ORDER_LEAD_TIME_HOURS} hours</strong> before your requested delivery time. For guaranteed on-time delivery, we recommend <strong>24+ hours advance notice</strong> when possible.
+            </p>
+            <p className="text-amber-600 text-xs">
+              Delivery times are estimated and may vary based on Nashville traffic conditions. Orders placed with less than 4 hours notice are fulfilled on a best-effort basis.
             </p>
           </div>
         </div>
@@ -479,10 +482,17 @@ export default function SchedulePage() {
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
                 <p className="text-sm text-red-700">
-                  Orders must be scheduled at least {MINIMUM_ORDER_LEAD_TIME_HOURS} hours in advance.
+                  Orders must be scheduled at least {MINIMUM_ORDER_LEAD_TIME_HOURS} hours in advance. We recommend 24+ hours notice for guaranteed on-time delivery.
                 </p>
               </div>
             )}
+
+            {/* Best-effort notice for short notice orders */}
+            <div className="p-3 bg-stone-50 border border-stone-200 rounded-lg">
+              <p className="text-xs text-stone-600">
+                <strong>Delivery Note:</strong> Times are estimated and may vary based on Nashville traffic. Orders with less than 4 hours notice are fulfilled on a best-effort basis.
+              </p>
+            </div>
 
             <div className="grid gap-6 py-4">
               {/* Date & Time */}

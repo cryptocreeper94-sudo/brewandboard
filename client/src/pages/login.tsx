@@ -58,12 +58,12 @@ export default function LandingPage() {
       title: '2-Hour Delivery',
       subtitle: 'Fast, reliable service',
       image: coffeeShopImage,
-      description: 'Time is money in business. Our streamlined ordering process and dedicated delivery network ensure your premium coffee arrives exactly when you need it. With just 2 hours notice, we coordinate with our partner roasters to prepare and deliver fresh, hot beverages to your location.',
+      description: 'Time is money in business. Our streamlined ordering process and dedicated delivery network ensure your premium coffee arrives exactly when you need it. With just 2 hours notice, we coordinate with our partner roasters to prepare and deliver fresh, hot beverages to your location. Pro tip: The more notice you give us, the smoother your experience. For guaranteed on-time delivery, we recommend scheduling 24+ hours in advance when possible.',
       highlights: [
-        'Guaranteed delivery within your 2-hour window',
+        '2 hours is our minimum notice requirement',
+        '24+ hours advance notice recommended for best results',
         'Real-time order tracking and updates',
-        'Temperature-controlled transport containers',
-        'Flexible scheduling for recurring orders'
+        'Delivery times may vary based on traffic conditions'
       ]
     },
     baristas: {

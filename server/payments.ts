@@ -72,8 +72,8 @@ export function registerPaymentRoutes(app: Express) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `Coffee Talk ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
-              description: `Monthly subscription for Coffee Talk ${tier} tier`
+              name: `Brew & Board ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
+              description: `Monthly subscription for Brew & Board ${tier} tier`
             },
             unit_amount: priceConfig.monthly,
             recurring: { interval: 'month' }
@@ -123,7 +123,7 @@ export function registerPaymentRoutes(app: Express) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Coffee Talk Order',
+              name: 'Brew & Board Order',
               description: description || 'Coffee delivery order'
             },
             unit_amount: amountInCents
@@ -177,7 +177,7 @@ export function registerPaymentRoutes(app: Express) {
           'X-CC-Version': '2018-03-22'
         },
         body: JSON.stringify({
-          name: 'Coffee Talk Order',
+          name: 'Brew & Board Order',
           description: description || 'Coffee delivery order',
           pricing_type: 'fixed_price',
           local_price: {

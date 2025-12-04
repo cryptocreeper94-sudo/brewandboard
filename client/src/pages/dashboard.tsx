@@ -111,7 +111,7 @@ export default function Dashboard() {
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1 className="font-serif text-2xl md:text-3xl text-amber-100 font-bold tracking-tight drop-shadow-lg">
-            Coffee Talk
+            Brew & Board
           </h1>
         </div>
         <div className="absolute bottom-0 left-0 right-0">
@@ -126,7 +126,7 @@ export default function Dashboard() {
         <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Coffee className="h-5 w-5 text-amber-600" />
-            <span className="text-sm font-medium text-foreground">Coffee Talk</span>
+            <span className="text-sm font-medium text-foreground">Brew & Board</span>
           </div>
           <div className="flex items-center gap-3">
             {/* Weather Button - Clickable */}

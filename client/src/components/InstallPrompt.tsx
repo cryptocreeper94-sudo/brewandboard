@@ -77,7 +77,7 @@ export function InstallPrompt() {
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold">Install Coffee Talk</h3>
+                  <h3 className="font-serif font-bold">Install Brew & Board</h3>
                   <p className="text-amber-100 text-xs">Add to home screen for quick access</p>
                 </div>
               </div>

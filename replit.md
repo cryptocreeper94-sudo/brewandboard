@@ -1,7 +1,9 @@
-# Coffee Talk - B2B Coffee Delivery Platform
+# Brew & Board Coffee - B2B Coffee Delivery Platform
 
 ## Overview
-Coffee Talk is a B2B coffee delivery platform connecting business owners and meeting planners in Nashville with local coffee shops to provide pre-meeting coffee service. The app features a premium "Nashville Luxury" aesthetic with Bento grid layout.
+Brew & Board Coffee is a B2B coffee delivery platform connecting business owners and meeting planners in Nashville with local coffee shops to provide pre-meeting coffee service. The app features a premium "Nashville Luxury" aesthetic with Bento grid layout.
+
+**Domain**: brewandboard.coffee
 
 ## Current State
 - **Authentication**: Custom PIN-based login/registration with optional 30-day persistence

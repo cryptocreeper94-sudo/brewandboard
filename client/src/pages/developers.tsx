@@ -105,7 +105,7 @@ const API_ENDPOINTS = [
 ];
 
 const CODE_EXAMPLES = {
-  javascript: `// Fetch clients using the Coffee Talk API
+  javascript: `// Fetch clients using the Brew & Board API
 const response = await fetch('/api/clients?userId=your-user-id', {
   headers: {
     'Content-Type': 'application/json',
@@ -411,7 +411,7 @@ export default function DevelopersPage() {
                   <Sparkles className="h-6 w-6 text-amber-500" />
                 </motion.div>
               </motion.h1>
-              <p className="text-muted-foreground mt-1">Build amazing integrations with Coffee Talk</p>
+              <p className="text-muted-foreground mt-1">Build amazing integrations with Brew & Board</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ export default function DevelopersPage() {
                     API Early Access
                   </h2>
                   <p className="text-muted-foreground mb-6">
-                    Be the first to integrate Coffee Talk into your business systems. 
+                    Be the first to integrate Brew & Board into your business systems. 
                     Get notified when API keys become available.
                   </p>
                   <div className="flex gap-3">

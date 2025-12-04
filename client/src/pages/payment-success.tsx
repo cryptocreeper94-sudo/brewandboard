@@ -42,7 +42,7 @@ export default function PaymentSuccessPage() {
               transition={{ delay: 0.4 }}
             >
               <h1 className="font-serif text-3xl font-bold gradient-text mb-3">
-                {paymentType === 'subscription' ? 'Welcome to Coffee Talk!' : 'Payment Successful!'}
+                {paymentType === 'subscription' ? 'Welcome to Brew & Board!' : 'Payment Successful!'}
               </h1>
               
               <p className="text-muted-foreground mb-8">
@@ -91,7 +91,7 @@ export default function PaymentSuccessPage() {
             >
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Coffee className="h-5 w-5" />
-                <span className="text-sm">Thank you for choosing Coffee Talk</span>
+                <span className="text-sm">Thank you for choosing Brew & Board</span>
               </div>
             </motion.div>
           </CardContent>

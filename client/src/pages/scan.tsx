@@ -815,7 +815,7 @@ export default function ScanPage() {
           await navigator.share({
             files: [file],
             title: documentName,
-            text: "Scanned document from Coffee Talk"
+            text: "Scanned document from Brew & Board"
           });
           toast({
             title: "Shared Successfully",
@@ -875,7 +875,7 @@ export default function ScanPage() {
         await navigator.share({
           files: [file],
           title: documentName,
-          text: "Scanned document from Coffee Talk"
+          text: "Scanned document from Brew & Board"
         });
         toast({
           title: "Shared Successfully",

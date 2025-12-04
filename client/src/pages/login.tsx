@@ -57,7 +57,7 @@ export default function LandingPage() {
   const handleDemoMode = () => {
     const demoUser = {
       id: "demo-user",
-      email: "demo@coffeetalk.app",
+      email: "demo@brewandboard.coffee",
       businessName: "Demo Business",
       contactName: "Demo User",
       isDemo: true
@@ -84,9 +84,9 @@ export default function LandingPage() {
             </div>
             <div>
               <h1 className="font-serif text-xl md:text-2xl font-bold text-stone-800 tracking-tight">
-                Coffee Talk
+                Brew & Board
               </h1>
-              <p className="text-[10px] md:text-xs font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Nashville Concierge</p>
+              <p className="text-[10px] md:text-xs font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Nashville Coffee Concierge</p>
             </div>
           </motion.div>
 

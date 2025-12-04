@@ -29,8 +29,8 @@ export function Footer() {
         // Create developer user for full access to all features
         const devUser = {
           id: "developer-admin",
-          email: "dev@coffeetalk.app",
-          businessName: "Coffee Talk Developer",
+          email: "dev@brewandboard.coffee",
+          businessName: "Brew & Board Developer",
           contactName: "Developer Admin",
           isDeveloper: true
         };
@@ -42,7 +42,7 @@ export function Footer() {
         
         toast({
           title: "Developer Access Granted",
-          description: "Full access enabled. Welcome to Coffee Talk!",
+          description: "Full access enabled. Welcome to Brew & Board!",
         });
         setShowDevLogin(false);
         setPin("");

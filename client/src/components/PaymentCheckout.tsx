@@ -56,7 +56,7 @@ export function PaymentCheckout({ isOpen, onClose, amount, description, orderId,
           userId: user.id,
           orderId,
           amount: amount.toFixed(2),
-          description: description || 'Coffee Talk Order',
+          description: description || 'Brew & Board Order',
           successUrl: `${window.location.origin}/payment-success?type=order`,
           cancelUrl: window.location.href
         })
@@ -102,7 +102,7 @@ export function PaymentCheckout({ isOpen, onClose, amount, description, orderId,
           userId: user.id,
           orderId,
           amount: amount.toFixed(2),
-          description: description || 'Coffee Talk Order',
+          description: description || 'Brew & Board Order',
           successUrl: `${window.location.origin}/payment-success?type=order`,
           cancelUrl: window.location.href
         })

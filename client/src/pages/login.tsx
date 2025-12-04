@@ -15,6 +15,8 @@ import cremaImage from "@assets/generated_images/crema_coffee_roasters_interior.
 import baristaParlorImage from "@assets/generated_images/barista_parlor_interior.png";
 import frothyMonkeyImage from "@assets/generated_images/frothy_monkey_interior.png";
 import drugStoreImage from "@assets/generated_images/drug_store_coffee_interior.png";
+import whiteGloveImage from "@assets/generated_images/white_glove_coffee_service.png";
+import localRoastersImage from "@assets/generated_images/local_coffee_roasting_scene.png";
 
 const shopImages: Record<string, string> = {
   'crema': cremaImage,
@@ -268,14 +270,14 @@ export default function LandingPage() {
                   </div>
 
                   {/* White Glove */}
-                  <div 
-                    className="flex-shrink-0 w-[160px] rounded-2xl p-4 flex flex-col justify-between min-h-[120px] hover-3d coffee-glow"
-                    style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-amber-200" />
-                    </div>
-                    <div>
+                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                    <img 
+                      src={whiteGloveImage} 
+                      alt="White Glove Service" 
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
                       <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
                         White Glove
                       </p>
@@ -284,14 +286,14 @@ export default function LandingPage() {
                   </div>
 
                   {/* Local Roasters */}
-                  <div 
-                    className="flex-shrink-0 w-[160px] rounded-2xl p-4 flex flex-col justify-between min-h-[120px] hover-3d"
-                    style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                      <Coffee className="h-4 w-4 text-amber-200" />
-                    </div>
-                    <div>
+                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                    <img 
+                      src={localRoastersImage} 
+                      alt="Local Roasters" 
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
                       <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
                         Local Roasters
                       </p>
@@ -336,15 +338,15 @@ export default function LandingPage() {
                 </div>
 
                 {/* White Glove */}
-                <div 
-                  className="rounded-3xl p-6 flex flex-col justify-between min-h-[200px] hover-3d coffee-glow"
-                  style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
-                >
-                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-amber-200" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                  <img 
+                    src={whiteGloveImage} 
+                    alt="White Glove Service" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
                       White Glove
                     </p>
                     <p className="text-stone-300 text-xs">Premium concierge service</p>
@@ -352,15 +354,15 @@ export default function LandingPage() {
                 </div>
 
                 {/* Local Roasters */}
-                <div 
-                  className="rounded-3xl p-6 flex flex-col justify-between min-h-[200px] hover-3d"
-                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
-                >
-                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                    <Coffee className="h-5 w-5 text-amber-200" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                  <img 
+                    src={localRoastersImage} 
+                    alt="Local Roasters" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
                       Local Roasters
                     </p>
                     <p className="text-stone-300 text-xs">Nashville's finest beans</p>

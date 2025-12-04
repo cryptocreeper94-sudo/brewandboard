@@ -14,7 +14,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { Link } from "wouter";
-import { COFFEE_SHOPS, Shop, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES } from "@/lib/mock-data";
+import { COFFEE_SHOPS, Shop, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,32 +28,6 @@ import {
 } from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
-
-const NASHVILLE_ZIP_COORDS: Record<string, { lat: number; lng: number }> = {
-  '37201': { lat: 36.1627, lng: -86.7816 },
-  '37202': { lat: 36.1627, lng: -86.7816 },
-  '37203': { lat: 36.1498, lng: -86.7906 },
-  '37204': { lat: 36.1159, lng: -86.7817 },
-  '37205': { lat: 36.1145, lng: -86.8587 },
-  '37206': { lat: 36.1877, lng: -86.7380 },
-  '37207': { lat: 36.2152, lng: -86.7617 },
-  '37208': { lat: 36.1805, lng: -86.8040 },
-  '37209': { lat: 36.1561, lng: -86.8571 },
-  '37210': { lat: 36.1360, lng: -86.7524 },
-  '37211': { lat: 36.0722, lng: -86.7118 },
-  '37212': { lat: 36.1357, lng: -86.8049 },
-  '37213': { lat: 36.1714, lng: -86.7530 },
-  '37214': { lat: 36.1714, lng: -86.6679 },
-  '37215': { lat: 36.0906, lng: -86.8169 },
-  '37216': { lat: 36.2067, lng: -86.7097 },
-  '37217': { lat: 36.1177, lng: -86.6633 },
-  '37218': { lat: 36.2153, lng: -86.8387 },
-  '37219': { lat: 36.1658, lng: -86.7844 },
-  '37220': { lat: 36.0696, lng: -86.7781 },
-  '37221': { lat: 36.0624, lng: -86.8917 },
-  '37067': { lat: 35.9625, lng: -86.8187 },
-  '37069': { lat: 35.9256, lng: -86.8684 },
-};
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3959;

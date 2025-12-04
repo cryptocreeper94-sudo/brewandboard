@@ -24,7 +24,7 @@ import {
   Minus,
   Trash2
 } from "lucide-react";
-import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE } from "@/lib/mock-data";
+import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,7 +100,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function SchedulePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { items: cartItems, vendorName: cartVendorName, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, total, itemCount } = useCart();
+  const { items: cartItems, vendorName: cartVendorName, vendorLocation, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, total, itemCount, calculateDeliveryFee } = useCart();
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
@@ -236,13 +236,34 @@ export default function SchedulePage() {
     });
   };
 
+  const extractZipCode = (address: string): string | null => {
+    const zipMatch = address.match(/\b(\d{5})\b/);
+    return zipMatch ? zipMatch[1] : null;
+  };
+
   const orderTotals = useMemo(() => {
     const subtotal = newOrder.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
     const serviceFee = subtotal * SERVICE_FEE_PERCENT;
-    const deliveryFee = DELIVERY_COORDINATION_FEE;
+    
+    let baseFee = DELIVERY_COORDINATION_FEE;
+    let extendedFee = 0;
+    let isExtendedDelivery = false;
+    let deliveryDistance = 0;
+    
+    const deliveryZip = extractZipCode(newOrder.deliveryAddress);
+    if (deliveryZip && vendorLocation && NASHVILLE_ZIP_COORDS[deliveryZip]) {
+      const deliveryCoords = NASHVILLE_ZIP_COORDS[deliveryZip];
+      const result = calculateDeliveryFee(deliveryCoords.lat, deliveryCoords.lng);
+      baseFee = result.baseFee;
+      extendedFee = result.extendedFee;
+      isExtendedDelivery = result.isExtended;
+      deliveryDistance = result.distance;
+    }
+    
+    const deliveryFee = baseFee + extendedFee;
     const total = subtotal + serviceFee + deliveryFee;
-    return { subtotal, serviceFee, deliveryFee, total };
-  }, [newOrder.items]);
+    return { subtotal, serviceFee, deliveryFee, baseFee, extendedFee, isExtendedDelivery, deliveryDistance, total };
+  }, [newOrder.items, newOrder.deliveryAddress, vendorLocation, calculateDeliveryFee]);
 
   const handleCreateOrder = () => {
     const { subtotal, serviceFee, deliveryFee, total } = orderTotals;
@@ -756,10 +777,19 @@ export default function SchedulePage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Truck className="h-3 w-3" />
-                        Delivery Coordination
+                        Base Delivery
                       </span>
-                      <span>${orderTotals.deliveryFee.toFixed(2)}</span>
+                      <span>${orderTotals.baseFee.toFixed(2)}</span>
                     </div>
+                    {orderTotals.isExtendedDelivery && (
+                      <div className="flex justify-between">
+                        <span className="text-orange-600 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Extended Delivery (+{orderTotals.deliveryDistance.toFixed(1)} mi)
+                        </span>
+                        <span className="text-orange-600">+${orderTotals.extendedFee.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-semibold pt-2 border-t border-amber-200 mt-2">
                       <span>Total</span>
                       <span className="text-amber-700">${orderTotals.total.toFixed(2)}</span>

@@ -27,6 +27,12 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 | v1.0.5 | BB-0000000010 | Dec 4, 2024 | Mobile UX improvements, news feed reliability |
 
 ## Recent Changes (December 2024)
+- **v1.0.6**: National chains + specialty bakeries + distance-based delivery pricing
+  - Added national chains: Starbucks (4 locations), Dunkin' (2), Dutch Bros
+  - Added bakeries: Crumbl Cookie, Gigi's Cupcakes, Christie Cookies, Five Daughters Bakery
+  - Distance-based delivery: $5.00 base fee, +$7.50 premium for vendors >10 miles
+  - Find Baristas page shows "Nearby" and "Extended Delivery" sections
+  - Cart/Schedule calculates delivery fee based on delivery ZIP code distance
 - **v1.0.5**: Mobile UX improvements (horizontal Quick Actions), news feed with fallback sources
 - **v1.0.4**: Redesigned Curated Roasters as single-panel carousel with left/right arrows and dot navigation
 - **v1.0.3**: Cleaned up dashboard hero section (removed floating mascot with white frame)
@@ -83,7 +89,8 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 - `menu_items` - Vendor menu items
 
 ## Pricing Model
-- **One-off orders**: 15% service fee + $5 delivery coordination
+- **One-off orders**: 15% service fee + $5 base delivery + $7.50 extended delivery premium (>10 mi)
+- **Extended Delivery**: Vendors more than 10 miles from delivery location incur +$7.50 premium
 - **Starter ($29/mo)**: 10 orders, 10% fee discount
 - **Professional ($79/mo)**: 50 orders, 50% fee discount, free delivery
 - **Enterprise ($199/mo)**: Unlimited orders, no service fees, priority delivery

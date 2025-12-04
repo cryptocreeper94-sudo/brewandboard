@@ -247,43 +247,39 @@ export function MascotButton({
         }}
         data-testid="button-mascot"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/50 to-orange-500/50 rounded-full blur-xl group-hover:blur-2xl transition-all duration-300 opacity-60" />
+        {/* Glow effect only - no background shapes */}
+        <div 
+          className="absolute inset-[-8px] opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+          style={{
+            background: 'radial-gradient(circle, rgba(251,191,36,0.6) 0%, rgba(245,158,11,0.4) 40%, transparent 70%)',
+            filter: 'blur(12px)',
+          }}
+        />
         
-        <div className="relative w-20 h-20 rounded-full overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-br from-amber-50 to-orange-100 p-1">
+        {/* Just the floating mascot image - no circle or background */}
+        <div className="relative w-20 h-20">
           <img
             src={mascotImage}
             alt="Happy Coffee - Your AI Assistant"
-            className="w-full h-full object-cover rounded-full"
+            className="w-full h-full object-contain drop-shadow-2xl"
+            style={{ filter: 'drop-shadow(0 4px 12px rgba(180, 83, 9, 0.4))' }}
           />
         </div>
 
+        {/* Sparkle indicator */}
         <motion.div
-          className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg"
+          className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center"
           animate={{
-            scale: [1, 1.2, 1],
+            scale: [1, 1.3, 1],
+            opacity: [0.8, 1, 0.8],
           }}
           transition={{
             repeat: Infinity,
             duration: 2,
           }}
         >
-          <Sparkles className="h-3 w-3 text-white" />
+          <Sparkles className="h-4 w-4 text-amber-400 drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.8))' }} />
         </motion.div>
-
-        <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
-            animate={{
-              x: ["-100%", "200%"],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 3,
-              ease: "easeInOut",
-              repeatDelay: 2,
-            }}
-          />
-        </div>
       </motion.button>
     </div>
   );

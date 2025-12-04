@@ -52,7 +52,7 @@ export default function LandingPage() {
               Coffee Talk
             </h1>
             <p className="text-amber-200/70 text-lg mt-2 font-light">
-              Nashville's Premium Meeting Catering
+              Coffee Concierge for Nashville Meetings
             </p>
           </motion.div>
         </div>

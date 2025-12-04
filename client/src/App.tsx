@@ -13,6 +13,7 @@ import ScanPage from "@/pages/scan";
 import DevelopersPage from "@/pages/developers";
 import { MascotButton } from "@/components/MascotButton";
 import { MascotPopover } from "@/components/MascotPopover";
+import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 
 function Router() {
@@ -27,6 +28,15 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+function FooterWrapper() {
+  const [location] = useLocation();
+  const hideFooterPages = ["/"];
+  
+  if (hideFooterPages.includes(location)) return null;
+  
+  return <Footer />;
 }
 
 function MascotWrapper() {
@@ -67,6 +77,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <FooterWrapper />
         <MascotWrapper />
       </TooltipProvider>
     </QueryClientProvider>

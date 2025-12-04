@@ -214,6 +214,19 @@ Two-tier blockchain verification system for document authenticity:
 - **From Address**: Brew & Board <onboarding@resend.dev>
 - **Features**: HTML-formatted emails with reply-to set to sender's email
 
+## Order Notifications
+- **Status**: FULLY FUNCTIONAL
+- **Email Provider**: Resend
+- **Recipient**: cryptocreeper94@gmail.com
+- **Trigger**: Sent automatically when any order is placed
+- **Includes**: 
+  - Delivery date, time, and address
+  - Customer name and phone
+  - Vendor name and full item list with prices
+  - Total, service fee, and delivery fee breakdown
+  - Special instructions if provided
+  - Dark coffee-themed email design matching brand
+
 ## Footer Navigation
 - Terms & Conditions (`/terms`)
 - Contact Us (`/contact`)

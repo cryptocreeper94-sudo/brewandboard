@@ -428,6 +428,77 @@ export async function registerRoutes(
         changedBy: 'system'
       });
       
+      // Send email notification for new order
+      if (process.env.RESEND_API_KEY) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          const items = validatedData.items as Array<{name: string, quantity: number, price: string}>;
+          const itemsList = items.map(item => 
+            `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.name}</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td><td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">$${item.price}</td></tr>`
+          ).join('');
+          
+          await resend.emails.send({
+            from: "Brew & Board <onboarding@resend.dev>",
+            to: "cryptocreeper94@gmail.com",
+            subject: `🚨 NEW ORDER: ${validatedData.vendorName} - ${validatedData.scheduledDate} at ${validatedData.scheduledTime}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a0f09; color: #fef3c7; padding: 20px; border-radius: 10px;">
+                <h1 style="color: #f59e0b; margin-bottom: 20px;">☕ New Order Received!</h1>
+                
+                <div style="background: #2d1810; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                  <h2 style="color: #fcd34d; margin: 0 0 10px 0;">Delivery Details</h2>
+                  <p style="margin: 5px 0;"><strong>📅 Date:</strong> ${validatedData.scheduledDate}</p>
+                  <p style="margin: 5px 0;"><strong>🕐 Time:</strong> ${validatedData.scheduledTime}</p>
+                  <p style="margin: 5px 0;"><strong>📍 Address:</strong> ${validatedData.deliveryAddress}</p>
+                  ${validatedData.deliveryInstructions ? `<p style="margin: 5px 0;"><strong>📝 Instructions:</strong> ${validatedData.deliveryInstructions}</p>` : ''}
+                </div>
+                
+                <div style="background: #2d1810; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                  <h2 style="color: #fcd34d; margin: 0 0 10px 0;">Customer Info</h2>
+                  <p style="margin: 5px 0;"><strong>👤 Name:</strong> ${validatedData.contactName || 'Not provided'}</p>
+                  <p style="margin: 5px 0;"><strong>📱 Phone:</strong> ${validatedData.contactPhone || 'Not provided'}</p>
+                </div>
+                
+                <div style="background: #2d1810; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                  <h2 style="color: #fcd34d; margin: 0 0 10px 0;">Order from ${validatedData.vendorName}</h2>
+                  <table style="width: 100%; border-collapse: collapse; color: #fef3c7;">
+                    <thead>
+                      <tr style="border-bottom: 2px solid #f59e0b;">
+                        <th style="padding: 8px; text-align: left;">Item</th>
+                        <th style="padding: 8px; text-align: center;">Qty</th>
+                        <th style="padding: 8px; text-align: right;">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${itemsList}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div style="background: #f59e0b; color: #1a0f09; padding: 15px; border-radius: 8px; text-align: center;">
+                  <h2 style="margin: 0 0 5px 0;">💰 Total: $${validatedData.total}</h2>
+                  <p style="margin: 0; font-size: 14px;">Service Fee: $${validatedData.serviceFee} | Delivery: $${validatedData.deliveryFee}</p>
+                </div>
+                
+                ${validatedData.specialInstructions ? `
+                <div style="background: #2d1810; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                  <h3 style="color: #fcd34d; margin: 0 0 10px 0;">Special Instructions</h3>
+                  <p style="margin: 0;">${validatedData.specialInstructions}</p>
+                </div>
+                ` : ''}
+                
+                <p style="text-align: center; margin-top: 20px; color: #a8a29e; font-size: 12px;">
+                  Fulfill via DoorDash, UberEats, or direct delivery
+                </p>
+              </div>
+            `
+          });
+          console.log("Order notification email sent successfully");
+        } catch (emailError) {
+          console.error("Failed to send order notification email:", emailError);
+        }
+      }
+      
       res.json(order);
     } catch (error: any) {
       res.status(400).json({ error: error.message });

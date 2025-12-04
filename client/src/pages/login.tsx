@@ -427,7 +427,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Vendor Info */}
-                      <div className="p-4 md:p-5 flex flex-col h-[220px] md:h-[240px]">
+                      <div className="p-4 md:p-5 flex flex-col h-[226px] md:h-[246px]">
                         <div className="flex-1">
                           <h4 
                             className="text-lg md:text-xl font-bold text-stone-800 mb-1 line-clamp-1"

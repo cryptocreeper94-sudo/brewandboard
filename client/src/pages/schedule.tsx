@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, startOfWeek, isSameDay, parseISO, addHours, isBefore } from "date-fns";
@@ -16,8 +17,11 @@ import {
   AlertTriangle,
   Package,
   Phone,
-  User
+  User,
+  Home,
+  Percent
 } from "lucide-react";
+import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +65,7 @@ interface ScheduledOrder {
   scheduledTime: string;
   items: OrderItem[];
   subtotal: string;
+  serviceFee: string;
   deliveryFee: string;
   total: string;
   status: string;
@@ -205,10 +210,16 @@ export default function SchedulePage() {
     });
   };
 
-  const handleCreateOrder = () => {
+  const orderTotals = useMemo(() => {
     const subtotal = newOrder.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-    const deliveryFee = 5.00;
-    const total = subtotal + deliveryFee;
+    const serviceFee = subtotal * SERVICE_FEE_PERCENT;
+    const deliveryFee = DELIVERY_COORDINATION_FEE;
+    const total = subtotal + serviceFee + deliveryFee;
+    return { subtotal, serviceFee, deliveryFee, total };
+  }, [newOrder.items]);
+
+  const handleCreateOrder = () => {
+    const { subtotal, serviceFee, deliveryFee, total } = orderTotals;
 
     createOrderMutation.mutate({
       userId,
@@ -221,6 +232,7 @@ export default function SchedulePage() {
       scheduledTime: newOrder.scheduledTime,
       items: newOrder.items.filter(i => i.name.trim()),
       subtotal: subtotal.toFixed(2),
+      serviceFee: serviceFee.toFixed(2),
       deliveryFee: deliveryFee.toFixed(2),
       total: total.toFixed(2),
       specialInstructions: newOrder.specialInstructions || null,
@@ -265,12 +277,19 @@ export default function SchedulePage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
-              <Calendar className="h-8 w-8 text-primary" />
-              Order Schedule
-            </h1>
-            <p className="text-muted-foreground">Manage your coffee delivery orders</p>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
+                <Calendar className="h-8 w-8 text-primary" />
+                Order Schedule
+              </h1>
+              <p className="text-muted-foreground">Manage your coffee delivery orders</p>
+            </div>
           </div>
           <Button 
             onClick={() => setIsNewOrderOpen(true)} 
@@ -599,6 +618,40 @@ export default function SchedulePage() {
                   data-testid="input-delivery-instructions"
                 />
               </div>
+
+              {/* Order Summary */}
+              {orderTotals.subtotal > 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                  <h4 className="font-medium text-amber-800 flex items-center gap-2">
+                    <Coffee className="h-4 w-4" />
+                    Order Summary
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>${orderTotals.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Percent className="h-3 w-3" />
+                        Service Fee ({Math.round(SERVICE_FEE_PERCENT * 100)}%)
+                      </span>
+                      <span>${orderTotals.serviceFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Truck className="h-3 w-3" />
+                        Delivery Coordination
+                      </span>
+                      <span>${orderTotals.deliveryFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold pt-2 border-t border-amber-200 mt-2">
+                      <span>Total</span>
+                      <span className="text-amber-700">${orderTotals.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">

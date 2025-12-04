@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -16,7 +17,9 @@ import {
   Mic,
   MicOff,
   Sparkles,
-  Search
+  Search,
+  ChevronLeft,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -346,12 +349,19 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <header className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
-              <Book className="h-8 w-8 text-primary" />
-              My Portfolio
-            </h1>
-            <p className="text-muted-foreground">Meeting notes, job details, and templates.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
+                <Book className="h-8 w-8 text-primary" />
+                My Portfolio
+              </h1>
+              <p className="text-muted-foreground">Meeting notes, job details, and templates.</p>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">

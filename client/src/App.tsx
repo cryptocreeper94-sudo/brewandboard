@@ -11,6 +11,7 @@ import PortfolioPage from "@/pages/portfolio";
 import SchedulePage from "@/pages/schedule";
 import ScanPage from "@/pages/scan";
 import DevelopersPage from "@/pages/developers";
+import PricingPage from "@/pages/pricing";
 import { MascotButton } from "@/components/MascotButton";
 import { MascotPopover } from "@/components/MascotPopover";
 import { Footer } from "@/components/Footer";

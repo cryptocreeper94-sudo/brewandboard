@@ -20,10 +20,21 @@ import {
   Webhook,
   Clock,
   Home,
+  Truck,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  Bike,
+  Car,
+  CreditCard,
+  Calendar,
+  MessageSquare,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -369,6 +380,279 @@ export default function DevelopersPage() {
                   </motion.div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-12"
+        >
+          <Card className="premium-card border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                <Truck className="h-6 w-6 text-amber-600" />
+                Integration Roadmap
+              </CardTitle>
+              <CardDescription>
+                Upcoming third-party API integrations for automated fulfillment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple" className="space-y-4">
+                <AccordionItem value="doordash" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-doordash">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+                        <Truck className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">DoorDash Drive API</span>
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">Priority</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Automated delivery dispatch for orders</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Register for DoorDash Drive developer account</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Obtain API credentials (sandbox + production)</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Implement delivery quote endpoint</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Create delivery dispatch on order confirmation</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Webhook integration for real-time tracking</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Driver ETA and status updates to customer</span>
+                      </div>
+                      <a href="https://developer.doordash.com/en-US/docs/drive/reference/drive-api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
+                        View Documentation <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="ubereats" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-ubereats">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                        <Car className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Uber Direct API</span>
+                          <Badge className="bg-blue-100 text-blue-700 border-blue-200">Planned</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">White-label delivery service</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Apply for Uber Direct API access</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Set up OAuth2 authentication flow</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Implement delivery quote and creation</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Real-time delivery tracking integration</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Proof of delivery handling</span>
+                      </div>
+                      <a href="https://developer.uber.com/docs/deliveries/overview" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
+                        View Documentation <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="stripe" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-stripe">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <CreditCard className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Stripe Payments</span>
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">Priority</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Secure payment processing & subscriptions</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span className="text-emerald-700">Stripe account connected</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Implement checkout session for orders</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Add subscription management for tiers</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Webhook for payment confirmations</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Invoice generation for business clients</span>
+                      </div>
+                      <a href="https://stripe.com/docs/api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
+                        View Documentation <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="google-calendar" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-google-calendar">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center shadow-lg">
+                        <Calendar className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Google Calendar</span>
+                          <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Sync orders with meeting schedules</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Enable Google Calendar integration via Replit</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>OAuth consent for calendar access</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Create calendar events for scheduled orders</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Smart suggestions based on meeting times</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Automatic reminders for coffee orders</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="twilio" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-twilio">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg">
+                        <MessageSquare className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Twilio SMS</span>
+                          <Badge className="bg-gray-100 text-gray-700 border-gray-200">Future</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">SMS notifications for order updates</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Set up Twilio account and phone number</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Order confirmation SMS to customers</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Delivery status text updates</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>"Coffee is on the way" notifications</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="maps" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-maps">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-lg">
+                        <MapPin className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Google Maps</span>
+                          <Badge className="bg-gray-100 text-gray-700 border-gray-200">Future</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Address autocomplete & delivery tracking</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Enable Places API for address autocomplete</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Distance matrix for delivery estimates</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Live map tracking for deliveries</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Vendor location display on map</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
         </motion.div>

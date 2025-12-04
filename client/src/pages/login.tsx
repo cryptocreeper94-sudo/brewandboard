@@ -97,12 +97,12 @@ export default function LandingPage() {
       title: 'Meeting Ready',
       subtitle: 'Impress your clients',
       image: meetingImage,
-      description: 'First impressions matter. Whether you\'re closing a deal, hosting investors, or celebrating a milestone, premium coffee service sets the tone for success. Our concierge team coordinates every detail so you can focus on what matters most - your business.',
+      description: 'First impressions matter. Whether you\'re closing a deal, hosting investors, or celebrating a milestone, premium catering sets the tone for success. Our concierge team coordinates every detail so you can focus on what matters most - your business.',
       highlights: [
         'Seamless scheduling with 2-hour delivery windows',
         'Professional setup and presentation',
-        'Customizable beverage menus for any occasion',
-        'Branded cups and napkins available'
+        'Customizable menus for any occasion',
+        'Branded packaging available'
       ]
     },
     whiteglove: {
@@ -110,7 +110,7 @@ export default function LandingPage() {
       title: 'White Glove Service',
       subtitle: 'Premium concierge experience',
       image: whiteGloveImage,
-      description: 'Experience coffee service elevated to an art form. Our white glove concierge handles every aspect of your coffee program, from curating the perfect menu to coordinating delivery logistics. Sit back and let us create an experience your guests will remember.',
+      description: 'Experience catering elevated to an art form. Our white glove concierge handles every aspect of your program, from curating the perfect menu to coordinating delivery logistics. Sit back and let us create an experience your guests will remember.',
       highlights: [
         'Dedicated account manager for your business',
         'Custom menu curation and tastings',
@@ -120,15 +120,15 @@ export default function LandingPage() {
     },
     local: {
       id: 'local',
-      title: 'Local Roasters',
-      subtitle: 'Nashville\'s finest beans',
+      title: 'Local Favorites',
+      subtitle: 'Nashville\'s finest vendors',
       image: localRoastersImage,
-      description: 'We\'ve partnered with Nashville\'s most celebrated roasters to bring you the best our city has to offer. From The Gulch to 12 South, our network of local artisans ensures every cup represents the vibrant coffee culture that makes Music City special.',
+      description: 'We\'ve partnered with Nashville\'s most celebrated vendors to bring you the best our city has to offer. From The Gulch to 12 South, our network of local favorites ensures every order represents the vibrant food scene that makes Music City special.',
       highlights: [
-        '12+ curated Nashville roasters and cafes',
+        '37+ curated Nashville vendors',
         'Supporting local businesses and communities',
         'Rotating seasonal selections',
-        'Exclusive access to limited edition roasts'
+        'Coffee, donuts, juice, boba & more'
       ]
     }
   };
@@ -183,7 +183,7 @@ export default function LandingPage() {
               <h1 className="font-serif text-xl md:text-2xl font-bold text-stone-800 tracking-tight">
                 Brew & Board
               </h1>
-              <p className="text-[10px] md:text-xs font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Nashville Coffee Concierge</p>
+              <p className="text-[10px] md:text-xs font-medium tracking-widest uppercase" style={{ color: '#5c4033' }}>Nashville's Catering Concierge</p>
             </div>
           </motion.div>
 
@@ -242,13 +242,13 @@ export default function LandingPage() {
                     className="text-2xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3 md:mb-4"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                   >
-                    Artisan Coffee,<br />
+                    Brews & Boards,<br />
                     <span className="italic" style={{ color: '#d4c4b0' }}>Delivered with Grace</span>
                   </h2>
                   
                   <p className="text-sm md:text-base text-stone-300 max-w-lg mb-5 md:mb-8 leading-relaxed hidden sm:block">
-                    Experience Nashville's finest baristas at your next meeting. 
-                    Premium carafes, artisan pastries — simply give us two hours notice.
+                    Nashville's finest coffee, pastries, and catering at your next meeting. 
+                    From artisan lattes to breakfast boards — just give us two hours notice.
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
@@ -518,7 +518,7 @@ export default function LandingPage() {
                 className="text-xl md:text-3xl lg:text-4xl font-bold text-stone-800 text-center"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Nashville's Finest Roasters
+                Nashville's Finest Vendors
               </h3>
             </motion.div>
 
@@ -625,7 +625,7 @@ export default function LandingPage() {
                   Ready to Elevate Your Next Meeting?
                 </h3>
                 <p className="text-stone-400 text-sm md:text-base max-w-2xl mx-auto mb-5 md:mb-8">
-                  Experience the convenience of Nashville's finest coffee, delivered with white-glove service.
+                  Experience Nashville's finest brews and boards, delivered with white-glove service.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button

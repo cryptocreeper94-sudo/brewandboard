@@ -110,7 +110,7 @@ function CuratedRoastersCarousel() {
       transition={{ delay: 0.3 }}
     >
       <div className="flex items-center justify-between mb-3 px-1">
-        <h3 className="font-serif text-lg">Curated Roasters</h3>
+        <h3 className="font-serif text-lg">Curated Vendors</h3>
         <span className="text-xs font-medium text-muted-foreground">
           {currentIndex + 1} of {shops.length}
         </span>

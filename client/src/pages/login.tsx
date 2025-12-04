@@ -306,66 +306,66 @@ export default function LandingPage() {
               {/* Desktop/Tablet: 4-column Grid */}
               <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
                 {/* Artisan Craft */}
-                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d">
                   <img 
                     src={latteArtImage} 
                     alt="Artisan Latte Art" 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <div className="absolute bottom-4 left-0 right-0 px-5">
+                    <p className="text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                       Artisan Craft
                     </p>
-                    <p className="text-stone-300 text-xs">Handcrafted with passion</p>
+                    <p className="text-stone-300 text-xs mt-1">Handcrafted with passion</p>
                   </div>
                 </div>
 
                 {/* Meeting Ready */}
-                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d">
                   <img 
                     src={meetingImage} 
                     alt="Corporate Meeting" 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <div className="absolute bottom-4 left-0 right-0 px-5">
+                    <p className="text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                       Meeting Ready
                     </p>
-                    <p className="text-stone-300 text-xs">Impress your clients</p>
+                    <p className="text-stone-300 text-xs mt-1">Impress your clients</p>
                   </div>
                 </div>
 
                 {/* White Glove */}
-                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d">
                   <img 
                     src={whiteGloveImage} 
                     alt="White Glove Service" 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <div className="absolute bottom-4 left-0 right-0 px-5">
+                    <p className="text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                       White Glove
                     </p>
-                    <p className="text-stone-300 text-xs">Premium concierge service</p>
+                    <p className="text-stone-300 text-xs mt-1">Premium concierge service</p>
                   </div>
                 </div>
 
                 {/* Local Roasters */}
-                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                <div className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d">
                   <img 
                     src={localRoastersImage} 
                     alt="Local Roasters" 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <div className="absolute bottom-4 left-0 right-0 px-5">
+                    <p className="text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                       Local Roasters
                     </p>
-                    <p className="text-stone-300 text-xs">Nashville's finest beans</p>
+                    <p className="text-stone-300 text-xs mt-1">Nashville's finest beans</p>
                   </div>
                 </div>
               </div>

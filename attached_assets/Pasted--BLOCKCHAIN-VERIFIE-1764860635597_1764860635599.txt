@@ -1,0 +1,953 @@
+================================================================================
+BLOCKCHAIN-VERIFIED HALLMARK STAMPING SYSTEM - COMPLETE IMPLEMENTATION GUIDE
+================================================================================
+
+This is a complete, production-ready guide for implementing a blockchain-verified authenticity seal system. This example uses a "Coffee Concierge" app but can be adapted to any domain by changing the prefix and branding.
+
+================================================================================
+SECTION 1: WHAT ARE HALLMARKS?
+================================================================================
+
+Hallmarks are blockchain-verified authenticity seals that prove something is genuine and originated from your platform. Think of them like a digital notary stamp that cannot be forged.
+
+HOW THEY WORK:
+1. Your app generates a unique serial number for an asset (certificate, product, credential)
+2. The serial number + metadata is hashed using SHA-256
+3. That hash is permanently recorded on the Solana blockchain
+4. A QR code is generated linking to a verification page
+5. Anyone can scan the QR to verify authenticity
+6. The blockchain proves the hallmark was issued by you and hasn't been tampered with
+
+EXAMPLE USE CASE - COFFEE CONCIERGE APP:
+- A coffee roaster completes certification → receives Hallmark "CC-2024-001234"
+- Their certification page displays a badge with a QR code
+- Customers scan the QR → see blockchain proof of authentic certification
+- If someone tries to fake it, blockchain verification will fail
+
+USE CASES FOR ANY APP:
+- Certificates (training, employment, compliance)
+- Products (verify authentic origin)
+- Documents (contracts, invoices, reports)
+- Credentials (badges, achievements, licenses)
+- Franchise verification (prove authorized dealer/partner)
+- Diplomas, tickets, collectibles, memberships, warranties
+
+================================================================================
+SECTION 2: SERIAL NUMBER SYSTEM
+================================================================================
+
+FORMAT: [PREFIX]-[YEAR]-[SEQUENCE]
+
+The serial number uniquely identifies every hallmark ever issued.
+
+EXAMPLES:
+  CC-2024-000001  → Coffee Concierge, first hallmark of 2024
+  CC-2024-123456  → Coffee Concierge, 123,456th hallmark of 2024
+  FR-2024-000001  → Franchise certification hallmark
+  RO-2024-000001  → Roaster certification hallmark
+  BL-2024-000001  → Blend/Product certification hallmark
+  TR-2024-000001  → Training completion hallmark
+
+PREFIX REGISTRY (customize these for your app):
+  CC = Platform-wide general hallmarks (Coffee Concierge)
+  FR = Franchise/Partner certifications
+  RO = Roaster certifications
+  BL = Blend/Product certifications
+  TR = Training completion certificates
+  QA = Quality assurance seals
+  EM = Employee credentials
+  EV = Event tickets or attendance
+
+VANITY NAMES (optional feature):
+  Instead of showing CC-2024-001234, users can create custom readable names:
+  "blue-mountain-roasters" or "sunrise-blend-2024"
+  These vanity names map to the underlying serial number for easy sharing.
+  Verification works with either the serial or the vanity name.
+
+================================================================================
+SECTION 3: DATABASE SCHEMA
+================================================================================
+
+File: shared/schema.ts
+
+Add this to your existing schema file:
+
+// ---------- HALLMARKS TABLE ----------
+// Core table storing all authenticity seals
+
+export const hallmarks = pgTable("hallmarks", {
+  id: serial("id").primaryKey(),
+  
+  // IDENTIFICATION
+  serialNumber: varchar("serial_number", { length: 32 }).notNull().unique(),
+  prefix: varchar("prefix", { length: 10 }).notNull(),
+  vanityName: varchar("vanity_name", { length: 50 }).unique(),
+  
+  // WHAT IS BEING STAMPED
+  assetType: varchar("asset_type", { length: 50 }).notNull(),
+  assetId: integer("asset_id"),
+  assetName: varchar("asset_name", { length: 200 }),
+  
+  // MULTI-TENANT SUPPORT (for white-label/franchise)
+  tenantId: integer("tenant_id"),
+  tenantName: varchar("tenant_name", { length: 100 }),
+  
+  // ISSUANCE INFO
+  issuedBy: varchar("issued_by", { length: 100 }),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  status: varchar("status", { length: 20 }).default("active").notNull(),
+  
+  // BLOCKCHAIN ANCHORING
+  contentHash: varchar("content_hash", { length: 128 }),
+  solanaTxSignature: varchar("solana_tx_signature", { length: 128 }),
+  solanaConfirmedAt: timestamp("solana_confirmed_at"),
+  solanaSlot: integer("solana_slot"),
+  solanaNetwork: varchar("solana_network", { length: 20 }).default("mainnet"),
+  
+  // VERIFICATION TRACKING
+  verificationCount: integer("verification_count").default(0),
+  lastVerifiedAt: timestamp("last_verified_at"),
+  
+  // FLEXIBLE METADATA (store any extra data as JSON)
+  metadata: jsonb("metadata"),
+});
+
+// ---------- HALLMARK EVENTS TABLE ----------
+// Audit trail of all hallmark activity
+
+export const hallmarkEvents = pgTable("hallmark_events", {
+  id: serial("id").primaryKey(),
+  hallmarkId: integer("hallmark_id").notNull(),
+  eventType: varchar("event_type", { length: 30 }).notNull(),
+  eventData: jsonb("event_data"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// EVENT TYPES: "issued", "verified", "stamped", "revoked", "renewed", "transferred"
+
+// ---------- INSERT SCHEMAS ----------
+
+export const insertHallmarkSchema = createInsertSchema(hallmarks).omit({
+  id: true,
+  issuedAt: true,
+  verificationCount: true,
+  lastVerifiedAt: true,
+});
+
+export const insertHallmarkEventSchema = createInsertSchema(hallmarkEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+// ---------- TYPES ----------
+
+export type Hallmark = typeof hallmarks.$inferSelect;
+export type InsertHallmark = z.infer<typeof insertHallmarkSchema>;
+export type HallmarkEvent = typeof hallmarkEvents.$inferSelect;
+export type InsertHallmarkEvent = z.infer<typeof insertHallmarkEventSchema>;
+
+================================================================================
+SECTION 4: SOLANA BLOCKCHAIN SERVICE
+================================================================================
+
+File: server/solanaService.ts
+
+Create this file to handle all blockchain interactions:
+
+import { Connection, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, sendAndConfirmTransaction } from "@solana/web3.js";
+import crypto from "crypto";
+
+// ---------- CONFIGURATION ----------
+
+const SOLANA_RPC = process.env.HELIUS_API_KEY
+  ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+  : "https://api.mainnet-beta.solana.com";
+
+const connection = new Connection(SOLANA_RPC, "confirmed");
+
+// ---------- WALLET LOADER ----------
+
+function getWallet(): Keypair {
+  const privateKey = process.env.SOLANA_WALLET_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("SOLANA_WALLET_PRIVATE_KEY not configured");
+  }
+  try {
+    const secretKey = Uint8Array.from(JSON.parse(privateKey));
+    return Keypair.fromSecretKey(secretKey);
+  } catch (error) {
+    throw new Error("Invalid SOLANA_WALLET_PRIVATE_KEY format. Must be JSON array [1,2,3,...64 numbers]");
+  }
+}
+
+// ---------- HASH GENERATION ----------
+
+export function generateContentHash(payload: {
+  serialNumber: string;
+  assetType: string;
+  assetId?: number;
+  tenantId?: number;
+  issuedAt: string;
+  metadata?: any;
+}): string {
+  const canonical = JSON.stringify(payload, Object.keys(payload).sort());
+  return crypto.createHash("sha256").update(canonical).digest("hex");
+}
+
+// ---------- BLOCKCHAIN ANCHORING ----------
+
+export async function anchorHashToBlockchain(contentHash: string): Promise<{
+  signature: string;
+  slot: number;
+  confirmedAt: Date;
+  network: string;
+}> {
+  const wallet = getWallet();
+  
+  const transaction = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: wallet.publicKey,
+      toPubkey: wallet.publicKey,
+      lamports: 1,
+    })
+  );
+  
+  const { blockhash } = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhash;
+  transaction.feePayer = wallet.publicKey;
+  
+  const signature = await sendAndConfirmTransaction(connection, transaction, [wallet]);
+  const txInfo = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
+  
+  return {
+    signature,
+    slot: txInfo?.slot || 0,
+    confirmedAt: new Date(),
+    network: SOLANA_RPC.includes("mainnet") ? "mainnet" : "devnet",
+  };
+}
+
+// ---------- TRANSACTION VERIFICATION ----------
+
+export async function verifyTransactionOnChain(signature: string): Promise<{
+  exists: boolean;
+  confirmed: boolean;
+  slot?: number;
+  blockTime?: Date;
+}> {
+  try {
+    const tx = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
+    if (!tx) return { exists: false, confirmed: false };
+    return {
+      exists: true,
+      confirmed: true,
+      slot: tx.slot,
+      blockTime: tx.blockTime ? new Date(tx.blockTime * 1000) : undefined,
+    };
+  } catch (error) {
+    return { exists: false, confirmed: false };
+  }
+}
+
+// ---------- UTILITIES ----------
+
+export async function getWalletBalance(): Promise<number> {
+  const wallet = getWallet();
+  const balance = await connection.getBalance(wallet.publicKey);
+  return balance / LAMPORTS_PER_SOL;
+}
+
+export async function getBlockchainStats(): Promise<{
+  network: string;
+  currentSlot: number;
+  walletBalance: number;
+  walletAddress: string;
+}> {
+  const wallet = getWallet();
+  const slot = await connection.getSlot();
+  const balance = await getWalletBalance();
+  return {
+    network: SOLANA_RPC.includes("mainnet") ? "mainnet" : "devnet",
+    currentSlot: slot,
+    walletBalance: balance,
+    walletAddress: wallet.publicKey.toBase58(),
+  };
+}
+
+================================================================================
+SECTION 5: HALLMARK SERVICE (BUSINESS LOGIC)
+================================================================================
+
+File: server/hallmarkService.ts
+
+Create this file for all hallmark business logic:
+
+import { db } from "./db";
+import { hallmarks, hallmarkEvents } from "@shared/schema";
+import { eq, or } from "drizzle-orm";
+import { generateContentHash, anchorHashToBlockchain, verifyTransactionOnChain } from "./solanaService";
+
+// ---------- SERIAL GENERATION ----------
+
+function generateSerial(prefix: string): string {
+  const year = new Date().getFullYear();
+  const sequence = Math.floor(Math.random() * 999999).toString().padStart(6, "0");
+  return `${prefix}-${year}-${sequence}`;
+}
+
+// ---------- ISSUE NEW HALLMARK ----------
+
+export async function issueHallmark(data: {
+  prefix: string;
+  assetType: string;
+  assetId?: number;
+  assetName?: string;
+  tenantId?: number;
+  tenantName?: string;
+  issuedBy?: string;
+  vanityName?: string;
+  expiresAt?: Date;
+  metadata?: any;
+}): Promise<{ hallmark: any; blockchainResult?: any }> {
+  
+  const serialNumber = generateSerial(data.prefix);
+  const issuedAt = new Date();
+  
+  const contentHash = generateContentHash({
+    serialNumber,
+    assetType: data.assetType,
+    assetId: data.assetId,
+    tenantId: data.tenantId,
+    issuedAt: issuedAt.toISOString(),
+    metadata: data.metadata,
+  });
+  
+  const [hallmark] = await db.insert(hallmarks).values({
+    serialNumber,
+    prefix: data.prefix,
+    vanityName: data.vanityName,
+    assetType: data.assetType,
+    assetId: data.assetId,
+    assetName: data.assetName,
+    tenantId: data.tenantId,
+    tenantName: data.tenantName,
+    issuedBy: data.issuedBy,
+    expiresAt: data.expiresAt,
+    contentHash,
+    metadata: data.metadata,
+    status: "active",
+  }).returning();
+  
+  await db.insert(hallmarkEvents).values({
+    hallmarkId: hallmark.id,
+    eventType: "issued",
+    eventData: { serialNumber, assetType: data.assetType },
+  });
+  
+  let blockchainResult = null;
+  try {
+    blockchainResult = await anchorHashToBlockchain(contentHash);
+    await db.update(hallmarks)
+      .set({
+        solanaTxSignature: blockchainResult.signature,
+        solanaConfirmedAt: blockchainResult.confirmedAt,
+        solanaSlot: blockchainResult.slot,
+        solanaNetwork: blockchainResult.network,
+      })
+      .where(eq(hallmarks.id, hallmark.id));
+  } catch (error) {
+    console.error("Blockchain anchoring failed:", error);
+  }
+  
+  return { hallmark, blockchainResult };
+}
+
+// ---------- LOOKUP HALLMARK ----------
+
+export async function getHallmarkByCode(code: string): Promise<any | null> {
+  const [hallmark] = await db.select()
+    .from(hallmarks)
+    .where(or(
+      eq(hallmarks.serialNumber, code),
+      eq(hallmarks.vanityName, code)
+    ));
+  return hallmark || null;
+}
+
+// ---------- VERIFY HALLMARK ----------
+
+export async function verifyHallmark(code: string, req?: any): Promise<{
+  valid: boolean;
+  hallmark?: any;
+  blockchain?: any;
+  message: string;
+}> {
+  const hallmark = await getHallmarkByCode(code);
+  
+  if (!hallmark) {
+    return { valid: false, message: "Hallmark not found" };
+  }
+  
+  if (hallmark.status === "revoked") {
+    return { valid: false, hallmark, message: "Hallmark has been revoked" };
+  }
+  
+  if (hallmark.expiresAt && new Date(hallmark.expiresAt) < new Date()) {
+    return { valid: false, hallmark, message: "Hallmark has expired" };
+  }
+  
+  let blockchain = null;
+  if (hallmark.solanaTxSignature) {
+    blockchain = await verifyTransactionOnChain(hallmark.solanaTxSignature);
+  }
+  
+  await db.update(hallmarks)
+    .set({
+      verificationCount: (hallmark.verificationCount || 0) + 1,
+      lastVerifiedAt: new Date(),
+    })
+    .where(eq(hallmarks.id, hallmark.id));
+  
+  await db.insert(hallmarkEvents).values({
+    hallmarkId: hallmark.id,
+    eventType: "verified",
+    eventData: { blockchain: blockchain?.confirmed || false },
+    ipAddress: req?.ip,
+    userAgent: req?.headers?.["user-agent"],
+  });
+  
+  return {
+    valid: true,
+    hallmark,
+    blockchain,
+    message: blockchain?.confirmed 
+      ? "Verified on Solana blockchain" 
+      : "Valid hallmark (pending blockchain confirmation)",
+  };
+}
+
+// ---------- REVOKE HALLMARK ----------
+
+export async function revokeHallmark(code: string, reason?: string): Promise<boolean> {
+  const hallmark = await getHallmarkByCode(code);
+  if (!hallmark) return false;
+  
+  await db.update(hallmarks)
+    .set({ status: "revoked" })
+    .where(eq(hallmarks.id, hallmark.id));
+    
+  await db.insert(hallmarkEvents).values({
+    hallmarkId: hallmark.id,
+    eventType: "revoked",
+    eventData: { reason },
+  });
+  
+  return true;
+}
+
+// ---------- LIST HALLMARKS ----------
+
+export async function listHallmarks(filters?: {
+  assetType?: string;
+  tenantId?: number;
+  status?: string;
+}): Promise<any[]> {
+  let query = db.select().from(hallmarks);
+  if (filters?.status) {
+    query = query.where(eq(hallmarks.status, filters.status));
+  }
+  return await query;
+}
+
+================================================================================
+SECTION 6: API ROUTES
+================================================================================
+
+File: server/routes.ts
+
+Add these routes to your existing routes file:
+
+import * as hallmarkService from "./hallmarkService";
+import { getBlockchainStats } from "./solanaService";
+
+// ---------- ISSUE NEW HALLMARK ----------
+
+app.post("/api/hallmark/issue", async (req, res) => {
+  try {
+    const schema = z.object({
+      prefix: z.string().max(10).default("CC"),
+      assetType: z.string(),
+      assetId: z.number().optional(),
+      assetName: z.string().optional(),
+      tenantId: z.number().optional(),
+      tenantName: z.string().optional(),
+      issuedBy: z.string().optional(),
+      vanityName: z.string().max(50).optional(),
+      expiresAt: z.string().datetime().optional(),
+      metadata: z.any().optional(),
+    });
+    
+    const data = schema.parse(req.body);
+    const result = await hallmarkService.issueHallmark({
+      ...data,
+      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+    });
+    
+    res.json({ success: true, hallmark: result.hallmark, blockchain: result.blockchainResult });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// ---------- VERIFY HALLMARK ----------
+
+app.get("/api/hallmark/verify/:code", async (req, res) => {
+  try {
+    const result = await hallmarkService.verifyHallmark(req.params.code, req);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// ---------- LOOKUP HALLMARK ----------
+
+app.get("/api/hallmark/:code", async (req, res) => {
+  try {
+    const hallmark = await hallmarkService.getHallmarkByCode(req.params.code);
+    if (!hallmark) {
+      return res.status(404).json({ error: "Hallmark not found" });
+    }
+    res.json(hallmark);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------- REVOKE HALLMARK ----------
+
+app.post("/api/hallmark/:code/revoke", async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const success = await hallmarkService.revokeHallmark(req.params.code, reason);
+    res.json({ success });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ---------- LIST ALL HALLMARKS ----------
+
+app.get("/api/hallmarks", async (req, res) => {
+  try {
+    const list = await hallmarkService.listHallmarks({
+      assetType: req.query.assetType as string,
+      status: req.query.status as string,
+    });
+    res.json(list);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------- BLOCKCHAIN STATS ----------
+
+app.get("/api/hallmark/blockchain/stats", async (req, res) => {
+  try {
+    const stats = await getBlockchainStats();
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+================================================================================
+SECTION 7: FRONTEND COMPONENTS
+================================================================================
+
+File: client/src/components/HallmarkBadge.tsx
+
+import { useState, useEffect } from "react";
+import QRCode from "react-qr-code";
+import { Shield, CheckCircle, XCircle, Clock, ExternalLink } from "lucide-react";
+
+interface HallmarkBadgeProps {
+  serialNumber: string;
+  assetName?: string;
+  issuedAt?: string;
+  status?: string;
+  solanaTx?: string;
+  showQR?: boolean;
+  size?: "sm" | "md" | "lg";
+}
+
+export function HallmarkBadge({ 
+  serialNumber, 
+  assetName,
+  issuedAt,
+  status = "active",
+  solanaTx,
+  showQR = true,
+  size = "md" 
+}: HallmarkBadgeProps) {
+  const verifyUrl = `${window.location.origin}/verify/${serialNumber}`;
+  const solanaExplorerUrl = solanaTx ? `https://solscan.io/tx/${solanaTx}` : null;
+  
+  const sizeClasses = {
+    sm: "p-3 text-xs",
+    md: "p-4 text-sm", 
+    lg: "p-6 text-base"
+  };
+  
+  const qrSizes = { sm: 80, md: 120, lg: 160 };
+  
+  const statusColors = {
+    active: "border-emerald-500/50 bg-emerald-950/30",
+    pending: "border-amber-500/50 bg-amber-950/30",
+    revoked: "border-red-500/50 bg-red-950/30",
+  };
+  
+  const StatusIcon = status === "active" ? CheckCircle : status === "revoked" ? XCircle : Clock;
+  const statusColor = status === "active" ? "text-emerald-400" : status === "revoked" ? "text-red-400" : "text-amber-400";
+  
+  return (
+    <div className={`rounded-xl border ${statusColors[status] || statusColors.active} ${sizeClasses[size]}`}>
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <Shield className={`w-8 h-8 ${statusColor}`} />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-bold text-white">VERIFIED HALLMARK</span>
+            <StatusIcon className={`w-4 h-4 ${statusColor}`} />
+          </div>
+          
+          <div className="font-mono text-cyan-300 mb-2">{serialNumber}</div>
+          
+          {assetName && (
+            <div className="text-slate-400 mb-1">{assetName}</div>
+          )}
+          
+          {issuedAt && (
+            <div className="text-slate-500 text-xs">
+              Issued: {new Date(issuedAt).toLocaleDateString()}
+            </div>
+          )}
+          
+          {solanaTx && (
+            <a 
+              href={solanaExplorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 mt-2"
+            >
+              <span>View on Solana</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+        
+        {showQR && (
+          <div className="flex-shrink-0 bg-white p-2 rounded-lg">
+            <QRCode value={verifyUrl} size={qrSizes[size]} />
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-slate-700/50 text-center">
+        <span className="text-xs text-slate-500">
+          Scan QR or visit: <span className="text-cyan-400">{verifyUrl}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+================================================================================
+
+File: client/src/pages/HallmarkVerify.tsx
+
+import { useState, useEffect } from "react";
+import { useParams } from "wouter";
+import { Shield, CheckCircle, XCircle, Clock, ExternalLink, AlertTriangle } from "lucide-react";
+
+export default function HallmarkVerify() {
+  const { code } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    async function verify() {
+      try {
+        const response = await fetch(`/api/hallmark/verify/${code}`);
+        const data = await response.json();
+        setResult(data);
+      } catch (err) {
+        setError("Failed to verify hallmark");
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (code) verify();
+  }, [code]);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-cyan-400 animate-pulse mx-auto mb-4" />
+          <p className="text-white">Verifying hallmark...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !result) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-red-950/50 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
+          <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">Verification Failed</h1>
+          <p className="text-red-300">{error || "Unable to verify this hallmark"}</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const { valid, hallmark, blockchain, message } = result;
+  
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className={`max-w-lg w-full rounded-2xl border ${valid ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-red-500/50 bg-red-950/20'} p-8`}>
+        
+        <div className="text-center mb-6">
+          {valid ? (
+            <CheckCircle className="w-20 h-20 text-emerald-400 mx-auto mb-4" />
+          ) : (
+            <XCircle className="w-20 h-20 text-red-400 mx-auto mb-4" />
+          )}
+          
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {valid ? "VERIFIED" : "INVALID"}
+          </h1>
+          <p className={valid ? "text-emerald-300" : "text-red-300"}>{message}</p>
+        </div>
+        
+        {hallmark && (
+          <div className="bg-slate-900/50 rounded-xl p-6 mb-6">
+            <div className="grid gap-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase">Serial Number</label>
+                <div className="font-mono text-lg text-cyan-300">{hallmark.serialNumber}</div>
+              </div>
+              
+              {hallmark.assetName && (
+                <div>
+                  <label className="text-xs text-slate-500 uppercase">Asset</label>
+                  <div className="text-white">{hallmark.assetName}</div>
+                </div>
+              )}
+              
+              <div>
+                <label className="text-xs text-slate-500 uppercase">Type</label>
+                <div className="text-white capitalize">{hallmark.assetType}</div>
+              </div>
+              
+              <div>
+                <label className="text-xs text-slate-500 uppercase">Issued</label>
+                <div className="text-white">{new Date(hallmark.issuedAt).toLocaleDateString()}</div>
+              </div>
+              
+              <div>
+                <label className="text-xs text-slate-500 uppercase">Status</label>
+                <div className={`capitalize ${hallmark.status === 'active' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {hallmark.status}
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-xs text-slate-500 uppercase">Verifications</label>
+                <div className="text-white">{hallmark.verificationCount || 0} times</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {blockchain && (
+          <div className="bg-purple-950/30 border border-purple-500/30 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Shield className="w-5 h-5 text-purple-400" />
+              <span className="font-semibold text-white">Blockchain Verification</span>
+            </div>
+            
+            {blockchain.confirmed ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Confirmed on Solana</span>
+                </div>
+                <div className="text-xs text-slate-400">
+                  Slot: {blockchain.slot}
+                </div>
+                {hallmark?.solanaTxSignature && (
+                  <a
+                    href={`https://solscan.io/tx/${hallmark.solanaTxSignature}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300"
+                  >
+                    View Transaction <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-amber-400">
+                <Clock className="w-4 h-4" />
+                <span>Pending blockchain confirmation</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div className="mt-6 pt-6 border-t border-slate-700/50 text-center">
+          <p className="text-xs text-slate-500">
+            Powered by Coffee Concierge Hallmark System
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+================================================================================
+SECTION 8: VERIFICATION FLOW DIAGRAM
+================================================================================
+
+STEP 1: ISSUE HALLMARK
+  User action → App calls POST /api/hallmark/issue
+  → Generate serial number (CC-2024-XXXXXX)
+  → Create SHA-256 hash of content
+  → Store in database
+  → Anchor hash to Solana blockchain
+  → Return hallmark with QR code URL
+
+STEP 2: DISPLAY BADGE
+  App renders HallmarkBadge component
+  → Shows serial number, status, issue date
+  → Displays QR code linking to /verify/[serial]
+  → Shows "View on Solana" link if anchored
+
+STEP 3: VERIFICATION (when someone scans QR)
+  Scanner opens /verify/CC-2024-001234
+  → Frontend calls GET /api/hallmark/verify/CC-2024-001234
+  → Backend looks up hallmark by serial or vanity name
+  → Checks status (active/revoked/expired)
+  → Verifies Solana transaction exists on-chain
+  → Increments verification count
+  → Logs verification event with IP/user-agent
+  → Returns verification result
+
+STEP 4: DISPLAY RESULT
+  Verification page shows:
+  → Large checkmark (valid) or X (invalid)
+  → Hallmark details (serial, asset, date, status)
+  → Blockchain confirmation status
+  → Link to Solana explorer
+  → Verification count
+
+================================================================================
+SECTION 9: ENVIRONMENT VARIABLES REQUIRED
+================================================================================
+
+Add these to your Replit Secrets:
+
+SOLANA_WALLET_PRIVATE_KEY
+  Description: JSON array of 64 numbers representing your Solana wallet private key
+  Example: [174,47,154,16,202,193,206,113,199,190,53,133,...]
+  How to get: Create wallet with Phantom/Solflare, export private key, convert to JSON array
+  Required: YES for blockchain anchoring
+
+HELIUS_API_KEY (optional but recommended)
+  Description: API key from helius.dev for reliable Solana RPC
+  How to get: Sign up at https://helius.dev, create project, copy API key
+  Required: NO (falls back to public RPC, but rate limited)
+
+================================================================================
+SECTION 10: NPM PACKAGES REQUIRED
+================================================================================
+
+Install these packages:
+
+npm install @solana/web3.js
+npm install react-qr-code
+
+================================================================================
+SECTION 11: ROUTING SETUP
+================================================================================
+
+Add to your App.tsx routes:
+
+import HallmarkVerify from "./pages/HallmarkVerify";
+
+<Route path="/verify/:code" component={HallmarkVerify} />
+
+================================================================================
+SECTION 12: USAGE EXAMPLES
+================================================================================
+
+ISSUING A HALLMARK (from your app code):
+
+const response = await fetch("/api/hallmark/issue", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    prefix: "CC",
+    assetType: "roaster_certification",
+    assetName: "Blue Mountain Coffee Roasters",
+    issuedBy: "Coffee Concierge Admin",
+    metadata: {
+      certificationLevel: "Gold",
+      region: "Jamaica",
+    }
+  })
+});
+const { hallmark, blockchain } = await response.json();
+console.log("Issued:", hallmark.serialNumber);
+console.log("Solana TX:", blockchain?.signature);
+
+DISPLAYING A BADGE (in your React component):
+
+import { HallmarkBadge } from "@/components/HallmarkBadge";
+
+<HallmarkBadge
+  serialNumber="CC-2024-047832"
+  assetName="Blue Mountain Coffee Roasters"
+  issuedAt="2024-01-15T10:30:00Z"
+  status="active"
+  solanaTx="5Uj7...abc"
+  showQR={true}
+  size="lg"
+/>
+
+================================================================================
+SECTION 13: CUSTOMIZATION CHECKLIST
+================================================================================
+
+To adapt this system for your app:
+
+[ ] Change prefix from "CC" to your app's abbreviation
+[ ] Update PREFIX REGISTRY with your asset types
+[ ] Replace "Coffee Concierge" branding in components
+[ ] Customize HallmarkBadge colors/styling to match your theme
+[ ] Add your app's logo to verification page
+[ ] Configure your own Solana wallet
+[ ] Set up Helius API key for production
+
+================================================================================
+END OF HALLMARK SYSTEM IMPLEMENTATION GUIDE
+================================================================================

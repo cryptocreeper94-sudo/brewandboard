@@ -44,6 +44,7 @@ function FooterWrapper() {
 }
 
 function MascotWrapper() {
+  const [location] = useLocation();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { toast } = useToast();
 
@@ -53,6 +54,9 @@ function MascotWrapper() {
       description: `"${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
     });
   };
+
+  // Hide mascot on login/landing page
+  if (location === "/") return null;
 
   return (
     <>

@@ -230,7 +230,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-1 md:col-span-3 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
+              className="col-span-1 md:col-span-3 lg:col-span-3 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
             >
               <img 
                 src={latteArtImage} 
@@ -254,7 +254,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="col-span-1 md:col-span-3 lg:col-span-4 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
+              className="col-span-1 md:col-span-3 lg:col-span-3 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
             >
               <img 
                 src={meetingImage} 
@@ -273,27 +273,47 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Premium Service Card - Desktop Only */}
+            {/* White Glove Service Card - Desktop Only */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.42 }}
-              className="hidden lg:flex col-span-4 rounded-2xl md:rounded-3xl p-6 lg:p-8 flex-col justify-between min-h-[200px] hover-3d"
-              style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+              className="hidden lg:flex lg:col-span-3 rounded-2xl md:rounded-3xl p-5 lg:p-6 flex-col justify-between min-h-[200px] hover-3d coffee-glow"
+              style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
             >
-              <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-4">
-                <Sparkles className="h-6 w-6 text-amber-200" />
+              <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-amber-200" />
               </div>
               <div>
-                <h3 
-                  className="text-2xl lg:text-3xl font-bold text-white mb-2"
+                <p 
+                  className="text-lg lg:text-xl font-bold text-white mb-1"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  White Glove Service
-                </h3>
-                <p className="text-stone-300 text-sm lg:text-base">
-                  Curated coffee experiences for your most important meetings
+                  White Glove
                 </p>
+                <p className="text-stone-300 text-xs">Premium concierge service</p>
+              </div>
+            </motion.div>
+
+            {/* Local Roasters Card - Desktop Only */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.44 }}
+              className="hidden lg:flex lg:col-span-3 rounded-2xl md:rounded-3xl p-5 lg:p-6 flex-col justify-between min-h-[200px] hover-3d"
+              style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+            >
+              <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <Coffee className="h-5 w-5 text-amber-200" />
+              </div>
+              <div>
+                <p 
+                  className="text-lg lg:text-xl font-bold text-white mb-1"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Local Roasters
+                </p>
+                <p className="text-stone-300 text-xs">Nashville's finest beans</p>
               </div>
             </motion.div>
 

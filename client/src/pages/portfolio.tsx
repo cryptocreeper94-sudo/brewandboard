@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Book, 
@@ -12,7 +12,10 @@ import {
   Building2,
   Briefcase,
   PenTool,
-  FileText
+  FileText,
+  Mic,
+  MicOff,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +41,7 @@ interface TemplateField {
 
 interface Template {
   name: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   fields: TemplateField[];
 }
 
@@ -114,11 +117,127 @@ export default function PortfolioPage() {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("general");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTranscript, setRecordingTranscript] = useState("");
+  const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>("");
 
   // Get current user ID from localStorage
   const userStr = localStorage.getItem("coffee_user");
   const user = userStr ? JSON.parse(userStr) : null;
   const userId = user?.id;
+  
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+  
+  const startVoiceNote = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      toast({
+        title: "Not Supported",
+        description: "Voice recording is not supported in your browser. Try Chrome or Edge.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    
+    transcriptRef.current = "";
+    setRecordingTranscript("");
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: "Speak now... Click stop when done.",
+      });
+    };
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+      
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + " ";
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      transcriptRef.current = finalTranscript;
+      setRecordingTranscript(finalTranscript + interimTranscript);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+      
+      const finalText = transcriptRef.current.trim();
+      if (finalText) {
+        createVoiceNote(finalText);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+      recognitionRef.current = null;
+      
+      if (event.error !== "aborted") {
+        toast({
+          title: "Recording Error",
+          description: "Could not capture your voice. Please try again.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+  
+  const stopVoiceNote = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+  
+  const createVoiceNote = (text: string) => {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+    
+    createNoteMutation.mutate({
+      userId,
+      title: `Voice Note - ${timestamp}`,
+      templateType: "general",
+      structuredData: {},
+      freeformNotes: text,
+      isPinned: false,
+      color: "default"
+    });
+    
+    toast({
+      title: "Voice Note Saved!",
+      description: "Your spoken note has been captured.",
+    });
+  };
 
   // Fetch notes
   const { data: notes = [] } = useQuery<Note[]>({
@@ -233,42 +352,68 @@ export default function PortfolioPage() {
             <p className="text-muted-foreground">Meeting notes, job details, and templates.</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
-                <Plus className="h-4 w-4" /> New Entry
+          <div className="flex items-center gap-3">
+            <motion.div
+              animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ repeat: Infinity, duration: 1 }}
+            >
+              <Button
+                onClick={isRecording ? stopVoiceNote : startVoiceNote}
+                variant={isRecording ? "destructive" : "outline"}
+                className={`gap-2 ${isRecording ? "animate-pulse" : "hover-3d"}`}
+                data-testid="button-voice-note"
+              >
+                {isRecording ? (
+                  <>
+                    <MicOff className="h-4 w-4" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4" />
+                    Record Note
+                  </>
+                )}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Choose a Template</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-1 gap-2">
-                  {Object.entries(TEMPLATES).map(([key, template]) => (
-                    <Button
-                      key={key}
-                      variant={selectedTemplate === key ? "default" : "outline"}
-                      className="justify-start h-auto py-3 px-4"
-                      onClick={() => setSelectedTemplate(key as TemplateType)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${selectedTemplate === key ? 'bg-white/20' : 'bg-muted'}`}>
-                          {template.icon}
-                        </div>
-                        <div className="text-left">
-                          <div className="font-semibold">{template.name}</div>
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-                <Button onClick={handleNewNote} className="w-full mt-2" disabled={createNoteMutation.isPending}>
-                  {createNoteMutation.isPending ? "Creating..." : "Create Note"}
+            </motion.div>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" data-testid="button-new-entry">
+                  <Plus className="h-4 w-4" /> New Entry
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Choose a Template</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(TEMPLATES).map(([key, template]) => (
+                      <Button
+                        key={key}
+                        variant={selectedTemplate === key ? "default" : "outline"}
+                        className="justify-start h-auto py-3 px-4"
+                        onClick={() => setSelectedTemplate(key as TemplateType)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${selectedTemplate === key ? 'bg-white/20' : 'bg-muted'}`}>
+                            {template.icon}
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold">{template.name}</div>
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                  <Button onClick={handleNewNote} className="w-full mt-2" disabled={createNoteMutation.isPending}>
+                    {createNoteMutation.isPending ? "Creating..." : "Create Note"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[600px]">

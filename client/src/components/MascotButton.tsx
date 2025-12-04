@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, X, Sparkles, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,18 @@ export function MascotButton({
   const [isListening, setIsListening] = useState(false);
   const [currentPhrase, setCurrentPhrase] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [displayTranscript, setDisplayTranscript] = useState("");
+  
+  const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>("");
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const handleMascotClick = () => {
     if (!isExpanded) {
@@ -58,42 +69,57 @@ export function MascotButton({
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
+    
+    transcriptRef.current = "";
+    setDisplayTranscript("");
 
     recognition.onstart = () => {
       setIsListening(true);
-      setTranscript("");
       onSpeechStart?.();
     };
 
     recognition.onresult = (event: any) => {
       let finalTranscript = "";
+      let interimTranscript = "";
+      
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
         }
       }
+      
       if (finalTranscript) {
-        setTranscript(finalTranscript);
+        transcriptRef.current += finalTranscript;
+        setDisplayTranscript(transcriptRef.current);
+      } else if (interimTranscript) {
+        setDisplayTranscript(transcriptRef.current + interimTranscript);
       }
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      if (transcript) {
-        onSpeechEnd?.(transcript);
+      recognitionRef.current = null;
+      if (transcriptRef.current.trim()) {
+        onSpeechEnd?.(transcriptRef.current.trim());
       }
     };
 
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       setIsListening(false);
+      recognitionRef.current = null;
     };
 
+    recognitionRef.current = recognition;
     recognition.start();
   };
 
   const stopListening = () => {
-    setIsListening(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
   };
 
   return (
@@ -174,6 +200,7 @@ export function MascotButton({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="absolute bottom-full right-0 mb-3 bg-white rounded-xl shadow-xl border border-red-200 p-3 min-w-[250px]"
+          data-testid="speech-indicator"
         >
           <div className="flex items-center gap-2 text-red-600">
             <div className="flex gap-1">
@@ -195,9 +222,9 @@ export function MascotButton({
             </div>
             <span className="text-sm font-medium">Listening...</span>
           </div>
-          {transcript && (
+          {displayTranscript && (
             <p className="mt-2 text-sm text-gray-700 bg-gray-50 p-2 rounded">
-              {transcript}
+              {displayTranscript}
             </p>
           )}
         </motion.div>

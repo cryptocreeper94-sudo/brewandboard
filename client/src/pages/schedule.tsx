@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,9 +19,13 @@ import {
   Phone,
   User,
   Home,
-  Percent
+  Percent,
+  ShoppingCart,
+  Minus,
+  Trash2
 } from "lucide-react";
 import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE } from "@/lib/mock-data";
+import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,6 +100,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function SchedulePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { items: cartItems, vendorName: cartVendorName, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, total, itemCount } = useCart();
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
@@ -145,6 +150,24 @@ export default function SchedulePage() {
     specialInstructions: "",
   });
 
+  // Auto-open order form if cart has items
+  useEffect(() => {
+    if (itemCount > 0 && !isNewOrderOpen) {
+      setNewOrder(prev => ({
+        ...prev,
+        vendorName: cartVendorName || "",
+        items: cartItems.map(item => ({
+          menuItemId: item.itemId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price.toFixed(2),
+          notes: ""
+        }))
+      }));
+      setIsNewOrderOpen(true);
+    }
+  }, []);
+
   // Calculate if order time is valid (at least 2 hours in advance)
   const isOrderTimeValid = useMemo(() => {
     const scheduledDateTime = new Date(`${newOrder.scheduledDate}T${newOrder.scheduledTime}`);
@@ -170,6 +193,7 @@ export default function SchedulePage() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       setIsNewOrderOpen(false);
       resetNewOrderForm();
+      clearCart();
       toast({ title: "Success", description: "Order scheduled successfully!" });
     },
     onError: (error: any) => {
@@ -299,6 +323,85 @@ export default function SchedulePage() {
             <Plus className="h-4 w-4" /> New Order
           </Button>
         </header>
+
+        {/* Cart Summary */}
+        {itemCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-amber-600" />
+                <span className="font-medium text-amber-900">Your Cart from {cartVendorName}</span>
+                <Badge className="bg-amber-600 text-white">{itemCount} items</Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearCart}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                data-testid="button-clear-cart"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            </div>
+            
+            <div className="space-y-2 mb-3">
+              {cartItems.map((item) => (
+                <div key={item.itemId} className="flex items-center justify-between bg-white/60 p-2 rounded-lg">
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-amber-900">{item.name}</span>
+                    <span className="text-xs text-amber-600 ml-2">${item.price.toFixed(2)} ea</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => updateQuantity(item.itemId, item.quantity - 1)}
+                      data-testid={`button-decrease-${item.itemId}`}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => updateQuantity(item.itemId, item.quantity + 1)}
+                      data-testid={`button-increase-${item.itemId}`}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => removeItem(item.itemId)}
+                      data-testid={`button-remove-${item.itemId}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-between items-center pt-2 border-t border-amber-200">
+              <div className="text-sm text-amber-700">
+                <span>Subtotal: ${subtotal.toFixed(2)}</span>
+                <span className="mx-2">+</span>
+                <span>Fee: ${serviceFee.toFixed(2)}</span>
+                <span className="mx-2">+</span>
+                <span>Delivery: ${deliveryFee.toFixed(2)}</span>
+              </div>
+              <span className="font-bold text-amber-900">Total: ${total.toFixed(2)}</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Lead Time Disclaimer */}
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">

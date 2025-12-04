@@ -113,7 +113,7 @@ export default function FindBaristasPage() {
   };
 
   const categories = selectedShop 
-    ? [...new Set(selectedShop.menu.map(item => item.category))]
+    ? Array.from(new Set(selectedShop.menu.map(item => item.category)))
     : [];
 
   return (

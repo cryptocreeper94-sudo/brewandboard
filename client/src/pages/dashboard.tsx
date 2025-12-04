@@ -22,10 +22,13 @@ import {
   Newspaper,
   ExternalLink,
   RefreshCw,
-  Shield
+  Shield,
+  ShoppingCart,
+  Navigation
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
+import { useCart } from "@/contexts/CartContext";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -84,6 +87,8 @@ interface NewsItem {
 function CuratedRoastersCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const { addItem, getItemQuantity, itemCount } = useCart();
+  const { toast } = useToast();
   const shops = COFFEE_SHOPS.slice(0, 8);
   
   const goNext = () => {
@@ -96,7 +101,7 @@ function CuratedRoastersCarousel() {
   
   const shop = shops[currentIndex];
   
-  const categories = [...new Set(shop.menu.map(item => item.category))];
+  const categories = Array.from(new Set(shop.menu.map(item => item.category)));
   
   return (
     <motion.div 
@@ -205,31 +210,52 @@ function CuratedRoastersCarousel() {
             </p>
           </DialogHeader>
           
-          <ScrollArea className="max-h-[60vh] pr-4">
+          <ScrollArea className="max-h-[55vh] pr-4">
             <div className="space-y-6">
               {categories.map(category => (
                 <div key={category}>
                   <h4 className="text-amber-400 font-semibold text-sm uppercase tracking-wider mb-3 border-b border-amber-800/30 pb-2">
                     {category}
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {shop.menu
                       .filter(item => item.category === category)
-                      .map(item => (
-                        <div 
-                          key={item.id} 
-                          className="flex justify-between items-start gap-4 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
-                          data-testid={`menu-item-${item.id}`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <h5 className="text-amber-100 font-medium text-sm">{item.name}</h5>
-                            <p className="text-amber-200/50 text-xs mt-0.5 truncate">{item.description}</p>
+                      .map(item => {
+                        const qty = getItemQuantity(item.id);
+                        return (
+                          <div 
+                            key={item.id} 
+                            className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+                            data-testid={`menu-item-${item.id}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-amber-100 font-medium text-sm">{item.name}</h5>
+                              <p className="text-amber-200/50 text-xs truncate">{item.description}</p>
+                            </div>
+                            <span className="text-amber-400 font-semibold text-sm whitespace-nowrap">
+                              ${item.price.toFixed(2)}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant={qty > 0 ? "default" : "outline"}
+                              className={qty > 0 
+                                ? "bg-amber-600 hover:bg-amber-700 min-w-[70px]" 
+                                : "border-amber-600 text-amber-400 hover:bg-amber-600/20 min-w-[70px]"
+                              }
+                              onClick={() => {
+                                addItem(shop, item);
+                                toast({
+                                  title: "Added to Cart",
+                                  description: `${item.name} added`
+                                });
+                              }}
+                              data-testid={`button-add-${item.id}`}
+                            >
+                              {qty > 0 ? `${qty} in cart` : "Add"}
+                            </Button>
                           </div>
-                          <span className="text-amber-400 font-semibold text-sm whitespace-nowrap">
-                            ${item.price.toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </div>
               ))}
@@ -237,16 +263,22 @@ function CuratedRoastersCarousel() {
           </ScrollArea>
           
           <div className="pt-3 border-t border-amber-800/30">
-            <Link href="/schedule">
-              <Button 
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => setShowMenu(false)}
-                data-testid="button-order-now"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Order from {shop.name}
-              </Button>
-            </Link>
+            {itemCount > 0 ? (
+              <Link href="/schedule">
+                <Button 
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => setShowMenu(false)}
+                  data-testid="button-checkout"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Checkout ({itemCount} items)
+                </Button>
+              </Link>
+            ) : (
+              <p className="text-center text-amber-200/50 text-sm py-2">
+                Add items to your cart to checkout
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -298,6 +330,8 @@ export default function Dashboard() {
     fetchNews();
   }, []);
 
+const { itemCount } = useCart();
+
   const quickActions = [
     {
       id: "schedule",
@@ -307,6 +341,15 @@ export default function Dashboard() {
       icon: Calendar,
       gradient: "from-amber-800 via-amber-700 to-amber-600",
       shadowColor: "shadow-amber-800/40"
+    },
+    {
+      id: "find-baristas",
+      title: "Find Baristas",
+      subtitle: "Nearby coffee shops",
+      href: "/find-baristas",
+      icon: Navigation,
+      gradient: "from-emerald-800 via-emerald-700 to-emerald-600",
+      shadowColor: "shadow-emerald-800/40"
     },
     {
       id: "portfolio",

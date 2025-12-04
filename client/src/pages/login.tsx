@@ -33,6 +33,20 @@ export default function LandingPage() {
     setLocation("/dashboard");
   };
 
+  const handleDemoMode = () => {
+    const demoUser = {
+      id: "demo-user",
+      email: "demo@coffeetalk.app",
+      businessName: "Demo Business",
+      contactName: "Demo User",
+      isDemo: true
+    };
+    localStorage.setItem("coffee_user", JSON.stringify(demoUser));
+    localStorage.setItem("coffee_demo_mode", "true");
+    localStorage.removeItem("coffee_demo_notes");
+    setLocation("/portfolio");
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100">
       
@@ -355,16 +369,27 @@ export default function LandingPage() {
                 <p className="text-stone-400 text-sm md:text-base max-w-2xl mx-auto mb-5 md:mb-8">
                   Experience the convenience of Nashville's finest coffee, delivered with white-glove service.
                 </p>
-                <Button
-                  onClick={handleExplore}
-                  size="lg"
-                  className="h-11 md:h-14 px-8 md:px-10 text-white text-sm md:text-lg font-medium rounded-full shine-effect sparkle-container"
-                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
-                  data-testid="button-get-started"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Get Started
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={handleExplore}
+                    size="lg"
+                    className="h-11 md:h-14 px-8 md:px-10 text-white text-sm md:text-lg font-medium rounded-full shine-effect sparkle-container"
+                    style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+                    data-testid="button-get-started"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Get Started
+                  </Button>
+                  <Button
+                    onClick={handleDemoMode}
+                    size="lg"
+                    variant="outline"
+                    className="h-11 md:h-14 px-6 md:px-8 border-stone-400 text-stone-300 hover:bg-stone-800/50 hover:text-white text-sm md:text-lg font-medium rounded-full"
+                    data-testid="button-try-demo"
+                  >
+                    Try Portfolio Demo
+                  </Button>
+                </div>
               </div>
             </motion.div>
 

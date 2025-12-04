@@ -127,11 +127,44 @@ export default function PortfolioPage() {
   const [recordingTranscript, setRecordingTranscript] = useState("");
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
+  
+  // Demo mode state
+  const [demoNotes, setDemoNotes] = useState<Note[]>([]);
 
   // Get current user ID from localStorage
   const userStr = localStorage.getItem("coffee_user");
   const user = userStr ? JSON.parse(userStr) : null;
   const userId = user?.id;
+  const isDemoMode = localStorage.getItem("coffee_demo_mode") === "true";
+  
+  // Load demo notes from localStorage on mount
+  useEffect(() => {
+    if (isDemoMode) {
+      const savedDemoNotes = localStorage.getItem("coffee_demo_notes");
+      if (savedDemoNotes) {
+        setDemoNotes(JSON.parse(savedDemoNotes));
+      }
+    }
+  }, [isDemoMode]);
+  
+  // Save demo notes to localStorage whenever they change
+  useEffect(() => {
+    if (isDemoMode) {
+      if (demoNotes.length > 0) {
+        localStorage.setItem("coffee_demo_notes", JSON.stringify(demoNotes));
+      } else {
+        localStorage.removeItem("coffee_demo_notes");
+      }
+    }
+  }, [demoNotes, isDemoMode]);
+  
+  // Exit demo mode
+  const exitDemoMode = () => {
+    localStorage.removeItem("coffee_demo_mode");
+    localStorage.removeItem("coffee_demo_notes");
+    localStorage.removeItem("coffee_user");
+    window.location.href = "/";
+  };
   
   useEffect(() => {
     return () => {
@@ -244,21 +277,62 @@ export default function PortfolioPage() {
     });
   };
 
-  // Fetch notes
-  const { data: notes = [] } = useQuery<Note[]>({
+  // Fetch notes (API or demo mode)
+  const { data: apiNotes = [] } = useQuery<Note[]>({
     queryKey: ["notes", userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId || isDemoMode) return [];
       const res = await fetch(`/api/notes?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch notes");
       return res.json();
     },
-    enabled: !!userId
+    enabled: !!userId && !isDemoMode
   });
+  
+  // Use demo notes or API notes
+  const notes = isDemoMode ? demoNotes : apiNotes;
+
+  // Demo mode CRUD helpers
+  const createDemoNote = (note: Partial<Note>) => {
+    const newNote: Note = {
+      id: `demo-${Date.now()}`,
+      userId: userId || "demo-user",
+      title: note.title || "New Note",
+      templateType: note.templateType || "general",
+      structuredData: note.structuredData || null,
+      freeformNotes: note.freeformNotes || null,
+      isPinned: note.isPinned || false,
+      color: note.color || "default",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setDemoNotes(prev => [newNote, ...prev]);
+    setActiveNote(newNote);
+    setIsDialogOpen(false);
+    toast({ title: "Success", description: "Note created! (Demo Mode - not saved to server)" });
+    return newNote;
+  };
+  
+  const updateDemoNote = (id: string, data: Partial<Note>) => {
+    setDemoNotes(prev => prev.map(n => 
+      n.id === id ? { ...n, ...data, updatedAt: new Date().toISOString() } : n
+    ));
+    setActiveNote(prev => prev?.id === id ? { ...prev, ...data } as Note : prev);
+    toast({ title: "Saved", description: "Note updated! (Demo Mode)" });
+  };
+  
+  const deleteDemoNote = (id: string) => {
+    setDemoNotes(prev => prev.filter(n => n.id !== id));
+    setActiveNote(null);
+    toast({ title: "Deleted", description: "Note deleted! (Demo Mode)" });
+  };
 
   // Create note mutation
   const createNoteMutation = useMutation({
     mutationFn: async (note: Partial<Note>) => {
+      if (isDemoMode) {
+        return createDemoNote(note);
+      }
       const res = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -268,16 +342,22 @@ export default function PortfolioPage() {
       return res.json();
     },
     onSuccess: (newNote) => {
-      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-      setActiveNote(newNote);
-      setIsDialogOpen(false);
-      toast({ title: "Success", description: "Note created successfully!" });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+        setActiveNote(newNote);
+        setIsDialogOpen(false);
+        toast({ title: "Success", description: "Note created successfully!" });
+      }
     }
   });
 
   // Update note mutation
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Note> }) => {
+      if (isDemoMode) {
+        updateDemoNote(id, data);
+        return data;
+      }
       const res = await fetch(`/api/notes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -287,22 +367,30 @@ export default function PortfolioPage() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-      toast({ title: "Saved", description: "Note updated successfully!" });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+        toast({ title: "Saved", description: "Note updated successfully!" });
+      }
     }
   });
 
   // Delete note mutation
   const deleteNoteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (isDemoMode) {
+        deleteDemoNote(id);
+        return {};
+      }
       const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete note");
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-      setActiveNote(null);
-      toast({ title: "Deleted", description: "Note deleted successfully!" });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
+        setActiveNote(null);
+        toast({ title: "Deleted", description: "Note deleted successfully!" });
+      }
     }
   });
 
@@ -347,10 +435,29 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Sparkles className="h-4 w-4" />
+            <span>Demo Mode - Play around! Your notes won't be saved to the server.</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={exitDemoMode}
+            className="text-white hover:bg-white/20 text-xs"
+            data-testid="button-exit-demo"
+          >
+            Exit Demo
+          </Button>
+        </div>
+      )}
+      
+      <div className={`max-w-6xl mx-auto ${isDemoMode ? 'pt-12' : ''}`}>
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
+            <Link href={isDemoMode ? "/" : "/dashboard"}>
               <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
                 <ChevronLeft className="h-5 w-5" />
               </Button>

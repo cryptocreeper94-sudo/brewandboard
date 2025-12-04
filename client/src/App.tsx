@@ -40,12 +40,8 @@ function FooterWrapper() {
 }
 
 function MascotWrapper() {
-  const [location] = useLocation();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { toast } = useToast();
-  
-  const hideMascotPages = ["/"];
-  const shouldShowMascot = !hideMascotPages.includes(location);
 
   const handleSpeechEnd = (text: string) => {
     toast({
@@ -53,8 +49,6 @@ function MascotWrapper() {
       description: `"${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
     });
   };
-
-  if (!shouldShowMascot) return null;
 
   return (
     <>

@@ -40,6 +40,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import cremaImage from "@assets/generated_images/crema_coffee_shop_interior.png";
+import baristaParlorImage from "@assets/generated_images/barista_parlor_interior.png";
+import frothyMonkeyImage from "@assets/generated_images/frothy_monkey_interior.png";
+
+const shopImages: Record<string, string> = {
+  'crema': cremaImage,
+  'barista-parlor': baristaParlorImage,
+  'frothy-monkey': frothyMonkeyImage,
+};
+
 interface NewsItem {
   title: string;
   link: string;
@@ -119,16 +129,6 @@ export default function Dashboard() {
       icon: Scan,
       bgClass: "bg-gradient-to-br from-slate-800 to-slate-900",
       textClass: "text-white"
-    },
-    {
-      id: "developers",
-      title: "Developer Hub",
-      subtitle: "API & integrations",
-      href: "/developers",
-      icon: Code2,
-      bgClass: "bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600",
-      textClass: "text-white",
-      hasSparkle: true
     }
   ];
 
@@ -207,7 +207,7 @@ export default function Dashboard() {
           <WebSearch />
         </motion.div>
         
-        {/* Quick Actions - Horizontal Carousel */}
+        {/* Quick Actions - Full Width Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -217,36 +217,29 @@ export default function Dashboard() {
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <ScrollArea className="w-full">
-            <div className="flex gap-4 pb-4">
-              {quickActions.map((action, index) => (
-                <Link key={action.id} href={action.href}>
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + index * 0.05 }}
-                    className={`flex-shrink-0 w-[160px] h-[140px] ${action.bgClass} ${action.textClass} rounded-2xl p-5 flex flex-col justify-between cursor-pointer hover:scale-[1.03] transition-transform shadow-sm hover:shadow-lg relative overflow-hidden`}
-                    data-testid={`button-${action.id}`}
-                  >
-                    {action.hasSparkle && (
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_70%)]" />
-                    )}
-                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center relative z-10">
-                      <action.icon className="h-5 w-5" />
-                    </div>
-                    <div className="relative z-10">
-                      <h4 className="font-serif text-sm font-semibold leading-tight mb-0.5 flex items-center gap-1">
-                        {action.title}
-                        {action.hasSparkle && <Sparkles className="h-3 w-3" />}
-                      </h4>
-                      <p className="text-[10px] opacity-70">{action.subtitle}</p>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {quickActions.map((action, index) => (
+              <Link key={action.id} href={action.href}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.05 }}
+                  className={`h-[140px] ${action.bgClass} ${action.textClass} rounded-2xl p-5 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform shadow-sm hover:shadow-lg`}
+                  data-testid={`button-${action.id}`}
+                >
+                  <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif text-sm font-semibold leading-tight mb-0.5">
+                      {action.title}
+                    </h4>
+                    <p className="text-[10px] opacity-70">{action.subtitle}</p>
+                  </div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
         </motion.div>
 
         {/* Curated Roasters - Horizontal Carousel */}
@@ -262,13 +255,13 @@ export default function Dashboard() {
           
           <ScrollArea className="w-full whitespace-nowrap rounded-2xl">
             <div className="flex w-max space-x-4 pb-4">
-              {COFFEE_SHOPS.map((shop) => (
+              {COFFEE_SHOPS.slice(0, 3).map((shop) => (
                 <div 
                   key={shop.id} 
                   className="w-[280px] h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-sm hover:shadow-md transition-all"
                 >
                   <img 
-                    src={shop.image} 
+                    src={shopImages[shop.id] || shop.image} 
                     alt={shop.name} 
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />

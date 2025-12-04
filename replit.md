@@ -16,7 +16,18 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 - **Pricing**: Concierge pricing with 15% service fee on one-off orders, subscription tiers for discounts
 - **Legal Pages**: Terms & Conditions, Contact Us, Investor/Franchise information
 
+## Version History (Blockchain Verified)
+| Version | Hallmark | Date | Changes |
+|---------|----------|------|---------|
+| v1.0.0 | BB-0000000005 | Dec 4, 2024 | Initial release with blockchain hallmark system |
+| v1.0.1 | BB-0000000006 | Dec 4, 2024 | PWA app icon, integration roadmap |
+| v1.0.2 | BB-0000000007 | Dec 4, 2024 | Stripe webhook security configuration |
+| v1.0.3 | BB-0000000008 | Dec 4, 2024 | Dashboard UI cleanup, removed mascot from hero |
+
 ## Recent Changes (December 2024)
+- **v1.0.3**: Cleaned up dashboard hero section (removed floating mascot with white frame)
+- **v1.0.2**: Added STRIPE_WEBHOOK_SECRET for secure payment event verification
+- **v1.0.1**: Generated branded PWA app icon, added interactive Developer Portal roadmap
 - **Developer Full Access**: Developer PIN (0424) now grants full access to ALL features
   - "Developer" link in footer opens PIN entry dialog
   - Creates developer user account with full permissions

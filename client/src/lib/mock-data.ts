@@ -1,9 +1,3 @@
-
-import cremaImage from '@assets/generated_images/crema_coffee_roasters_interior.png';
-import baristaParlorImage from '@assets/generated_images/barista_parlor_interior.png';
-import frothyMonkeyImage from '@assets/generated_images/frothy_monkey_interior.png';
-import drugStoreImage from '@assets/generated_images/drug_store_coffee_interior.png';
-
 export interface Product {
   id: string;
   name: string;
@@ -45,7 +39,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'crema',
     name: 'Crema Coffee Roasters',
-    image: cremaImage,
+    image: '/attached_assets/generated_images/crema_coffee_roasters_interior.png',
     location: 'Downtown Nashville',
     rating: 4.9,
     specialty: 'Single Origin Pour Over',
@@ -64,7 +58,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'barista-parlor',
     name: 'Barista Parlor',
-    image: baristaParlorImage,
+    image: '/attached_assets/generated_images/barista_parlor_interior.png',
     location: 'The Gulch',
     rating: 4.8,
     specialty: 'Artisan Espresso',
@@ -83,7 +77,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'frothy-monkey',
     name: 'Frothy Monkey',
-    image: frothyMonkeyImage,
+    image: '/attached_assets/generated_images/frothy_monkey_interior.png',
     location: '12 South',
     rating: 4.7,
     specialty: 'Breakfast Blend',
@@ -103,7 +97,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'drug-store',
     name: 'Drug Store Coffee',
-    image: drugStoreImage,
+    image: '/attached_assets/generated_images/drug_store_coffee_interior.png',
     location: 'Noelle Hotel',
     rating: 4.9,
     specialty: 'Premium Experience',
@@ -121,7 +115,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'steadfast',
     name: 'Steadfast Coffee',
-    image: cremaImage,
+    image: '/attached_assets/generated_images/crema_coffee_roasters_interior.png',
     location: 'East Nashville',
     rating: 4.8,
     specialty: 'Direct Trade Roasting',
@@ -139,7 +133,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'dose',
     name: 'Dose Coffee',
-    image: baristaParlorImage,
+    image: '/attached_assets/generated_images/barista_parlor_interior.png',
     location: 'Berry Hill',
     rating: 4.6,
     specialty: 'Quick Service Excellence',
@@ -157,7 +151,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'humphreys',
     name: 'Humphreys Street Coffee',
-    image: frothyMonkeyImage,
+    image: '/attached_assets/generated_images/frothy_monkey_interior.png',
     location: 'Wedgewood-Houston',
     rating: 4.7,
     specialty: 'Neighborhood Vibes',
@@ -175,7 +169,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'smoothie-king',
     name: 'Smoothie King',
-    image: drugStoreImage,
+    image: '/attached_assets/generated_images/drug_store_coffee_interior.png',
     location: 'Multiple Nashville Locations',
     rating: 4.5,
     specialty: 'Fitness & Wellness Smoothies',
@@ -195,7 +189,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'tropical-smoothie',
     name: 'Tropical Smoothie Cafe',
-    image: cremaImage,
+    image: '/attached_assets/generated_images/crema_coffee_roasters_interior.png',
     location: 'Green Hills',
     rating: 4.4,
     specialty: 'Tropical Flavors & Wraps',
@@ -214,7 +208,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'jamba',
     name: 'Jamba',
-    image: baristaParlorImage,
+    image: '/attached_assets/generated_images/barista_parlor_interior.png',
     location: 'Cool Springs',
     rating: 4.3,
     specialty: 'Classic Smoothies & Bowls',
@@ -233,7 +227,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'just-love',
     name: 'Just Love Coffee Cafe',
-    image: frothyMonkeyImage,
+    image: '/attached_assets/generated_images/frothy_monkey_interior.png',
     location: 'Franklin',
     rating: 4.6,
     specialty: 'Community & Great Coffee',
@@ -251,7 +245,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'eighth-son',
     name: '8th & Roast',
-    image: drugStoreImage,
+    image: '/attached_assets/generated_images/drug_store_coffee_interior.png',
     location: 'Berry Hill',
     rating: 4.8,
     specialty: 'Small Batch Roasting',

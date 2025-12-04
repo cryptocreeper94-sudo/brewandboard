@@ -26,6 +26,7 @@ function Router() {
       <Route path="/schedule" component={SchedulePage} />
       <Route path="/scan" component={ScanPage} />
       <Route path="/developers" component={DevelopersPage} />
+      <Route path="/pricing" component={PricingPage} />
       <Route component={NotFound} />
     </Switch>
   );

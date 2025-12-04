@@ -11,19 +11,19 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - **Document Scanner**: Universal OCR scanner for creating and sharing PDFs on-the-go
 - **Web3 Research**: Quick search bar for crypto tokens, contract addresses, and URLs
 - **AI Mascot**: "Happy Coffee" floating mascot button with breathing animation
+- **Pricing**: Concierge pricing with 15% service fee on one-off orders, subscription tiers for discounts
 
 ## Recent Changes (December 2024)
-- Added Order Scheduling System with calendar view
-- Implemented scheduled_orders and order_events database tables
-- Added 2-hour lead time validation for guaranteed delivery
-- Created status tracking for orders (scheduled → confirmed → preparing → out_for_delivery → delivered)
-- Added fulfillment tracking for manual DoorDash/Uber Eats entry
-- Added Universal Document Scanner with OCR (Tesseract.js) and PDF generation (jsPDF)
-- Added "Happy Coffee" AI mascot with floating button and breathing animations
-- Implemented speech-to-text voice note recording in Portfolio (Web Speech API)
-- Created Developers page with API documentation
-- Added Web3 Research search bar (CoinGecko API) on Dashboard and Portfolio pages
-- Premium UI enhancements: sparkle effects, 3D hover transforms, glassmorphism
+- Added back navigation buttons to Portfolio, Schedule, and Developers pages
+- Expanded vendor catalog to 12 vendors (Nashville coffee shops + smoothie places)
+- Added Smoothie King, Tropical Smoothie Cafe, Jamba, and more coffee shops
+- Full menus with Coffee, Tea, Specialty, Smoothies, Fruit Drinks, Food, and Catering options
+- Developers page now includes Integration Roadmap with accordion-style API to-do lists
+- Integration roadmap covers: DoorDash, Uber Direct, Stripe, Google Calendar, Twilio, Google Maps
+- Added service fee (15%) and delivery coordination ($5) to order flow
+- Updated pricing page with subscription tier discounts and visual fee breakdown
+- Added serviceFee field to database schema for orders
+- Added /pricing route to app navigation
 
 ## Project Architecture
 
@@ -31,12 +31,13 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - `/client/src/pages/login.tsx` - PIN-based authentication
 - `/client/src/pages/dashboard.tsx` - Bento grid home page
 - `/client/src/pages/portfolio.tsx` - CRM notes with industry templates
-- `/client/src/pages/schedule.tsx` - Order scheduling calendar
+- `/client/src/pages/schedule.tsx` - Order scheduling calendar with service fee breakdown
 - `/client/src/pages/scan.tsx` - Document scanner with OCR and PDF export
-- `/client/src/pages/developers.tsx` - API documentation page
+- `/client/src/pages/developers.tsx` - API documentation + integration roadmap
+- `/client/src/pages/pricing.tsx` - Concierge pricing with subscription tiers
+- `/client/src/lib/mock-data.ts` - Vendors, menus, pricing constants, subscription tiers
 - `/client/src/components/Web3Search.tsx` - Web3 research search bar
 - `/client/src/components/MascotButton.tsx` - AI mascot floating button
-- `/client/src/hooks/useSpeechToText.ts` - Voice recording hook
 
 ### Backend (Express + TypeScript)
 - `/server/routes.ts` - API endpoints for auth, notes, orders
@@ -49,32 +50,41 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - `clients` - CRM contacts
 - `crm_activities` - Activity timeline
 - `crm_meetings` - Business meetings
-- `scheduled_orders` - Coffee delivery orders
+- `scheduled_orders` - Coffee delivery orders (includes serviceFee field)
 - `order_events` - Order status history
 - `vendors` - Coffee shops
 - `menu_items` - Vendor menu items
+
+## Pricing Model
+- **One-off orders**: 15% service fee + $5 delivery coordination
+- **Starter ($29/mo)**: 10 orders, 10% fee discount
+- **Professional ($79/mo)**: 50 orders, 50% fee discount, free delivery
+- **Enterprise ($199/mo)**: Unlimited orders, no service fees, priority delivery
 
 ## User Preferences
 - **Design**: "Nashville Luxury" aesthetic with Playfair Display typography and warm amber/wood tones
 - **Weather Widget**: Must remain compact (no large icons covering text)
 - **Portfolio**: Supports both structured industry templates AND open freeform notes
 - **30-day persistence**: Optional with warning about device access
-- **Stripe**: Do not integrate until EIN obtained
 - **Order Lead Time**: Minimum 2 hours for guaranteed delivery
+- **Navigation**: All pages should have back buttons
 
 ## Key Features
 1. PIN-based quick access (4-digit)
 2. Industry-specific CRM templates
-3. Calendar-based order scheduling
+3. Calendar-based order scheduling with service fee display
 4. Manual fulfillment tracking (DoorDash/Uber Eats)
 5. Status workflow for orders
 6. Universal document scanner with OCR
-   - Camera capture or file upload
-   - On-device text extraction (Tesseract.js)
-   - Multi-page PDF generation (jsPDF)
-   - Native sharing via Web Share API
+7. 12 vendor catalog with full menus (coffee + smoothies)
+
+## Stripe Integration
+- User is adding STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY to secrets
+- Checkout and subscription management coming soon
+- See Developers page Integration Roadmap for implementation tasks
 
 ## Future Plans
 - Google Calendar integration (available via Replit integration)
 - DoorDash/Uber Eats API integration for auto-dispatch
-- Stripe payment processing (after EIN)
+- Twilio SMS notifications
+- Google Maps for address autocomplete

@@ -44,12 +44,34 @@ import {
 import cremaImage from "@assets/generated_images/crema_coffee_shop_interior.png";
 import baristaParlorImage from "@assets/generated_images/barista_parlor_interior.png";
 import frothyMonkeyImage from "@assets/generated_images/frothy_monkey_interior.png";
+import mascotImage from "@assets/generated_images/kawaii_coffee_cup_mascot_character.png";
 
 const shopImages: Record<string, string> = {
   'crema': cremaImage,
   'barista-parlor': baristaParlorImage,
   'frothy-monkey': frothyMonkeyImage,
 };
+
+const FloatingBean = ({ delay, duration, x, size }: { delay: number; duration: number; x: number; size: number }) => (
+  <motion.div
+    className="absolute text-amber-600/30"
+    initial={{ y: "100vh", x: `${x}vw`, rotate: 0, opacity: 0 }}
+    animate={{ 
+      y: "-20vh", 
+      rotate: 360,
+      opacity: [0, 0.6, 0.6, 0]
+    }}
+    transition={{ 
+      duration, 
+      delay,
+      repeat: Infinity,
+      ease: "linear"
+    }}
+    style={{ fontSize: size }}
+  >
+    ☕
+  </motion.div>
+);
 
 interface NewsItem {
   title: string;
@@ -110,17 +132,17 @@ export default function Dashboard() {
       subtitle: "Client notes & templates",
       href: "/portfolio",
       icon: Users,
-      bgClass: "bg-amber-700",
-      textClass: "text-white"
+      gradient: "from-violet-600 via-purple-600 to-indigo-600",
+      shadowColor: "shadow-purple-500/25"
     },
     {
       id: "schedule",
       title: "Schedule Order",
-      subtitle: "Coffee delivery",
+      subtitle: "Premium coffee delivery",
       href: "/schedule",
       icon: Calendar,
-      bgClass: "bg-primary",
-      textClass: "text-primary-foreground"
+      gradient: "from-orange-500 via-amber-500 to-yellow-500",
+      shadowColor: "shadow-amber-500/25"
     },
     {
       id: "scan",
@@ -128,30 +150,141 @@ export default function Dashboard() {
       subtitle: "Create & share PDFs",
       href: "/scan",
       icon: Scan,
-      bgClass: "bg-gradient-to-br from-slate-800 to-slate-900",
-      textClass: "text-white"
+      gradient: "from-emerald-600 via-teal-600 to-cyan-600",
+      shadowColor: "shadow-teal-500/25"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Coffee Banner - Dark Coffee with Cream Mixing Effect */}
-      <div className="relative h-24 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 25%, #3d2418 45%, #2a1612 55%, #1f110c 75%, #1a0f0a 100%)' }}>
-        {/* Subtle cream mixing overlay */}
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50/30 to-background dark:from-amber-950/30 dark:via-background dark:to-background text-foreground pb-20 overflow-hidden">
+      {/* Floating Coffee Beans Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <FloatingBean delay={0} duration={15} x={10} size={24} />
+        <FloatingBean delay={3} duration={18} x={25} size={20} />
+        <FloatingBean delay={6} duration={20} x={45} size={28} />
+        <FloatingBean delay={2} duration={16} x={65} size={22} />
+        <FloatingBean delay={8} duration={22} x={80} size={26} />
+        <FloatingBean delay={4} duration={17} x={90} size={18} />
+      </div>
+
+      {/* Hero Banner - Exciting with Mascot */}
+      <div className="relative overflow-hidden">
+        {/* Animated gradient background */}
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0"
           style={{ 
-            background: 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(210,180,140,0.4) 0%, transparent 50%), radial-gradient(ellipse 60% 40% at 70% 60%, rgba(205,175,130,0.3) 0%, transparent 45%), radial-gradient(ellipse 40% 30% at 50% 30%, rgba(200,170,120,0.25) 0%, transparent 40%)'
+            background: 'linear-gradient(135deg, #7c2d12 0%, #c2410c 25%, #ea580c 50%, #f97316 75%, #fb923c 100%)'
           }}
         />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="font-serif text-2xl md:text-3xl text-amber-100 font-bold tracking-tight drop-shadow-lg">
-            Brew & Board
-          </h1>
+        {/* Animated shine effect */}
+        <motion.div 
+          className="absolute inset-0 opacity-30"
+          animate={{
+            background: [
+              'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+              'linear-gradient(45deg, transparent 100%, rgba(255,255,255,0.3) 150%, transparent 200%)',
+            ]
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{
+            backgroundSize: '200% 200%',
+          }}
+        />
+        {/* Sparkle particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1.5, 0],
+              }}
+              transition={{
+                duration: 2 + Math.random() * 2,
+                delay: Math.random() * 3,
+                repeat: Infinity,
+              }}
+            />
+          ))}
         </div>
+        
+        <div className="relative z-10 px-4 py-8 md:py-12">
+          <div className="container max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Left side - Text */}
+            <motion.div 
+              className="text-center md:text-left"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-3"
+              >
+                <Sparkles className="h-3 w-3 text-yellow-200" />
+                <span className="text-xs font-medium text-white">Nashville's Coffee Concierge</span>
+              </motion.div>
+              <h1 className="font-serif text-3xl md:text-5xl text-white font-bold tracking-tight drop-shadow-lg mb-2">
+                Brew & Board
+              </h1>
+              <p className="text-amber-100/90 text-sm md:text-base max-w-md">
+                Premium coffee delivery for your business meetings
+              </p>
+              <motion.div 
+                className="flex gap-3 mt-4 justify-center md:justify-start"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Link href="/schedule">
+                  <Button className="bg-white text-orange-600 hover:bg-amber-50 font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Order Now
+                  </Button>
+                </Link>
+                <Link href="/verify/BB-0000000001">
+                  <Button variant="outline" className="border-white/50 text-white hover:bg-white/20 backdrop-blur-sm">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Verified
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
+            
+            {/* Right side - Mascot */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, type: "spring" }}
+              className="relative"
+            >
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <img 
+                  src={mascotImage} 
+                  alt="Brew & Board Mascot" 
+                  className="w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-2xl"
+                />
+              </motion.div>
+              {/* Glow effect behind mascot */}
+              <div className="absolute inset-0 bg-gradient-radial from-yellow-300/40 to-transparent blur-2xl -z-10 scale-150" />
+            </motion.div>
+          </div>
+        </div>
+        
+        {/* Wave divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1200 20" className="w-full h-4 fill-background">
-            <path d="M0,20 L0,10 Q300,0 600,10 T1200,10 L1200,20 Z" />
+          <svg viewBox="0 0 1200 40" className="w-full h-8 fill-amber-50 dark:fill-background" preserveAspectRatio="none">
+            <path d="M0,40 L0,20 Q150,0 300,15 T600,10 T900,20 T1200,10 L1200,40 Z" />
           </svg>
         </div>
       </div>
@@ -229,24 +362,42 @@ export default function Dashboard() {
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {quickActions.map((action, index) => (
               <Link key={action.id} href={action.href}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  className={`h-[140px] ${action.bgClass} ${action.textClass} rounded-2xl p-5 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform shadow-sm hover:shadow-lg`}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.1 + index * 0.08, type: "spring", stiffness: 100 }}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`relative h-[150px] bg-gradient-to-br ${action.gradient} text-white rounded-2xl p-5 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
                   data-testid={`button-${action.id}`}
                 >
-                  <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <action.icon className="h-5 w-5" />
+                  {/* Animated shine effect */}
+                  <motion.div 
+                    className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
+                    style={{
+                      background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 45%, transparent 50%)',
+                    }}
+                  />
+                  {/* Decorative circles */}
+                  <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
+                  <div className="absolute -right-2 -bottom-8 w-16 h-16 bg-white/10 rounded-full" />
+                  
+                  <div className="relative z-10">
+                    <motion.div 
+                      className="h-12 w-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner"
+                      whileHover={{ rotate: 5 }}
+                    >
+                      <action.icon className="h-6 w-6" />
+                    </motion.div>
                   </div>
-                  <div>
-                    <h4 className="font-serif text-sm font-semibold leading-tight mb-0.5">
+                  <div className="relative z-10">
+                    <h4 className="font-serif text-base font-bold leading-tight mb-1">
                       {action.title}
                     </h4>
-                    <p className="text-[10px] opacity-70">{action.subtitle}</p>
+                    <p className="text-xs text-white/80">{action.subtitle}</p>
                   </div>
                 </motion.div>
               </Link>

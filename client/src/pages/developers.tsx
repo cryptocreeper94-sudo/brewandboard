@@ -1145,9 +1145,9 @@ export default function DevelopersPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">DoorDash Drive API</span>
-                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">Priority</Badge>
+                          <Badge className="bg-red-100 text-red-700 border-red-200">Next Up</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">Automated delivery dispatch for orders</p>
+                        <p className="text-sm text-muted-foreground">Automated delivery dispatch for orders - Priority #1</p>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -1193,9 +1193,9 @@ export default function DevelopersPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">Uber Direct API</span>
-                          <Badge className="bg-blue-100 text-blue-700 border-blue-200">Planned</Badge>
+                          <Badge className="bg-blue-100 text-blue-700 border-blue-200">Priority #2</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">White-label delivery service</p>
+                        <p className="text-sm text-muted-foreground">White-label delivery service - Backup to DoorDash</p>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -1237,9 +1237,9 @@ export default function DevelopersPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">Stripe Payments</span>
-                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">Priority</Badge>
+                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Live</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">Secure payment processing & subscriptions</p>
+                        <p className="text-sm text-muted-foreground">Secure payment processing & subscriptions - Fully Implemented</p>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -1250,16 +1250,16 @@ export default function DevelopersPage() {
                         <span className="text-emerald-700">Stripe account connected</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Implement checkout session for orders</span>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span className="text-emerald-700">Checkout session for orders</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Add subscription management for tiers</span>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span className="text-emerald-700">Subscription management for tiers (Starter, Pro, Enterprise)</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
-                        <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Webhook for payment confirmations</span>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span className="text-emerald-700">Webhook endpoints implemented</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <Circle className="h-4 w-4 text-gray-400" />
@@ -1322,9 +1322,9 @@ export default function DevelopersPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">Twilio SMS</span>
-                          <Badge className="bg-gray-100 text-gray-700 border-gray-200">Future</Badge>
+                          <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">Waiting on EIN</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">SMS notifications for order updates</p>
+                        <p className="text-sm text-muted-foreground">SMS notifications for order updates - Pending business registration</p>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -1382,6 +1382,51 @@ export default function DevelopersPage() {
                       <div className="flex items-center gap-3 text-sm">
                         <Circle className="h-4 w-4 text-gray-400" />
                         <span>Vendor location display on map</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="mobile-app" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-mobile-app">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <Zap className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Mobile App (iOS/Android)</span>
+                          <Badge className="bg-purple-100 text-purple-700 border-purple-200">Coming Soon</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Native mobile experience for on-the-go ordering</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>React Native or Flutter framework selection</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Push notifications for order updates</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Biometric authentication (Face ID/Touch ID)</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Offline mode with sync</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>Apple Pay / Google Pay integration</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>App Store & Play Store submission</span>
                       </div>
                     </div>
                   </AccordionContent>

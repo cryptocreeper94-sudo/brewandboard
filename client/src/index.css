@@ -119,6 +119,34 @@
   }
 }
 
+/* Safe Area for Mobile Notches */
+.safe-area-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+/* Disable heavy animations on mobile for performance */
+@media (pointer: coarse) {
+  .hover-3d:hover {
+    transform: translateY(-4px);
+  }
+  .shine-effect::after {
+    animation: none;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hover-3d,
+  .shine-effect::after,
+  .glow-pulse,
+  .float-animation,
+  .sparkle-container::before,
+  .sparkle-container::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 .font-serif {
   font-family: 'Playfair Display', serif;
 }

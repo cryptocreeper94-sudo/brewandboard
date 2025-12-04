@@ -399,17 +399,10 @@ export default function Dashboard() {
           </div>
         </motion.div>
         
-        {/* Carousel container - breaks out of parent padding for full-width scroll */}
-        <div className="relative -mx-4 md:-mx-8 lg:-mx-12">
-          <div 
-            className="flex gap-4 overflow-x-auto px-4 md:px-8 lg:px-12 pb-4 snap-x snap-mandatory"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
-            <style>{`.snap-x::-webkit-scrollbar { display: none; }`}</style>
+        {/* Carousel container with proper overflow handling */}
+        <div className="relative overflow-x-auto overflow-y-visible -mx-4 px-4 pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+          <div className="flex gap-4 snap-x snap-mandatory w-max">
             {COFFEE_SHOPS.slice(0, 8).map((shop, index) => (
               <motion.div 
                 key={shop.id}

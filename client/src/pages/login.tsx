@@ -11,6 +11,25 @@ import baristaImage from "@assets/generated_images/professional_barista.png";
 import latteArtImage from "@assets/generated_images/artisan_latte_art.png";
 import meetingImage from "@assets/generated_images/corporate_meeting_with_coffee.png";
 import coffeeShopImage from "@assets/generated_images/premium_nashville_coffee_shop_interior.png";
+import cremaImage from "@assets/generated_images/crema_coffee_roasters_interior.png";
+import baristaParlorImage from "@assets/generated_images/barista_parlor_interior.png";
+import frothyMonkeyImage from "@assets/generated_images/frothy_monkey_interior.png";
+import drugStoreImage from "@assets/generated_images/drug_store_coffee_interior.png";
+
+const shopImages: Record<string, string> = {
+  'crema': cremaImage,
+  'barista-parlor': baristaParlorImage,
+  'frothy-monkey': frothyMonkeyImage,
+  'drug-store': drugStoreImage,
+  'steadfast': cremaImage,
+  'eighth-and-roast': baristaParlorImage,
+  'dose': drugStoreImage,
+  'just-love': frothyMonkeyImage,
+  'smoothie-king': frothyMonkeyImage,
+  'tropical-smoothie': frothyMonkeyImage,
+  'jamba': frothyMonkeyImage,
+  'juice-bar-nashville': frothyMonkeyImage,
+};
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
@@ -283,8 +302,8 @@ export default function LandingPage() {
               transition={{ delay: 0.5 }}
               className="col-span-2 md:col-span-12"
             >
-              <ScrollArea className="w-full">
-                <div className="flex gap-3 md:gap-4 lg:gap-6 pb-4">
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent pb-2">
+                <div className="flex gap-3 md:gap-4 lg:gap-6 pb-4" style={{ width: 'max-content' }}>
                   {COFFEE_SHOPS.map((shop, index) => (
                     <motion.div
                       key={shop.id}
@@ -296,7 +315,7 @@ export default function LandingPage() {
                       {/* Vendor Image */}
                       <div className="relative h-36 md:h-44 overflow-hidden">
                         <img 
-                          src={shop.image} 
+                          src={shopImages[shop.id] || coffeeShopImage} 
                           alt={shop.name}
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
@@ -346,8 +365,7 @@ export default function LandingPage() {
                     </motion.div>
                   ))}
                 </div>
-                <ScrollBar orientation="horizontal" className="invisible" />
-              </ScrollArea>
+              </div>
             </motion.div>
 
             {/* Bottom CTA */}

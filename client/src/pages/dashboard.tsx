@@ -44,7 +44,6 @@ import {
 import cremaImage from "@assets/generated_images/crema_coffee_shop_interior.png";
 import baristaParlorImage from "@assets/generated_images/barista_parlor_interior.png";
 import frothyMonkeyImage from "@assets/generated_images/frothy_monkey_interior.png";
-import mascotImage from "@assets/generated_images/kawaii_coffee_cup_mascot_character.png";
 
 const shopImages: Record<string, string> = {
   'crema': cremaImage,
@@ -258,26 +257,6 @@ export default function Dashboard() {
               </motion.div>
             </motion.div>
             
-            {/* Right side - Mascot */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, type: "spring" }}
-              className="relative"
-            >
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <img 
-                  src={mascotImage} 
-                  alt="Brew & Board Mascot" 
-                  className="w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-2xl"
-                />
-              </motion.div>
-              {/* Glow effect behind mascot */}
-              <div className="absolute inset-0 bg-gradient-radial from-yellow-300/40 to-transparent blur-2xl -z-10 scale-150" />
-            </motion.div>
           </div>
         </div>
         

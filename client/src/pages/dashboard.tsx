@@ -336,7 +336,7 @@ const { itemCount } = useCart();
     {
       id: "schedule",
       title: "Create Order",
-      subtitle: "Premium coffee delivery",
+      subtitle: "Premium catering delivery",
       href: "/schedule",
       icon: Calendar,
       gradient: "from-amber-800 via-amber-700 to-amber-600",
@@ -344,8 +344,8 @@ const { itemCount } = useCart();
     },
     {
       id: "find-baristas",
-      title: "Find Baristas",
-      subtitle: "Nearby coffee shops",
+      title: "Find Vendors",
+      subtitle: "Coffee, donuts & more",
       href: "/find-baristas",
       icon: Navigation,
       gradient: "from-emerald-800 via-emerald-700 to-emerald-600",
@@ -445,13 +445,13 @@ const { itemCount } = useCart();
                 className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-3"
               >
                 <Sparkles className="h-3 w-3 text-yellow-200" />
-                <span className="text-xs font-medium text-white">Nashville's Coffee Concierge</span>
+                <span className="text-xs font-medium text-white">Nashville's Catering Concierge</span>
               </motion.div>
               <h1 className="font-serif text-3xl md:text-5xl text-white font-bold tracking-tight drop-shadow-lg mb-2">
                 Brew & Board
               </h1>
               <p className="text-amber-200/90 text-sm md:text-base max-w-md">
-                Premium coffee delivery for your business meetings
+                Premium catering delivered for your business meetings
               </p>
               <motion.div 
                 className="flex gap-3 mt-4 justify-center md:justify-start"

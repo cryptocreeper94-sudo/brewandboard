@@ -26,10 +26,23 @@ export function Footer() {
     
     setTimeout(() => {
       if (pin === DEVELOPER_PIN) {
+        // Create developer user for full access to all features
+        const devUser = {
+          id: "developer-admin",
+          email: "dev@coffeetalk.app",
+          businessName: "Coffee Talk Developer",
+          contactName: "Developer Admin",
+          isDeveloper: true
+        };
+        localStorage.setItem("coffee_user", JSON.stringify(devUser));
         localStorage.setItem("coffee_dev_auth", "true");
+        // Set a long session expiry (30 days)
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+        
         toast({
           title: "Developer Access Granted",
-          description: "Welcome to the Developer Hub.",
+          description: "Full access enabled. Welcome to Coffee Talk!",
         });
         setShowDevLogin(false);
         setPin("");

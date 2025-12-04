@@ -14,9 +14,11 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 - **Pricing**: Concierge pricing with 15% service fee on one-off orders, subscription tiers for discounts
 
 ## Recent Changes (December 2024)
-- **Developer Hub Protection**: Added PIN-based authentication (PIN: 0424) for /developers page
+- **Developer Full Access**: Developer PIN (0424) now grants full access to ALL features
   - "Developer" link in footer opens PIN entry dialog
-  - Auth stored in localStorage (coffee_dev_auth)
+  - Creates developer user account with full permissions
+  - Auth stored in localStorage (coffee_dev_auth + coffee_user)
+  - 30-day session expiry for developer access
   - Logout button in Developer Hub header
 - **Demo Mode for Portfolio**: "Try Demo" button on login page for testing without database
   - Demo notes stored in localStorage only

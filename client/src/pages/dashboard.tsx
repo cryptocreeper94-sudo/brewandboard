@@ -448,7 +448,7 @@ export default function Dashboard() {
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {quickActions.map((action, index) => (
               <Link key={action.id} href={action.href}>
                 <motion.div
@@ -457,7 +457,7 @@ export default function Dashboard() {
                   transition={{ delay: 0.1 + index * 0.08, type: "spring", stiffness: 100 }}
                   whileHover={{ scale: 1.03, y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`relative h-[150px] bg-gradient-to-br ${action.gradient} text-white rounded-2xl p-5 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
+                  className={`relative h-[120px] sm:h-[150px] bg-gradient-to-br ${action.gradient} text-white rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
                   data-testid={`button-${action.id}`}
                 >
                   {/* Animated shine effect */}
@@ -473,17 +473,17 @@ export default function Dashboard() {
                   
                   <div className="relative z-10">
                     <motion.div 
-                      className="h-12 w-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner"
+                      className="h-9 w-9 sm:h-12 sm:w-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center shadow-inner"
                       whileHover={{ rotate: 5 }}
                     >
-                      <action.icon className="h-6 w-6" />
+                      <action.icon className="h-4 w-4 sm:h-6 sm:w-6" />
                     </motion.div>
                   </div>
                   <div className="relative z-10">
-                    <h4 className="font-serif text-base font-bold leading-tight mb-1">
+                    <h4 className="font-serif text-xs sm:text-base font-bold leading-tight mb-0.5 sm:mb-1">
                       {action.title}
                     </h4>
-                    <p className="text-xs text-white/80">{action.subtitle}</p>
+                    <p className="text-[10px] sm:text-xs text-white/80 hidden sm:block">{action.subtitle}</p>
                   </div>
                 </motion.div>
               </Link>

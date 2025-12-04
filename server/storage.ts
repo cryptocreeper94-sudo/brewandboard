@@ -266,14 +266,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createScheduledOrder(order: InsertScheduledOrder): Promise<ScheduledOrder> {
-    const [newOrder] = await db.insert(scheduledOrders).values(order).returning();
+    const [newOrder] = await db.insert(scheduledOrders).values(order as any).returning();
     return newOrder;
   }
 
   async updateScheduledOrder(id: string, order: Partial<InsertScheduledOrder>): Promise<ScheduledOrder> {
     const [updated] = await db
       .update(scheduledOrders)
-      .set({ ...order, updatedAt: new Date() })
+      .set({ ...order, updatedAt: new Date() } as any)
       .where(eq(scheduledOrders.id, id))
       .returning();
     return updated;

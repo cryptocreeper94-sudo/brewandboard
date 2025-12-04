@@ -8,7 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Camera, 
   Upload, 
@@ -25,10 +46,26 @@ import {
   Home,
   Eye,
   FileImage,
-  Sparkles
+  Sparkles,
+  FolderOpen,
+  Search,
+  Calendar,
+  User,
+  Briefcase,
+  Receipt,
+  FileSignature,
+  CreditCard,
+  StickyNote,
+  Save,
+  History,
+  Tag,
+  Link as LinkIcon,
+  Mail
 } from "lucide-react";
 import { createWorker, Worker } from "tesseract.js";
 import { jsPDF } from "jspdf";
+import { DOCUMENT_CATEGORIES, OCR_LANGUAGES, type ScannedDocument, type Client, type CrmNote } from "@shared/schema";
+import { format } from "date-fns";
 
 interface ScannedPage {
   id: string;
@@ -38,8 +75,31 @@ interface ScannedPage {
   ocrProgress: number;
 }
 
+const CATEGORY_ICONS: Record<string, any> = {
+  general: FileText,
+  receipt: Receipt,
+  contract: FileSignature,
+  invoice: CreditCard,
+  business_card: User,
+  meeting_notes: StickyNote,
+  proposal: Briefcase,
+  other: FolderOpen,
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general: "General",
+  receipt: "Receipt",
+  contract: "Contract",
+  invoice: "Invoice",
+  business_card: "Business Card",
+  meeting_notes: "Meeting Notes",
+  proposal: "Proposal",
+  other: "Other",
+};
+
 export default function ScanPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -50,11 +110,125 @@ export default function ScanPage() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [documentName, setDocumentName] = useState("Scanned Document");
   const [showCamera, setShowCamera] = useState(false);
+  const [activeTab, setActiveTab] = useState<"scan" | "history">("scan");
+  
+  const [category, setCategory] = useState<string>("general");
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string>("");
+  const [ocrLanguage, setOcrLanguage] = useState<string>("eng");
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const ocrWorkerRef = useRef<Worker | null>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const [isWorkerReady, setIsWorkerReady] = useState(false);
   const [location] = useLocation();
+
+  const userId = localStorage.getItem("userId");
+
+  const { data: documents = [], isLoading: isLoadingDocs } = useQuery<ScannedDocument[]>({
+    queryKey: ["scanned-documents", userId, categoryFilter, searchQuery],
+    queryFn: async () => {
+      if (!userId) return [];
+      let url = `/api/documents?userId=${userId}`;
+      if (categoryFilter && categoryFilter !== "all") {
+        url += `&category=${categoryFilter}`;
+      }
+      if (searchQuery) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch documents");
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["clients", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const res = await fetch(`/api/clients?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch clients");
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: notes = [] } = useQuery<CrmNote[]>({
+    queryKey: ["notes", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const res = await fetch(`/api/notes?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch notes");
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const saveDocumentMutation = useMutation({
+    mutationFn: async (data: {
+      title: string;
+      category: string;
+      extractedText: string;
+      pageCount: number;
+      imageData: string;
+      thumbnailData: string;
+      clientId?: string;
+      noteId?: string;
+      tags?: string[];
+      language: string;
+    }) => {
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          ...data,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save document");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scanned-documents"] });
+      toast({
+        title: "Document Saved",
+        description: "Your document has been saved to your library.",
+      });
+      setShowSaveDialog(false);
+      setPages([]);
+      setDocumentName("Scanned Document");
+      setCategory("general");
+      setSelectedClientId(null);
+      setSelectedNoteId(null);
+      setTags("");
+    },
+    onError: () => {
+      toast({
+        title: "Save Failed",
+        description: "Could not save document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete document");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scanned-documents"] });
+      toast({ title: "Document Deleted" });
+    },
+  });
 
   const stopCameraStream = useCallback(() => {
     if (cameraStreamRef.current) {
@@ -69,7 +243,7 @@ export default function ScanPage() {
 
     const initWorker = async () => {
       try {
-        const worker = await createWorker("eng", 1, {
+        const worker = await createWorker(ocrLanguage, 1, {
           logger: (m) => {
             if (m.status === "recognizing text" && mounted) {
               const progress = Math.round(m.progress * 100);
@@ -110,7 +284,7 @@ export default function ScanPage() {
         cameraStreamRef.current = null;
       }
     };
-  }, [toast]);
+  }, [toast, ocrLanguage]);
 
   useEffect(() => {
     stopCameraStream();
@@ -294,6 +468,66 @@ export default function ScanPage() {
     }
   };
 
+  const createThumbnail = (imageData: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 200;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = imageData;
+    });
+  };
+
+  const saveToDatabase = async () => {
+    if (!userId || pages.length === 0) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const allText = pages.map(p => p.extractedText).join("\n\n--- Page Break ---\n\n");
+      const thumbnail = await createThumbnail(pages[0].imageData);
+      const tagArray = tags.split(",").map(t => t.trim()).filter(t => t.length > 0);
+      
+      await saveDocumentMutation.mutateAsync({
+        title: documentName,
+        category,
+        extractedText: allText,
+        pageCount: pages.length,
+        imageData: pages[0].imageData,
+        thumbnailData: thumbnail,
+        clientId: selectedClientId || undefined,
+        noteId: selectedNoteId || undefined,
+        tags: tagArray.length > 0 ? tagArray : undefined,
+        language: ocrLanguage,
+      });
+    } catch (error) {
+      console.error("Save failed:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const generatePdfBlob = async (): Promise<Blob> => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -461,6 +695,8 @@ export default function ScanPage() {
     }
   };
 
+  const CategoryIcon = CATEGORY_ICONS[category] || FileText;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <input
@@ -526,6 +762,130 @@ export default function ScanPage() {
         )}
       </AnimatePresence>
 
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="h-5 w-5" />
+              Save to Library
+            </DialogTitle>
+            <DialogDescription>
+              Save this document to your library for future access
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Document Name</Label>
+              <Input
+                value={documentName}
+                onChange={(e) => setDocumentName(e.target.value)}
+                placeholder="Enter document name"
+                className="mt-1"
+                data-testid="input-save-doc-name"
+              />
+            </div>
+            
+            <div>
+              <Label>Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="mt-1" data-testid="select-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_CATEGORIES.map((cat) => {
+                    const Icon = CATEGORY_ICONS[cat];
+                    return (
+                      <SelectItem key={cat} value={cat}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {CATEGORY_LABELS[cat]}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Link to Client (Optional)</Label>
+              <Select 
+                value={selectedClientId || "none"} 
+                onValueChange={(v) => setSelectedClientId(v === "none" ? null : v)}
+              >
+                <SelectTrigger className="mt-1" data-testid="select-client">
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No client</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name} {client.industry ? `(${client.industry})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Link to Portfolio Note (Optional)</Label>
+              <Select 
+                value={selectedNoteId || "none"} 
+                onValueChange={(v) => setSelectedNoteId(v === "none" ? null : v)}
+              >
+                <SelectTrigger className="mt-1" data-testid="select-note">
+                  <SelectValue placeholder="Select a note" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No note</SelectItem>
+                  {notes.map((note) => (
+                    <SelectItem key={note.id} value={note.id}>
+                      {note.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Tags (comma-separated)</Label>
+              <Input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="invoice, 2024, client-name"
+                className="mt-1"
+                data-testid="input-tags"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={saveToDatabase}
+              disabled={isSaving || !documentName}
+              className="gap-2"
+              data-testid="button-confirm-save"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Document
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -539,7 +899,7 @@ export default function ScanPage() {
                 <Scan className="h-8 w-8 text-primary" />
                 Document Scanner
               </h1>
-              <p className="text-muted-foreground">Scan documents and create PDFs instantly</p>
+              <p className="text-muted-foreground">Scan, organize, and share documents</p>
             </div>
           </div>
           <Link href="/dashboard">
@@ -549,315 +909,489 @@ export default function ScanPage() {
           </Link>
         </header>
 
-        <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="text-amber-800 font-medium text-sm">On-Device Processing</p>
-              <p className="text-amber-700 text-sm">Your documents are processed privately on your device - nothing leaves your phone.</p>
-            </div>
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="scan" className="gap-2" data-testid="tab-scan">
+              <Camera className="h-4 w-4" />
+              Scan New
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2" data-testid="tab-history">
+              <History className="h-4 w-4" />
+              My Documents
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
-              <CardContent className="p-8">
-                <div className="text-center space-y-6">
-                  <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto">
-                    <Camera className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold mb-2">Add Document Pages</h2>
-                    <p className="text-muted-foreground">Take a photo or upload images of your documents</p>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-4">
-                    <Button
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="gap-2 bg-primary hover:bg-primary/90"
-                      data-testid="button-camera-scan"
-                    >
-                      <Camera className="h-4 w-4" />
-                      Scan with Camera
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="gap-2"
-                      data-testid="button-upload-file"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload Image
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={startLiveCamera}
-                      className="gap-2"
-                      data-testid="button-live-camera"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Live Camera
-                    </Button>
-                  </div>
+          <TabsContent value="scan" className="mt-6">
+            <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-amber-800 font-medium text-sm">On-Device Processing</p>
+                  <p className="text-amber-700 text-sm">Your documents are processed privately on your device.</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {pages.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-lg flex items-center gap-2">
-                        <FileImage className="h-5 w-5" />
-                        Scanned Pages ({pages.length})
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => cameraInputRef.current?.click()}
-                        className="gap-2"
-                        data-testid="button-add-page"
-                      >
-                        <Plus className="h-4 w-4" /> Add Page
-                      </Button>
-                    </div>
-                    <ScrollArea className="h-[300px]">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {pages.map((page, index) => (
-                          <motion.div
-                            key={page.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className={`relative group rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                              selectedPageIndex === index 
-                                ? "border-primary shadow-lg" 
-                                : "border-border hover:border-primary/50"
-                            }`}
-                            onClick={() => setSelectedPageIndex(index)}
-                            data-testid={`page-thumbnail-${index}`}
-                          >
-                            <img
-                              src={page.imageData}
-                              alt={`Page ${index + 1}`}
-                              className="w-full aspect-[3/4] object-cover"
-                            />
-                            
-                            <div className="absolute top-2 left-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {index + 1}
-                              </Badge>
-                            </div>
-
-                            {page.isProcessing && (
-                              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4">
-                                <Loader2 className="h-6 w-6 text-white animate-spin mb-2" />
-                                <p className="text-white text-xs mb-2">Extracting text...</p>
-                                <Progress value={page.ocrProgress} className="w-full h-1" />
-                              </div>
-                            )}
-
-                            {!page.isProcessing && page.extractedText && (
-                              <div className="absolute bottom-2 left-2">
-                                <Badge className="bg-green-500 text-white text-xs gap-1">
-                                  <Check className="h-3 w-3" /> OCR
-                                </Badge>
-                              </div>
-                            )}
-
-                            {!page.isProcessing && !page.extractedText && (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                className="absolute bottom-2 left-2 h-6 text-xs gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  retryOcr(page.id, page.imageData);
-                                }}
-                                data-testid={`button-retry-ocr-${index}`}
-                              >
-                                <Scan className="h-3 w-3" /> Retry OCR
-                              </Button>
-                            )}
-
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removePage(index);
-                              }}
-                              data-testid={`button-remove-page-${index}`}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </motion.div>
-                        ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
+                  <CardContent className="p-8">
+                    <div className="text-center space-y-6">
+                      <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto">
+                        <Camera className="h-8 w-8 text-primary" />
                       </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {selectedPageIndex !== null && pages[selectedPageIndex] && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Extracted Text - Page {selectedPageIndex + 1}
-                    </h3>
-                    {pages[selectedPageIndex].isProcessing ? (
-                      <div className="flex items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Processing text recognition...</span>
+                      <div>
+                        <h2 className="text-xl font-semibold mb-2">Add Document Pages</h2>
+                        <p className="text-muted-foreground">Take a photo or upload images of your documents</p>
                       </div>
-                    ) : pages[selectedPageIndex].extractedText ? (
-                      <ScrollArea className="h-[200px] rounded-lg bg-muted/30 p-4">
-                        <pre className="whitespace-pre-wrap text-sm font-mono">
-                          {pages[selectedPageIndex].extractedText}
-                        </pre>
-                      </ScrollArea>
-                    ) : (
-                      <div className="space-y-3">
-                        <p className="text-muted-foreground italic">No text was extracted from this page.</p>
+                      <div className="flex flex-wrap justify-center gap-4">
+                        <Button
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="gap-2 bg-primary hover:bg-primary/90"
+                          data-testid="button-camera-scan"
+                        >
+                          <Camera className="h-4 w-4" />
+                          Scan with Camera
+                        </Button>
                         <Button
                           variant="outline"
-                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
                           className="gap-2"
-                          onClick={() => retryOcr(
-                            pages[selectedPageIndex].id, 
-                            pages[selectedPageIndex].imageData
-                          )}
-                          disabled={!isWorkerReady}
-                          data-testid="button-retry-ocr-selected"
+                          data-testid="button-upload-file"
                         >
-                          <Scan className="h-4 w-4" />
-                          {isWorkerReady ? "Retry Text Extraction" : "OCR Loading..."}
+                          <Upload className="h-4 w-4" />
+                          Upload Image
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={startLiveCamera}
+                          className="gap-2"
+                          data-testid="button-live-camera"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Live Camera
                         </Button>
                       </div>
-                    )}
+                      
+                      <div className="pt-4 border-t">
+                        <Label className="text-sm text-muted-foreground">OCR Language</Label>
+                        <Select value={ocrLanguage} onValueChange={setOcrLanguage}>
+                          <SelectTrigger className="w-48 mx-auto mt-2" data-testid="select-language">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {OCR_LANGUAGES.map((lang) => (
+                              <SelectItem key={lang.code} value={lang.code}>
+                                {lang.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            )}
-          </div>
 
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-card to-muted/30">
-              <CardContent className="p-6 space-y-6">
-                <div>
-                  <h3 className="font-serif text-xl font-semibold mb-4">Create PDF</h3>
-                  <div className="space-y-4">
+                {pages.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <FileImage className="h-5 w-5" />
+                            Scanned Pages ({pages.length})
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="gap-2"
+                            data-testid="button-add-page"
+                          >
+                            <Plus className="h-4 w-4" /> Add Page
+                          </Button>
+                        </div>
+                        <ScrollArea className="h-[300px]">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {pages.map((page, index) => (
+                              <motion.div
+                                key={page.id}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={`relative group rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                                  selectedPageIndex === index 
+                                    ? "border-primary shadow-lg" 
+                                    : "border-border hover:border-primary/50"
+                                }`}
+                                onClick={() => setSelectedPageIndex(index)}
+                                data-testid={`page-thumbnail-${index}`}
+                              >
+                                <img
+                                  src={page.imageData}
+                                  alt={`Page ${index + 1}`}
+                                  className="w-full aspect-[3/4] object-cover"
+                                />
+                                
+                                <div className="absolute top-2 left-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {index + 1}
+                                  </Badge>
+                                </div>
+
+                                {page.isProcessing && (
+                                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4">
+                                    <Loader2 className="h-6 w-6 text-white animate-spin mb-2" />
+                                    <p className="text-white text-xs mb-2">Extracting text...</p>
+                                    <Progress value={page.ocrProgress} className="w-full h-1" />
+                                  </div>
+                                )}
+
+                                {!page.isProcessing && page.extractedText && (
+                                  <div className="absolute bottom-2 left-2">
+                                    <Badge className="bg-green-500 text-white text-xs gap-1">
+                                      <Check className="h-3 w-3" /> OCR
+                                    </Badge>
+                                  </div>
+                                )}
+
+                                {!page.isProcessing && !page.extractedText && (
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="absolute bottom-2 left-2 h-6 text-xs gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      retryOcr(page.id, page.imageData);
+                                    }}
+                                    data-testid={`button-retry-ocr-${index}`}
+                                  >
+                                    <Scan className="h-3 w-3" /> Retry OCR
+                                  </Button>
+                                )}
+
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePage(index);
+                                  }}
+                                  data-testid={`button-remove-page-${index}`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {selectedPageIndex !== null && pages[selectedPageIndex] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Card>
+                      <CardContent className="p-6">
+                        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Extracted Text - Page {selectedPageIndex + 1}
+                        </h3>
+                        {pages[selectedPageIndex].isProcessing ? (
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Processing text recognition...</span>
+                          </div>
+                        ) : pages[selectedPageIndex].extractedText ? (
+                          <ScrollArea className="h-[200px] rounded-lg bg-muted/30 p-4">
+                            <pre className="whitespace-pre-wrap text-sm font-mono">
+                              {pages[selectedPageIndex].extractedText}
+                            </pre>
+                          </ScrollArea>
+                        ) : (
+                          <div className="space-y-3">
+                            <p className="text-muted-foreground italic">No text was extracted from this page.</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => retryOcr(
+                                pages[selectedPageIndex].id, 
+                                pages[selectedPageIndex].imageData
+                              )}
+                              disabled={!isWorkerReady}
+                              data-testid="button-retry-ocr-selected"
+                            >
+                              <Scan className="h-4 w-4" />
+                              {isWorkerReady ? "Retry Text Extraction" : "OCR Loading..."}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <Card className="bg-gradient-to-br from-card to-muted/30">
+                  <CardContent className="p-6 space-y-6">
                     <div>
-                      <Label htmlFor="doc-name">Document Name</Label>
+                      <h3 className="font-serif text-xl font-semibold mb-4">Document Actions</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="doc-name">Document Name</Label>
+                          <Input
+                            id="doc-name"
+                            value={documentName}
+                            onChange={(e) => setDocumentName(e.target.value)}
+                            placeholder="Enter document name"
+                            className="mt-1"
+                            data-testid="input-document-name"
+                          />
+                        </div>
+
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Pages</span>
+                            <span className="font-semibold">{pages.length}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mt-2">
+                            <span className="text-muted-foreground">OCR Ready</span>
+                            <span className="font-semibold">
+                              {pages.filter(p => !p.isProcessing && p.extractedText).length}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Button
+                        onClick={() => setShowSaveDialog(true)}
+                        disabled={pages.length === 0}
+                        className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                        data-testid="button-save-library"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save to Library
+                      </Button>
+                      
+                      <Button
+                        onClick={generatePdf}
+                        disabled={pages.length === 0 || isGeneratingPdf}
+                        className="w-full gap-2 bg-primary hover:bg-primary/90"
+                        data-testid="button-generate-pdf"
+                      >
+                        {isGeneratingPdf ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Creating PDF...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            Download PDF
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        onClick={sharePdf}
+                        disabled={pages.length === 0 || isGeneratingPdf}
+                        className="w-full gap-2"
+                        data-testid="button-share-pdf"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share PDF
+                      </Button>
+
+                      {pages.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setPages([]);
+                            setSelectedPageIndex(null);
+                          }}
+                          className="w-full gap-2 text-muted-foreground hover:text-destructive"
+                          data-testid="button-clear-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Clear All Pages
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-4">Quick Tips</h3>
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Use good lighting for best OCR results</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Keep documents flat and straight</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Save to library for future access</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Link documents to clients or notes</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-6">
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="doc-name"
-                        value={documentName}
-                        onChange={(e) => setDocumentName(e.target.value)}
-                        placeholder="Enter document name"
-                        className="mt-1"
-                        data-testid="input-document-name"
+                        placeholder="Search documents..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                        data-testid="input-search-docs"
                       />
                     </div>
-
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Pages</span>
-                        <span className="font-semibold">{pages.length}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm mt-2">
-                        <span className="text-muted-foreground">OCR Ready</span>
-                        <span className="font-semibold">
-                          {pages.filter(p => !p.isProcessing && p.extractedText).length}
-                        </span>
-                      </div>
-                    </div>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger className="w-48" data-testid="select-filter-category">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {DOCUMENT_CATEGORIES.map((cat) => {
+                          const Icon = CATEGORY_ICONS[cat];
+                          return (
+                            <SelectItem key={cat} value={cat}>
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" />
+                                {CATEGORY_LABELS[cat]}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
 
-                <div className="space-y-3">
-                  <Button
-                    onClick={generatePdf}
-                    disabled={pages.length === 0 || isGeneratingPdf}
-                    className="w-full gap-2 bg-primary hover:bg-primary/90"
-                    data-testid="button-generate-pdf"
-                  >
-                    {isGeneratingPdf ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating PDF...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4" />
-                        Download PDF
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    onClick={sharePdf}
-                    disabled={pages.length === 0 || isGeneratingPdf}
-                    className="w-full gap-2"
-                    data-testid="button-share-pdf"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share PDF
-                  </Button>
-
-                  {pages.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setPages([]);
-                        setSelectedPageIndex(null);
-                      }}
-                      className="w-full gap-2 text-muted-foreground hover:text-destructive"
-                      data-testid="button-clear-all"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Clear All Pages
-                    </Button>
+                  {isLoadingDocs ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : documents.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FolderOpen className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Documents Yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        {searchQuery || categoryFilter !== "all" 
+                          ? "No documents match your search criteria"
+                          : "Start scanning documents to build your library"}
+                      </p>
+                      <Button onClick={() => setActiveTab("scan")} className="gap-2">
+                        <Camera className="h-4 w-4" />
+                        Scan First Document
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {documents.map((doc) => {
+                        const DocIcon = CATEGORY_ICONS[doc.category || "general"];
+                        return (
+                          <motion.div
+                            key={doc.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                          >
+                            <Card className="group hover:shadow-lg transition-shadow">
+                              <CardContent className="p-4">
+                                <div className="flex gap-4">
+                                  {doc.thumbnailData ? (
+                                    <img
+                                      src={doc.thumbnailData}
+                                      alt={doc.title}
+                                      className="w-20 h-24 object-cover rounded-lg border"
+                                    />
+                                  ) : (
+                                    <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                                      <FileText className="h-8 w-8 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold truncate" data-testid={`doc-title-${doc.id}`}>
+                                      {doc.title}
+                                    </h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge variant="secondary" className="gap-1 text-xs">
+                                        <DocIcon className="h-3 w-3" />
+                                        {CATEGORY_LABELS[doc.category || "general"]}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">
+                                        {doc.pageCount} page{doc.pageCount !== 1 ? "s" : ""}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {doc.createdAt ? format(new Date(doc.createdAt), "MMM d, yyyy") : "Unknown date"}
+                                    </p>
+                                    {doc.tags && doc.tags.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {doc.tags.slice(0, 3).map((tag, i) => (
+                                          <Badge key={i} variant="outline" className="text-xs">
+                                            <Tag className="h-2 w-2 mr-1" />
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button variant="outline" size="sm" className="flex-1 gap-1">
+                                    <Eye className="h-3 w-3" />
+                                    View
+                                  </Button>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={() => deleteDocumentMutation.mutate(doc.id)}
+                                    data-testid={`button-delete-doc-${doc.id}`}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4">Quick Tips</h3>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Use good lighting for best OCR results</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Keep documents flat and straight</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Add multiple pages for multi-page documents</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Extracted text is included in the PDF</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

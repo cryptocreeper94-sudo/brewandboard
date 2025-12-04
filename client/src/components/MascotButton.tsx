@@ -251,9 +251,9 @@ export function MascotButton({
         <img
           src={mascotImage}
           alt="Happy Coffee - Your AI Assistant"
-          className="w-40 h-40 object-contain"
+          className="w-32 h-32 object-contain"
           style={{ 
-            filter: 'drop-shadow(0 0 24px rgba(251,191,36,0.55)) drop-shadow(0 6px 12px rgba(180,83,9,0.3))'
+            filter: 'drop-shadow(0 0 20px rgba(251,191,36,0.55)) drop-shadow(0 5px 10px rgba(180,83,9,0.3))'
           }}
         />
 

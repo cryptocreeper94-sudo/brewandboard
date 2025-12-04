@@ -230,10 +230,10 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-2 md:col-span-6 lg:col-span-12"
+              className="col-span-2 md:col-span-12"
             >
-              {/* Mobile: Horizontal Scroll Carousel */}
-              <div className="lg:hidden overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent -mx-3 px-3">
+              {/* Mobile/Tablet: Horizontal Scroll Carousel */}
+              <div className="md:hidden overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent -mx-3 px-3">
                 <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
                   {/* Artisan Craft */}
                   <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
@@ -301,8 +301,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Desktop: 4-column Grid */}
-              <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+              {/* Desktop/Tablet: 4-column Grid */}
+              <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
                 {/* Artisan Craft */}
                 <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
                   <img 

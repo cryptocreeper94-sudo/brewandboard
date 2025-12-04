@@ -150,9 +150,9 @@ export default function SchedulePage() {
     specialInstructions: "",
   });
 
-  // Auto-open order form if cart has items
+  // Sync order form with cart whenever cart changes
   useEffect(() => {
-    if (itemCount > 0 && !isNewOrderOpen) {
+    if (itemCount > 0) {
       setNewOrder(prev => ({
         ...prev,
         vendorName: cartVendorName || "",
@@ -164,9 +164,11 @@ export default function SchedulePage() {
           notes: ""
         }))
       }));
-      setIsNewOrderOpen(true);
+      if (!isNewOrderOpen) {
+        setIsNewOrderOpen(true);
+      }
     }
-  }, []);
+  }, [itemCount, cartItems, cartVendorName]);
 
   // Calculate if order time is valid (at least 2 hours in advance)
   const isOrderTimeValid = useMemo(() => {

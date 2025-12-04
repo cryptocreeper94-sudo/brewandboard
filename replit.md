@@ -27,6 +27,14 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 | v1.0.5 | BB-0000000010 | Dec 4, 2024 | Mobile UX improvements, news feed reliability |
 
 ## Recent Changes (December 2024)
+- **v1.0.7**: Expanded vendor catalog to 37+ locations with new categories
+  - Added donut shops: Krispy Kreme (national chain), Fox's Donut Den (Nashville classic since 1973)
+  - Added juice bars: Juice Bar Nashville, Clean Juice (USDA certified organic)
+  - Added bubble tea: Kung Fu Tea, Tiger Sugar (famous tiger stripes)
+  - Added Nashville breakfast spots: Biscuit Love (Southern biscuits), Hattie B's Hot Chicken, Loveless Cafe (world famous biscuits), Jeni's Splendid Ice Creams
+  - New vendor type badges on Find Baristas page with color-coded categories
+  - Login page carousel now shows menu items from any category (not just Coffee/Catering)
+  - Updated Shop type to support 9 vendor categories: coffee, smoothie, both, bakery, chain, donut, juice, boba, breakfast
 - **v1.0.6**: National chains + specialty bakeries + distance-based delivery pricing
   - Added national chains: Starbucks (4 locations), Dunkin' (2), Dutch Bros
   - Added bakeries: Crumbl Cookie, Gigi's Cupcakes, Christie Cookies, Five Daughters Bakery

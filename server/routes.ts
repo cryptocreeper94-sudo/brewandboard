@@ -15,6 +15,7 @@ import {
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import Parser from "rss-parser";
+import { Resend } from "resend";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -630,19 +631,49 @@ export async function registerRoutes(
         return res.status(400).json({ error: "All fields are required" });
       }
       
-      // Log contact form submission (in production, would send email)
+      // Log contact form submission
       console.log("=== CONTACT FORM SUBMISSION ===");
       console.log(`From: ${name} <${email}>`);
       console.log(`Subject: ${subject}`);
       console.log(`Message: ${message}`);
-      console.log(`Recipient: cryptocreeper94@gmail.com`);
       console.log("================================");
       
-      // Store contact message in database for later review
-      // For now, just acknowledge receipt
+      // Send email via Resend
+      if (process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: "Brew & Board <onboarding@resend.dev>",
+          to: "cryptocreeper94@gmail.com",
+          replyTo: email,
+          subject: `[Contact Form] ${subject}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #3d2418; border-bottom: 2px solid #5c4033; padding-bottom: 10px;">
+                New Contact Form Submission
+              </h2>
+              <p><strong>From:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+              <p><strong>Subject:</strong> ${subject}</p>
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <p><strong>Message:</strong></p>
+                <p style="white-space: pre-wrap;">${message}</p>
+              </div>
+              <p style="color: #888; font-size: 12px; margin-top: 20px;">
+                Sent from Brew & Board Coffee contact form
+              </p>
+            </div>
+          `
+        });
+        
+        console.log("Email sent successfully via Resend");
+      } else {
+        console.log("RESEND_API_KEY not configured - email not sent");
+      }
+      
       res.json({ 
         success: true, 
-        message: "Message received. We'll get back to you soon!",
+        message: "Message sent! We'll get back to you soon.",
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {

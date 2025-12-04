@@ -186,10 +186,11 @@ Two-tier blockchain verification system for document authenticity:
 - Links to blockchain tutorial for education
 
 ## Contact Form
-- **Status**: Form captures messages, logs to server console
-- **Email Delivery**: NOT YET IMPLEMENTED - Resend integration dismissed by user
-- **To enable email**: Set up Resend or SendGrid integration, update `/server/routes.ts` contact endpoint
+- **Status**: FULLY FUNCTIONAL with email delivery
+- **Email Provider**: Resend (API key configured)
 - **Recipient**: cryptocreeper94@gmail.com
+- **From Address**: Brew & Board <onboarding@resend.dev>
+- **Features**: HTML-formatted emails with reply-to set to sender's email
 
 ## Footer Navigation
 - Terms & Conditions (`/terms`)

@@ -398,10 +398,10 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="col-span-2 md:col-span-12 mb-8 md:mb-12"
+              className="col-span-2 md:col-span-12"
             >
-              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent pb-4">
-                <div className="flex gap-3 md:gap-4 lg:gap-6 pb-6" style={{ width: 'max-content' }}>
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent pb-2">
+                <div className="flex gap-3 md:gap-4 lg:gap-6 pb-4" style={{ width: 'max-content' }}>
                   {COFFEE_SHOPS.map((shop, index) => (
                     <motion.div
                       key={shop.id}
@@ -473,7 +473,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="col-span-2 md:col-span-12 mt-4 rounded-2xl md:rounded-3xl p-6 md:p-10 text-center relative overflow-hidden"
+              className="col-span-2 md:col-span-12 rounded-2xl md:rounded-3xl p-6 md:p-10 text-center relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 50%, #1a0f0a 100%)' }}
             >
               {/* Decorative glow */}

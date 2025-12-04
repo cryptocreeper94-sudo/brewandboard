@@ -83,6 +83,7 @@ interface NewsItem {
 
 function CuratedRoastersCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   const shops = COFFEE_SHOPS.slice(0, 8);
   
   const goNext = () => {
@@ -94,6 +95,8 @@ function CuratedRoastersCarousel() {
   };
   
   const shop = shops[currentIndex];
+  
+  const categories = [...new Set(shop.menu.map(item => item.category))];
   
   return (
     <motion.div 
@@ -151,7 +154,12 @@ function CuratedRoastersCarousel() {
               >
                 <ChevronLeft className="h-5 w-5 text-white" />
               </Button>
-              <Button size="sm" className="bg-white text-black hover:bg-white/90 font-medium">
+              <Button 
+                size="sm" 
+                className="bg-white text-black hover:bg-white/90 font-medium"
+                onClick={(e) => { e.stopPropagation(); setShowMenu(true); }}
+                data-testid="button-view-menu"
+              >
                 View Menu
               </Button>
               <Button
@@ -183,6 +191,65 @@ function CuratedRoastersCarousel() {
           ))}
         </div>
       </div>
+      
+      {/* Menu Modal */}
+      <Dialog open={showMenu} onOpenChange={setShowMenu}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] to-[#2d1810] border-amber-800/30">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="font-serif text-2xl text-amber-100 flex items-center gap-3">
+              <Coffee className="h-6 w-6 text-amber-500" />
+              {shop.name}
+            </DialogTitle>
+            <p className="text-amber-200/60 text-sm flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> {shop.location}
+            </p>
+          </DialogHeader>
+          
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-6">
+              {categories.map(category => (
+                <div key={category}>
+                  <h4 className="text-amber-400 font-semibold text-sm uppercase tracking-wider mb-3 border-b border-amber-800/30 pb-2">
+                    {category}
+                  </h4>
+                  <div className="space-y-3">
+                    {shop.menu
+                      .filter(item => item.category === category)
+                      .map(item => (
+                        <div 
+                          key={item.id} 
+                          className="flex justify-between items-start gap-4 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+                          data-testid={`menu-item-${item.id}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-amber-100 font-medium text-sm">{item.name}</h5>
+                            <p className="text-amber-200/50 text-xs mt-0.5 truncate">{item.description}</p>
+                          </div>
+                          <span className="text-amber-400 font-semibold text-sm whitespace-nowrap">
+                            ${item.price.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <div className="pt-3 border-t border-amber-800/30">
+            <Link href="/schedule">
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => setShowMenu(false)}
+                data-testid="button-order-now"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Order from {shop.name}
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

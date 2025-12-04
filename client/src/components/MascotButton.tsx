@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, X, Sparkles, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import mascotImage from "@assets/generated_images/cute_female_coffee_cup_mascot.png";
+import mascotImage from "@assets/generated_images/cute_female_coffee_cup_mascot_nobg.png";
 
 interface MascotButtonProps {
   onSpeechStart?: () => void;

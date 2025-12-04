@@ -12,6 +12,7 @@ import {
   MINIMUM_ORDER_LEAD_TIME_HOURS
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
+import Parser from "rss-parser";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -40,6 +41,50 @@ export async function registerRoutes(
     }
     
     res.json(health);
+  });
+
+  // ========================
+  // NEWS ROUTES
+  // ========================
+  
+  const rssParser = new Parser({
+    customFields: {
+      item: ['media:content', 'media:thumbnail']
+    }
+  });
+  
+  let newsCache: { items: any[]; fetchedAt: number } | null = null;
+  const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  
+  app.get("/api/news/nashville", async (req, res) => {
+    try {
+      // Check cache first
+      if (newsCache && Date.now() - newsCache.fetchedAt < NEWS_CACHE_TTL) {
+        return res.json({ items: newsCache.items, cached: true });
+      }
+      
+      const feed = await rssParser.parseURL('https://www.wkrn.com/feed/');
+      
+      const items = feed.items.slice(0, 10).map(item => ({
+        title: item.title || '',
+        link: item.link || '',
+        pubDate: item.pubDate || '',
+        description: item.contentSnippet?.slice(0, 150) || '',
+        image: item['media:content']?.['$']?.url || item['media:thumbnail']?.['$']?.url || null
+      }));
+      
+      // Update cache
+      newsCache = { items, fetchedAt: Date.now() };
+      
+      res.json({ items, cached: false });
+    } catch (error: any) {
+      console.error('News fetch error:', error.message);
+      // Return cached data if available, even if stale
+      if (newsCache) {
+        return res.json({ items: newsCache.items, cached: true, stale: true });
+      }
+      res.status(500).json({ error: 'Failed to fetch news' });
+    }
   });
   
   // ========================

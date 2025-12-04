@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coffee-talk-v1';
+const CACHE_NAME = 'coffee-talk-v2';
 const urlsToCache = [
   '/',
   '/favicon.png'

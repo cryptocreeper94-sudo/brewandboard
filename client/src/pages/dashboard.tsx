@@ -9,7 +9,9 @@ import {
   Download,
   Users,
   Calendar,
-  Scan
+  Scan,
+  Code2,
+  Sparkles
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, TEAM_MEMBERS } from "@/lib/mock-data";
@@ -139,21 +141,28 @@ export default function Dashboard() {
             </motion.div>
           </Link>
 
-          {/* Subscription Status */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-secondary text-secondary-foreground rounded-2xl p-6 flex flex-col justify-between group h-32"
-          >
-             <div className="flex justify-between items-start">
-               <Badge variant="outline" className="bg-white/50 border-black/5 text-[10px] h-5">Starter</Badge>
-             </div>
-             <div>
-              <div className="text-xl font-bold font-serif mb-1">8<span className="text-xs font-sans font-normal text-muted-foreground">/10</span></div>
-              <p className="text-[10px] text-muted-foreground">Orders remaining</p>
-             </div>
-          </motion.div>
+          {/* Developer Hub */}
+          <Link href="/developers">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white rounded-2xl p-6 flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform h-32 relative overflow-hidden shine-effect"
+              data-testid="button-developers"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_70%)]" />
+              <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center mb-2 relative z-10">
+                <Code2 className="h-4 w-4" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="font-serif text-md leading-none mb-1 flex items-center gap-1">
+                  Developer Hub
+                  <Sparkles className="h-3 w-3" />
+                </h3>
+                <p className="text-white/60 text-[10px]">API & integrations</p>
+              </div>
+            </motion.div>
+          </Link>
 
           {/* Team Status */}
           <motion.div 

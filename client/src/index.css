@@ -122,3 +122,181 @@
 .font-serif {
   font-family: 'Playfair Display', serif;
 }
+
+/* Premium Shine & Sparkle Effects */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(217, 119, 6, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(217, 119, 6, 0.6); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shine-sweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Premium Card with Glassmorphism */
+.premium-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.premium-card:hover {
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: translateY(-4px);
+}
+
+/* 3D Hover Transform */
+.hover-3d {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.hover-3d:hover {
+  transform: translateY(-8px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 30px rgba(217, 119, 6, 0.15);
+}
+
+/* Shine Effect Overlay */
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-25deg);
+  animation: shine-sweep 4s infinite;
+}
+
+/* Premium Button with Glow */
+.btn-premium {
+  background: linear-gradient(135deg, #d97706 0%, #ea580c 50%, #d97706 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+  box-shadow: 
+    0 4px 15px rgba(217, 119, 6, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 8px 25px rgba(217, 119, 6, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Sparkle Overlay */
+.sparkle-container {
+  position: relative;
+}
+
+.sparkle-container::before,
+.sparkle-container::after {
+  content: '✨';
+  position: absolute;
+  font-size: 12px;
+  animation: sparkle 2s infinite;
+  pointer-events: none;
+}
+
+.sparkle-container::before {
+  top: -5px;
+  right: -5px;
+  animation-delay: 0s;
+}
+
+.sparkle-container::after {
+  bottom: -5px;
+  left: -5px;
+  animation-delay: 1s;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Floating Animation */
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glow Pulse */
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Premium Input */
+.input-premium {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  transition: all 0.3s ease;
+}
+
+.input-premium:focus {
+  border-color: #d97706;
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.2);
+}
+
+/* Luxury Background Pattern */
+.luxury-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(217, 119, 6, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(234, 88, 12, 0.05) 0%, transparent 50%);
+}
+
+/* Grain Texture Overlay */
+.grain-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}

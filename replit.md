@@ -24,8 +24,10 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 | v1.0.2 | BB-0000000007 | Dec 4, 2024 | Stripe webhook security configuration |
 | v1.0.3 | BB-0000000008 | Dec 4, 2024 | Dashboard UI cleanup, removed mascot from hero |
 | v1.0.4 | BB-0000000009 | Dec 4, 2024 | Curated Roasters carousel with arrow navigation |
+| v1.0.5 | BB-0000000010 | Dec 4, 2024 | Mobile UX improvements, news feed reliability |
 
 ## Recent Changes (December 2024)
+- **v1.0.5**: Mobile UX improvements (horizontal Quick Actions), news feed with fallback sources
 - **v1.0.4**: Redesigned Curated Roasters as single-panel carousel with left/right arrows and dot navigation
 - **v1.0.3**: Cleaned up dashboard hero section (removed floating mascot with white frame)
 - **v1.0.2**: Added STRIPE_WEBHOOK_SECRET for secure payment event verification

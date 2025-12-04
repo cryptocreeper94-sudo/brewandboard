@@ -77,6 +77,9 @@ export interface IStorage {
   updateScannedDocument(id: string, doc: Partial<InsertScannedDocument>): Promise<ScannedDocument>;
   deleteScannedDocument(id: string): Promise<void>;
   searchScannedDocuments(userId: string, query: string): Promise<ScannedDocument[]>;
+  
+  // Health Check
+  checkDatabaseHealth(): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -376,6 +379,18 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(scannedDocuments.createdAt))
       .limit(50);
+  }
+  
+  // ========================
+  // HEALTH CHECK
+  // ========================
+  async checkDatabaseHealth(): Promise<boolean> {
+    try {
+      await db.execute(sql`SELECT 1`);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

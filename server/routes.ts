@@ -22,6 +22,27 @@ export async function registerRoutes(
   registerPaymentRoutes(app);
   
   // ========================
+  // HEALTH CHECK ROUTES
+  // ========================
+  
+  app.get("/api/health", async (req, res) => {
+    const health: { api: string; database: string; timestamp: string } = {
+      api: 'healthy',
+      database: 'checking',
+      timestamp: new Date().toISOString()
+    };
+    
+    try {
+      await storage.checkDatabaseHealth();
+      health.database = 'healthy';
+    } catch (error) {
+      health.database = 'offline';
+    }
+    
+    res.json(health);
+  });
+  
+  // ========================
   // AUTH ROUTES
   // ========================
   

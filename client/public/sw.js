@@ -1,6 +1,5 @@
-const CACHE_NAME = 'coffee-talk-v3';
+const CACHE_NAME = 'coffee-talk-v4';
 const urlsToCache = [
-  '/',
   '/favicon.png'
 ];
 
@@ -13,6 +12,16 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate' || 
+      event.request.url.includes('.js') || 
+      event.request.url.includes('.tsx') ||
+      event.request.url.includes('.ts')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -28,13 +37,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,6 +30,12 @@ import {
   Calendar,
   MessageSquare,
   MapPin,
+  Activity,
+  Server,
+  Wifi,
+  WifiOff,
+  Bitcoin,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -163,6 +169,57 @@ curl -X POST "https://your-app.replit.app/api/scheduled-orders" \\
   }'`,
 };
 
+type HealthStatus = 'healthy' | 'degraded' | 'offline' | 'checking';
+
+interface SystemHealth {
+  api: HealthStatus;
+  database: HealthStatus;
+  stripe: HealthStatus;
+  coinbase: HealthStatus;
+  lastChecked: Date | null;
+}
+
+function StatusLight({ status, size = 'md' }: { status: HealthStatus; size?: 'sm' | 'md' | 'lg' }) {
+  const sizeClasses = {
+    sm: 'w-2 h-2',
+    md: 'w-3 h-3',
+    lg: 'w-4 h-4'
+  };
+  
+  const statusColors = {
+    healthy: 'bg-emerald-500 shadow-emerald-500/50',
+    degraded: 'bg-amber-500 shadow-amber-500/50',
+    offline: 'bg-red-500 shadow-red-500/50',
+    checking: 'bg-gray-400 animate-pulse'
+  };
+  
+  return (
+    <div className={`${sizeClasses[size]} rounded-full ${statusColors[status]} shadow-lg`} />
+  );
+}
+
+function StatusBadge({ status }: { status: HealthStatus }) {
+  const statusText = {
+    healthy: 'Operational',
+    degraded: 'Degraded',
+    offline: 'Offline',
+    checking: 'Checking...'
+  };
+  
+  const statusColors = {
+    healthy: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    degraded: 'bg-amber-100 text-amber-700 border-amber-200',
+    offline: 'bg-red-100 text-red-700 border-red-200',
+    checking: 'bg-gray-100 text-gray-700 border-gray-200'
+  };
+  
+  return (
+    <Badge variant="outline" className={statusColors[status]}>
+      {statusText[status]}
+    </Badge>
+  );
+}
+
 function MethodBadge({ method }: { method: string }) {
   const colors: Record<string, string> = {
     GET: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
@@ -182,6 +239,105 @@ export default function DevelopersPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("javascript");
   const [email, setEmail] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [health, setHealth] = useState<SystemHealth>({
+    api: 'checking',
+    database: 'checking',
+    stripe: 'checking',
+    coinbase: 'checking',
+    lastChecked: null
+  });
+
+  const checkHealth = async () => {
+    setIsRefreshing(true);
+    const newHealth: SystemHealth = {
+      api: 'checking',
+      database: 'checking',
+      stripe: 'checking',
+      coinbase: 'checking',
+      lastChecked: new Date()
+    };
+
+    try {
+      const healthResponse = await fetch('/api/health', { 
+        signal: AbortSignal.timeout(5000) 
+      });
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        newHealth.api = 'healthy';
+        newHealth.database = healthData.database === 'healthy' ? 'healthy' : 'offline';
+      } else {
+        newHealth.api = 'degraded';
+        newHealth.database = 'degraded';
+      }
+    } catch {
+      newHealth.api = 'offline';
+      newHealth.database = 'offline';
+    }
+
+    try {
+      const stripeResponse = await fetch('/api/config/stripe', { 
+        signal: AbortSignal.timeout(5000) 
+      });
+      const stripeData = await stripeResponse.json();
+      newHealth.stripe = stripeData.isConfigured ? 'healthy' : 'offline';
+    } catch {
+      newHealth.stripe = 'offline';
+    }
+
+    try {
+      const coinbaseResponse = await fetch('/api/config/coinbase', { 
+        signal: AbortSignal.timeout(5000) 
+      });
+      const coinbaseData = await coinbaseResponse.json();
+      newHealth.coinbase = coinbaseData.isConfigured ? 'healthy' : 'offline';
+    } catch {
+      newHealth.coinbase = 'offline';
+    }
+
+    setHealth(newHealth);
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    checkHealth();
+    const interval = setInterval(checkHealth, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getOverallStatus = (): { status: HealthStatus; message: string } => {
+    const allServices = [health.api, health.database, health.stripe, health.coinbase];
+    const coreServices = [health.api, health.database];
+    const paymentServices = [health.stripe, health.coinbase];
+    
+    if (allServices.every(s => s === 'checking')) {
+      return { status: 'checking', message: 'Checking system status...' };
+    }
+    
+    if (coreServices.some(s => s === 'offline')) {
+      return { status: 'offline', message: 'Core services are offline' };
+    }
+    
+    if (coreServices.some(s => s === 'degraded')) {
+      return { status: 'degraded', message: 'Core services are degraded' };
+    }
+    
+    if (paymentServices.every(s => s === 'offline')) {
+      return { status: 'degraded', message: 'Payment services not configured' };
+    }
+    
+    if (paymentServices.some(s => s === 'offline')) {
+      return { status: 'degraded', message: 'Some payment services not configured' };
+    }
+    
+    if (allServices.every(s => s === 'healthy')) {
+      return { status: 'healthy', message: 'All systems operational' };
+    }
+    
+    return { status: 'degraded', message: 'Some services need attention' };
+  };
+
+  const overallStatus = getOverallStatus();
 
   const copyCode = (code: string, key: string) => {
     navigator.clipboard.writeText(code);
@@ -330,6 +486,167 @@ export default function DevelopersPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* System Health Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-12"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-amber-500/5 to-red-500/5" />
+            <CardHeader className="relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                    <Activity className="h-6 w-6 text-amber-600" />
+                    System Health
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    Real-time status of all services
+                    {health.lastChecked && (
+                      <span className="text-xs text-muted-foreground">
+                        • Last checked: {health.lastChecked.toLocaleTimeString()}
+                      </span>
+                    )}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={checkHealth}
+                  disabled={isRefreshing}
+                  className="gap-2"
+                  data-testid="button-refresh-health"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* System Services */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <Server className="h-4 w-4" />
+                    Core Services
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-api-server">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                          <Wifi className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">API Server</p>
+                          <p className="text-xs text-muted-foreground">Express.js backend</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={health.api} />
+                        <StatusLight status={health.api} size="lg" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-database">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                          <Database className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Database</p>
+                          <p className="text-xs text-muted-foreground">PostgreSQL (Neon)</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={health.database} />
+                        <StatusLight status={health.database} size="lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Services */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Payment Services
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-stripe">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                          <CreditCard className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Stripe</p>
+                          <p className="text-xs text-muted-foreground">Cards & subscriptions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={health.stripe} />
+                        <StatusLight status={health.stripe} size="lg" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-coinbase">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                          <Bitcoin className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Coinbase Commerce</p>
+                          <p className="text-xs text-muted-foreground">Crypto payments</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={health.coinbase} />
+                        <StatusLight status={health.coinbase} size="lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Overall Status Summary */}
+              <div className={`mt-6 p-4 rounded-xl border ${
+                overallStatus.status === 'healthy' 
+                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200' 
+                  : overallStatus.status === 'degraded'
+                    ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
+                    : overallStatus.status === 'offline'
+                      ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                      : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <StatusLight status={overallStatus.status} size="lg" />
+                    <span className={`text-sm font-semibold ${
+                      overallStatus.status === 'healthy' ? 'text-emerald-700' :
+                      overallStatus.status === 'degraded' ? 'text-amber-700' :
+                      overallStatus.status === 'offline' ? 'text-red-700' : 'text-gray-700'
+                    }`}>
+                      {overallStatus.message}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <StatusLight status="healthy" size="sm" /> Operational
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <StatusLight status="degraded" size="sm" /> Degraded
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <StatusLight status="offline" size="sm" /> Offline
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

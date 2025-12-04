@@ -164,13 +164,13 @@ export default function Dashboard() {
               <Coffee className="h-5 w-5 text-amber-600" />
               <span className="text-sm font-medium text-foreground">Brew & Board</span>
             </div>
-            <Link href="/verify">
+            <Link href="/verify/BB-0000000001">
               <Badge 
-                className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 border-emerald-200 hover:from-emerald-500/20 hover:to-teal-500/20 cursor-pointer transition-all text-[10px] py-0.5 gap-1"
+                className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700 hover:from-emerald-500/20 hover:to-teal-500/20 cursor-pointer transition-all text-[10px] py-0.5 gap-1"
                 data-testid="badge-solana-certified"
               >
                 <Shield className="h-2.5 w-2.5" />
-                Solana Certified
+                <span className="font-mono">BB-0000000001</span>
               </Badge>
             </Link>
           </div>

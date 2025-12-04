@@ -232,7 +232,7 @@ export function MascotButton({
 
       <motion.button
         onClick={handleMascotClick}
-        className="relative group"
+        className="relative group bg-transparent border-none p-0 focus:outline-none outline-none"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         animate={{
@@ -247,24 +247,15 @@ export function MascotButton({
         }}
         data-testid="button-mascot"
       >
-        {/* Glow effect only - no background shapes */}
-        <div 
-          className="absolute inset-[-8px] opacity-70 group-hover:opacity-90 transition-opacity duration-300"
-          style={{
-            background: 'radial-gradient(circle, rgba(251,191,36,0.6) 0%, rgba(245,158,11,0.4) 40%, transparent 70%)',
-            filter: 'blur(12px)',
+        {/* Just the floating mascot image with drop-shadow glow - no containers */}
+        <img
+          src={mascotImage}
+          alt="Happy Coffee - Your AI Assistant"
+          className="w-20 h-20 object-contain"
+          style={{ 
+            filter: 'drop-shadow(0 0 18px rgba(251,191,36,0.55)) drop-shadow(0 4px 8px rgba(180,83,9,0.3))'
           }}
         />
-        
-        {/* Just the floating mascot image - no circle or background */}
-        <div className="relative w-20 h-20">
-          <img
-            src={mascotImage}
-            alt="Happy Coffee - Your AI Assistant"
-            className="w-full h-full object-contain drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 4px 12px rgba(180, 83, 9, 0.4))' }}
-          />
-        </div>
 
         {/* Sparkle indicator */}
         <motion.div
@@ -278,7 +269,7 @@ export function MascotButton({
             duration: 2,
           }}
         >
-          <Sparkles className="h-4 w-4 text-amber-400 drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.8))' }} />
+          <Sparkles className="h-4 w-4 text-amber-400" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.8))' }} />
         </motion.div>
       </motion.button>
     </div>

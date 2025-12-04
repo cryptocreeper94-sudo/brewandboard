@@ -240,6 +240,7 @@ export default function DevelopersPage() {
   const [activeTab, setActiveTab] = useState("javascript");
   const [email, setEmail] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [health, setHealth] = useState<SystemHealth>({
     api: 'checking',
     database: 'checking',
@@ -247,6 +248,15 @@ export default function DevelopersPage() {
     coinbase: 'checking',
     lastChecked: null
   });
+  
+  useEffect(() => {
+    const devAuth = localStorage.getItem("coffee_dev_auth");
+    if (devAuth === "true") {
+      setIsAuthenticated(true);
+    } else {
+      window.location.href = "/";
+    }
+  }, []);
 
   const checkHealth = async () => {
     setIsRefreshing(true);
@@ -357,6 +367,22 @@ export default function DevelopersPage() {
     });
     setEmail("");
   };
+  
+  const handleLogout = () => {
+    localStorage.removeItem("coffee_dev_auth");
+    window.location.href = "/";
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Verifying developer access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay relative">
@@ -388,11 +414,22 @@ export default function DevelopersPage() {
               <p className="text-muted-foreground mt-1">Build amazing integrations with Coffee Talk</p>
             </div>
           </div>
-          <Link href="/dashboard">
-            <Button variant="outline" className="gap-2 hover-3d" data-testid="button-home">
-              <Home className="h-4 w-4" /> Dashboard
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <Button variant="outline" className="gap-2 hover-3d" data-testid="button-home">
+                <Home className="h-4 w-4" /> Dashboard
+              </Button>
+            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2 text-muted-foreground hover:text-destructive"
+              data-testid="button-dev-logout"
+            >
+              <Lock className="h-4 w-4" /> Logout
             </Button>
-          </Link>
+          </div>
         </header>
 
         <motion.div

@@ -27,6 +27,12 @@ Brew & Board Coffee is a B2B coffee delivery platform connecting business owners
 | v1.0.5 | BB-0000000010 | Dec 4, 2024 | Mobile UX improvements, news feed reliability |
 
 ## Recent Changes (December 2024)
+- **v1.0.8**: "Brew & Board" brand identity update
+  - Updated headline to "Brews & Boards, Delivered with Grace" reflecting dual meaning
+  - "Brew" = coffee, tea, juice, boba; "Board" = food boards (donuts, pastries, breakfast spreads)
+  - Renamed "Curated Roasters" to "Curated Vendors" on dashboard
+  - Updated feature descriptions to be inclusive of all vendor types
+  - Changed "Nashville's Finest Roasters" to "Nashville's Finest Vendors" on login
 - **v1.0.7**: Expanded vendor catalog to 37+ locations with new categories
   - Added donut shops: Krispy Kreme (national chain), Fox's Donut Den (Nashville classic since 1973)
   - Added juice bars: Juice Bar Nashville, Clean Juice (USDA certified organic)

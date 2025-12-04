@@ -618,5 +618,38 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // CONTACT FORM ROUTE
+  // ========================
+  
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      
+      // Log contact form submission (in production, would send email)
+      console.log("=== CONTACT FORM SUBMISSION ===");
+      console.log(`From: ${name} <${email}>`);
+      console.log(`Subject: ${subject}`);
+      console.log(`Message: ${message}`);
+      console.log(`Recipient: cryptocreeper94@gmail.com`);
+      console.log("================================");
+      
+      // Store contact message in database for later review
+      // For now, just acknowledge receipt
+      res.json({ 
+        success: true, 
+        message: "Message received. We'll get back to you soon!",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Contact form error:", error);
+      res.status(500).json({ error: "Failed to send message. Please try again." });
+    }
+  });
+
   return httpServer;
 }

@@ -167,13 +167,13 @@ export default function Dashboard() {
         <FloatingBean delay={4} duration={17} x={90} size={18} />
       </div>
 
-      {/* Hero Banner - Exciting with Mascot */}
+      {/* Hero Banner - Shimmering Dark Brown */}
       <div className="relative overflow-hidden">
-        {/* Animated gradient background */}
+        {/* Rich dark brown gradient background */}
         <div 
           className="absolute inset-0"
           style={{ 
-            background: 'linear-gradient(135deg, #7c2d12 0%, #c2410c 25%, #ea580c 50%, #f97316 75%, #fb923c 100%)'
+            background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 25%, #3d2216 50%, #4a2c1c 75%, #5a3620 100%)'
           }}
         />
         {/* Animated shine effect */}
@@ -234,7 +234,7 @@ export default function Dashboard() {
               <h1 className="font-serif text-3xl md:text-5xl text-white font-bold tracking-tight drop-shadow-lg mb-2">
                 Brew & Board
               </h1>
-              <p className="text-amber-100/90 text-sm md:text-base max-w-md">
+              <p className="text-amber-200/90 text-sm md:text-base max-w-md">
                 Premium coffee delivery for your business meetings
               </p>
               <motion.div 
@@ -244,13 +244,13 @@ export default function Dashboard() {
                 transition={{ delay: 0.4 }}
               >
                 <Link href="/schedule">
-                  <Button className="bg-white text-orange-600 hover:bg-amber-50 font-semibold shadow-lg hover:shadow-xl transition-all">
+                  <Button className="bg-amber-500 text-white hover:bg-amber-400 font-semibold shadow-lg hover:shadow-xl transition-all border border-amber-400/50">
                     <Calendar className="h-4 w-4 mr-2" />
                     Order Now
                   </Button>
                 </Link>
                 <Link href="/verify/BB-0000000001">
-                  <Button variant="outline" className="border-white/50 text-white hover:bg-white/20 backdrop-blur-sm">
+                  <Button variant="outline" className="border-amber-400/50 text-amber-100 hover:bg-amber-800/30 backdrop-blur-sm">
                     <Shield className="h-4 w-4 mr-2" />
                     Verified
                   </Button>

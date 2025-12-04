@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Code, Lock, Shield, Coffee, ExternalLink, CheckCircle } from "lucide-react";
+import { Code, Lock, Shield, Coffee, ExternalLink, CheckCircle, Mail, TrendingUp, FileText, ShieldCheck } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DEVELOPER_PIN = "0424";
+const ADMIN_PIN = "4444";
 const CURRENT_VERSION = "1.0.0";
 
 interface AppVersion {
@@ -29,10 +30,12 @@ export function Footer() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showDevLogin, setShowDevLogin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [versions, setVersions] = useState<AppVersion[]>([]);
   const [currentVersion, setCurrentVersion] = useState<AppVersion | null>(null);
   const [pin, setPin] = useState("");
+  const [adminPin, setAdminPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
@@ -65,7 +68,6 @@ export function Footer() {
     
     setTimeout(() => {
       if (pin === DEVELOPER_PIN) {
-        // Create developer user for full access to all features
         const devUser = {
           id: "developer-admin",
           email: "dev@brewandboard.coffee",
@@ -75,7 +77,6 @@ export function Footer() {
         };
         localStorage.setItem("coffee_user", JSON.stringify(devUser));
         localStorage.setItem("coffee_dev_auth", "true");
-        // Set a long session expiry (30 days)
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
         localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
         
@@ -97,9 +98,38 @@ export function Footer() {
     }, 500);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleAdminLogin = () => {
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      if (adminPin === ADMIN_PIN) {
+        toast({
+          title: "Admin Access Granted",
+          description: "Welcome to the Admin Panel.",
+        });
+        setShowAdminLogin(false);
+        setAdminPin("");
+        setLocation("/admin");
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "Invalid admin PIN.",
+          variant: "destructive"
+        });
+      }
+      setIsLoading(false);
+    }, 500);
+  };
+
+  const handleDevKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && pin.length === 4) {
       handleDevLogin();
+    }
+  };
+
+  const handleAdminKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && adminPin.length === 4) {
+      handleAdminLogin();
     }
   };
 
@@ -109,44 +139,91 @@ export function Footer() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-md border-t border-border/30"
+        className="fixed bottom-0 left-0 right-0 z-30"
+        style={{ 
+          background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 50%, #3d2216 100%)'
+        }}
       >
-        <div className="container max-w-5xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <div className="container max-w-5xl mx-auto px-4 py-2">
+          {/* Top row - Navigation Links */}
+          <div className="flex items-center justify-center gap-4 text-xs text-amber-200/70 mb-1.5 flex-wrap">
+            <Link href="/terms">
+              <button
+                className="flex items-center gap-1 hover:text-amber-400 transition-colors"
+                data-testid="link-terms"
+              >
+                <FileText className="h-3 w-3" />
+                <span>Terms & Conditions</span>
+              </button>
+            </Link>
+            <span className="text-amber-700/50">•</span>
+            <Link href="/contact">
+              <button
+                className="flex items-center gap-1 hover:text-amber-400 transition-colors"
+                data-testid="link-contact"
+              >
+                <Mail className="h-3 w-3" />
+                <span>Contact Us</span>
+              </button>
+            </Link>
+            <span className="text-amber-700/50">•</span>
+            <Link href="/investor">
+              <button
+                className="flex items-center gap-1 hover:text-amber-400 transition-colors font-semibold"
+                data-testid="link-investor"
+              >
+                <TrendingUp className="h-3 w-3" />
+                <span>Investors & Franchise</span>
+              </button>
+            </Link>
+            <span className="text-amber-700/50">•</span>
+            <button
+              onClick={() => setShowAdminLogin(true)}
+              className="flex items-center gap-1 hover:text-amber-400 transition-colors"
+              data-testid="button-admin-login"
+            >
+              <ShieldCheck className="h-3 w-3" />
+              <span>Admin</span>
+            </button>
+          </div>
+          
+          {/* Bottom row - Company info */}
+          <div className="flex items-center justify-center gap-2 text-[10px] text-amber-300/50">
             <span>Powered by</span>
             <a 
               href="https://darkwavestudios.io" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="font-serif font-semibold text-foreground hover:text-amber-600 transition-colors underline-offset-2 hover:underline"
+              className="font-serif font-semibold text-amber-200/70 hover:text-amber-400 transition-colors underline-offset-2 hover:underline"
               data-testid="link-darkwave"
             >
               Darkwave Studios, LLC
             </a>
-            <span className="mx-1">•</span>
+            <span className="mx-0.5">•</span>
             <span>&copy; 2025</span>
-            <span className="mx-1">•</span>
+            <span className="mx-0.5">•</span>
             <button
               onClick={() => setShowChangelog(true)}
-              className="flex items-center gap-1 text-muted-foreground/60 hover:text-amber-600 transition-colors"
+              className="flex items-center gap-1 text-amber-300/50 hover:text-amber-400 transition-colors"
               data-testid="button-version"
             >
-              <Shield className="h-3 w-3" />
+              <Shield className="h-2.5 w-2.5" />
               <span>v{currentVersion?.version || CURRENT_VERSION}</span>
             </button>
-            <span className="mx-1">•</span>
+            <span className="mx-0.5">•</span>
             <button
               onClick={() => setShowDevLogin(true)}
-              className="flex items-center gap-1 text-muted-foreground/60 hover:text-amber-600 transition-colors"
+              className="flex items-center gap-1 text-amber-300/50 hover:text-amber-400 transition-colors"
               data-testid="button-dev-login"
             >
-              <Code className="h-3 w-3" />
+              <Code className="h-2.5 w-2.5" />
               <span>Developer</span>
             </button>
           </div>
         </div>
       </motion.footer>
 
+      {/* Developer Login Dialog */}
       <Dialog open={showDevLogin} onOpenChange={setShowDevLogin}>
         <DialogContent className="sm:max-w-[320px]">
           <DialogHeader>
@@ -165,7 +242,7 @@ export function Footer() {
               maxLength={4}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleDevKeyDown}
               className="text-center text-lg tracking-widest"
               data-testid="input-dev-pin"
               autoFocus
@@ -182,6 +259,43 @@ export function Footer() {
         </DialogContent>
       </Dialog>
 
+      {/* Admin Login Dialog */}
+      <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
+        <DialogContent className="sm:max-w-[320px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Admin Access
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Enter your admin PIN to access the Admin Panel.
+            </p>
+            <Input
+              type="password"
+              placeholder="Enter 4-digit PIN"
+              maxLength={4}
+              value={adminPin}
+              onChange={(e) => setAdminPin(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={handleAdminKeyDown}
+              className="text-center text-lg tracking-widest"
+              data-testid="input-admin-pin"
+              autoFocus
+            />
+            <Button 
+              onClick={handleAdminLogin} 
+              className="w-full"
+              disabled={adminPin.length !== 4 || isLoading}
+              data-testid="button-admin-submit"
+            >
+              {isLoading ? "Verifying..." : "Access Admin Panel"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Changelog Dialog */}
       <Dialog open={showChangelog} onOpenChange={setShowChangelog}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>

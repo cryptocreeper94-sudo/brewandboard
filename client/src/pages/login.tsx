@@ -273,6 +273,30 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
+            {/* Premium Service Card - Desktop Only */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42 }}
+              className="hidden lg:flex col-span-4 rounded-2xl md:rounded-3xl p-6 lg:p-8 flex-col justify-between min-h-[200px] hover-3d"
+              style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+            >
+              <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-4">
+                <Sparkles className="h-6 w-6 text-amber-200" />
+              </div>
+              <div>
+                <h3 
+                  className="text-2xl lg:text-3xl font-bold text-white mb-2"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  White Glove Service
+                </h3>
+                <p className="text-stone-300 text-sm lg:text-base">
+                  Curated coffee experiences for your most important meetings
+                </p>
+              </div>
+            </motion.div>
+
             {/* Vendors Section Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -56,20 +56,40 @@ export async function registerRoutes(
   const rssParser = new Parser({
     customFields: {
       item: ['media:content', 'media:thumbnail']
-    }
+    },
+    timeout: 8000
   });
   
   let newsCache: { items: any[]; fetchedAt: number } | null = null;
-  const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  const NEWS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes (longer cache to reduce failures)
+  
+  // Fallback Nashville news data for when feeds are unavailable
+  const fallbackNews = [
+    { title: "Nashville Weather Update", link: "#", pubDate: new Date().toISOString(), description: "Check your local forecast for Nashville and Middle Tennessee.", image: null },
+    { title: "Nashville Business News", link: "#", pubDate: new Date().toISOString(), description: "Stay updated on the latest Nashville business developments.", image: null },
+    { title: "Music City Events", link: "#", pubDate: new Date().toISOString(), description: "Discover upcoming events and entertainment in Nashville.", image: null },
+    { title: "Tennessee Traffic Updates", link: "#", pubDate: new Date().toISOString(), description: "Real-time traffic information for Middle Tennessee commuters.", image: null }
+  ];
   
   app.get("/api/news/nashville", async (req, res) => {
     try {
-      // Check cache first
+      // Check cache first (return cache if still valid)
       if (newsCache && Date.now() - newsCache.fetchedAt < NEWS_CACHE_TTL) {
         return res.json({ items: newsCache.items, cached: true });
       }
       
-      const feed = await rssParser.parseURL('https://www.wkrn.com/feed/');
+      // Try primary feed (NewsChannel 5 Nashville - more reliable)
+      let feed;
+      try {
+        feed = await rssParser.parseURL('https://www.newschannel5.com/news.rss');
+      } catch (e) {
+        // Try backup feed
+        try {
+          feed = await rssParser.parseURL('https://www.tennessean.com/arcio/rss/category/news/');
+        } catch (e2) {
+          throw new Error('All feeds unavailable');
+        }
+      }
       
       const items = feed.items.slice(0, 10).map(item => ({
         title: item.title || '',
@@ -89,7 +109,8 @@ export async function registerRoutes(
       if (newsCache) {
         return res.json({ items: newsCache.items, cached: true, stale: true });
       }
-      res.status(500).json({ error: 'Failed to fetch news' });
+      // Return fallback news as last resort
+      res.json({ items: fallbackNews, cached: false, fallback: true });
     }
   });
   

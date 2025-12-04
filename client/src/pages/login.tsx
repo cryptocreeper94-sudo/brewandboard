@@ -27,72 +27,31 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col relative overflow-hidden">
-      {/* Coffee Banner with Cream Swirl */}
-      <div className="relative h-48 md:h-64 bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 overflow-hidden">
-        {/* Cream Swirl Effects */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="creamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,248,240,0.9)" />
-              <stop offset="50%" stopColor="rgba(255,243,224,0.7)" />
-              <stop offset="100%" stopColor="rgba(255,248,240,0.4)" />
-            </linearGradient>
-          </defs>
-          <motion.path
-            d="M0,150 Q200,50 400,150 T800,150 T1200,100"
-            fill="none"
-            stroke="url(#creamGradient)"
-            strokeWidth="80"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-          />
-          <motion.path
-            d="M-100,200 Q300,100 600,200 T1000,180 T1400,220"
-            fill="none"
-            stroke="url(#creamGradient)"
-            strokeWidth="60"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.7 }}
-            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.3 }}
-          />
-          <motion.path
-            d="M100,80 Q400,180 700,80 T1100,120"
-            fill="none"
-            stroke="url(#creamGradient)"
-            strokeWidth="40"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.5 }}
-            transition={{ duration: 2, ease: "easeInOut", delay: 0.6 }}
-          />
-        </svg>
-        
-        {/* Coffee steam effect */}
-        <div className="absolute right-8 top-4 opacity-30">
-          <motion.div
-            animate={{ y: [-10, -30, -10], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ repeat: Infinity, duration: 3 }}
-            className="text-white/50"
-          >
-            <Coffee className="h-24 w-24" />
-          </motion.div>
-        </div>
+      {/* Coffee Banner - Dark Coffee with Cream Mixing Effect */}
+      <div 
+        className="relative h-48 md:h-64 overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 20%, #3d2418 40%, #2a1612 60%, #1f110c 80%, #1a0f0a 100%)' }}
+      >
+        {/* Subtle cream mixing overlay - like cream swirling into dark coffee */}
+        <div 
+          className="absolute inset-0"
+          style={{ 
+            background: 'radial-gradient(ellipse 100% 60% at 25% 30%, rgba(210,180,140,0.15) 0%, transparent 50%), radial-gradient(ellipse 80% 50% at 75% 50%, rgba(205,175,130,0.12) 0%, transparent 45%), radial-gradient(ellipse 60% 40% at 40% 70%, rgba(200,170,120,0.1) 0%, transparent 40%), radial-gradient(ellipse 50% 35% at 60% 25%, rgba(215,185,145,0.08) 0%, transparent 35%)'
+          }}
+        />
 
         {/* Logo/Title in banner */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.3 }}
             className="text-center"
           >
-            <h1 className="font-serif text-5xl md:text-6xl text-white font-bold tracking-tight drop-shadow-lg">
+            <h1 className="font-serif text-5xl md:text-6xl text-amber-100 font-bold tracking-tight drop-shadow-lg">
               Coffee Talk
             </h1>
-            <p className="text-amber-100/90 text-lg mt-2 font-light">
+            <p className="text-amber-200/70 text-lg mt-2 font-light">
               Nashville's Premium Meeting Catering
             </p>
           </motion.div>

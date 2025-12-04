@@ -48,39 +48,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Coffee Banner with Cream Swirl */}
-      <div className="relative h-24 bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 overflow-hidden">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 100" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="creamGradientDash" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,248,240,0.8)" />
-              <stop offset="50%" stopColor="rgba(255,243,224,0.6)" />
-              <stop offset="100%" stopColor="rgba(255,248,240,0.3)" />
-            </linearGradient>
-          </defs>
-          <motion.path
-            d="M0,50 Q300,20 600,50 T1200,40"
-            fill="none"
-            stroke="url(#creamGradientDash)"
-            strokeWidth="40"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-          />
-          <motion.path
-            d="M-100,70 Q400,30 800,70 T1400,60"
-            fill="none"
-            stroke="url(#creamGradientDash)"
-            strokeWidth="25"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.3 }}
-          />
-        </svg>
+      {/* Coffee Banner - Dark Coffee with Cream Mixing Effect */}
+      <div className="relative h-24 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 25%, #3d2418 45%, #2a1612 55%, #1f110c 75%, #1a0f0a 100%)' }}>
+        {/* Subtle cream mixing overlay */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{ 
+            background: 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(210,180,140,0.4) 0%, transparent 50%), radial-gradient(ellipse 60% 40% at 70% 60%, rgba(205,175,130,0.3) 0%, transparent 45%), radial-gradient(ellipse 40% 30% at 50% 30%, rgba(200,170,120,0.25) 0%, transparent 40%)'
+          }}
+        />
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="font-serif text-2xl md:text-3xl text-white font-bold tracking-tight drop-shadow-lg">
+          <h1 className="font-serif text-2xl md:text-3xl text-amber-100 font-bold tracking-tight drop-shadow-lg">
             Coffee Talk
           </h1>
         </div>

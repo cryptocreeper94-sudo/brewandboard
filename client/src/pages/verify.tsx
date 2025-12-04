@@ -96,6 +96,17 @@ export default function VerifyPage() {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0f0a] to-[#0d0705] flex items-center justify-center p-4">
+      {/* Back Button */}
+      <Link href="/dashboard">
+        <a 
+          className="fixed top-4 left-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-amber-400 hover:text-amber-300 rounded-full transition-all backdrop-blur-sm border border-slate-600/50"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </a>
+      </Link>
+      
       <div 
         className={`max-w-lg w-full rounded-2xl border-2 ${
           valid 

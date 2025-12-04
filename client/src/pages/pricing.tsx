@@ -1,12 +1,97 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowLeft, Coffee, Sparkles, Crown, Percent, Info, ChevronLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Check, Coffee, Sparkles, Crown, Percent, Info, ChevronLeft, CreditCard, Bitcoin, Loader2 } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { SUBSCRIPTION_TIERS, SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE } from "@/lib/mock-data";
 
 export default function PricingPage() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [stripeConfig, setStripeConfig] = useState<{ publishableKey: string | null; isConfigured: boolean } | null>(null);
+  const [coinbaseConfig, setCoinbaseConfig] = useState<{ isConfigured: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/config/stripe')
+      .then(res => res.json())
+      .then(data => setStripeConfig(data))
+      .catch(() => setStripeConfig({ publishableKey: null, isConfigured: false }));
+    
+    fetch('/api/config/coinbase')
+      .then(res => res.json())
+      .then(data => setCoinbaseConfig(data))
+      .catch(() => setCoinbaseConfig({ isConfigured: false }));
+  }, []);
+
+  const handleSubscribe = async (tierId: string) => {
+    const storedUser = localStorage.getItem('coffee_user');
+    if (!storedUser) {
+      toast({
+        title: "Please log in first",
+        description: "You need to be logged in to subscribe.",
+        variant: "destructive"
+      });
+      setLocation('/');
+      return;
+    }
+
+    const user = JSON.parse(storedUser);
+    
+    if (tierId === 'enterprise') {
+      toast({
+        title: "Enterprise Plan",
+        description: "Our team will contact you within 24 hours to discuss your needs."
+      });
+      return;
+    }
+
+    if (!stripeConfig?.isConfigured) {
+      toast({
+        title: "Payment not configured",
+        description: "Stripe payments are not yet configured. Please contact support.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingTier(tierId);
+
+    try {
+      const response = await fetch('/api/payments/create-subscription-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          tier: tierId,
+          successUrl: `${window.location.origin}/payment-success?type=subscription`,
+          cancelUrl: `${window.location.origin}/pricing`
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingTier(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay py-12 px-4">
       <div className="container mx-auto max-w-6xl relative z-10">
@@ -61,6 +146,24 @@ export default function PricingPage() {
                       <div>
                         <p className="font-semibold">Delivery Coordination</p>
                         <p className="text-sm text-muted-foreground">Per order, covers DoorDash/Uber dispatch</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100">
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-2">
+                        <CreditCard className="h-5 w-5 text-blue-600" />
+                        <Bitcoin className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">Payment Options</p>
+                        <p className="text-xs text-muted-foreground">
+                          {stripeConfig?.isConfigured ? "Credit Card" : ""}
+                          {stripeConfig?.isConfigured && coinbaseConfig?.isConfigured ? " & " : ""}
+                          {coinbaseConfig?.isConfigured ? "Crypto (BTC, ETH, USDC)" : ""}
+                          {!stripeConfig?.isConfigured && !coinbaseConfig?.isConfigured ? "Coming soon" : ""}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -141,8 +244,19 @@ export default function PricingPage() {
                   <Button 
                     className={`w-full ${tier.highlight ? 'btn-premium text-white' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                     data-testid={`button-select-${tier.id}`}
+                    onClick={() => handleSubscribe(tier.id)}
+                    disabled={loadingTier === tier.id}
                   >
-                    {tier.id === "enterprise" ? "Contact Sales" : "Start Free Trial"}
+                    {loadingTier === tier.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : tier.id === "enterprise" ? (
+                      "Contact Sales"
+                    ) : (
+                      "Start Free Trial"
+                    )}
                   </Button>
                 </CardFooter>
               </Card>

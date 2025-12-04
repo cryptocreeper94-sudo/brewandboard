@@ -11,11 +11,15 @@ import {
   insertOrderEventSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS
 } from "@shared/schema";
+import { registerPaymentRoutes } from "./payments";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Register payment routes (Stripe + Coinbase Commerce)
+  registerPaymentRoutes(app);
   
   // ========================
   // AUTH ROUTES

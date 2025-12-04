@@ -392,6 +392,88 @@ export const OCR_LANGUAGES = [
 ] as const;
 
 // ========================
+// USER SUBSCRIPTIONS
+// ========================
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    // Stripe subscription info
+    stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+    stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+    stripePriceId: varchar("stripe_price_id", { length: 255 }),
+    
+    // Subscription details
+    tier: varchar("tier", { length: 50 }).notNull(), // 'starter', 'professional', 'enterprise'
+    status: varchar("status", { length: 50 }).default("active").notNull(),
+    // Status: 'active', 'past_due', 'canceled', 'trialing'
+    
+    // Billing period
+    currentPeriodStart: timestamp("current_period_start"),
+    currentPeriodEnd: timestamp("current_period_end"),
+    
+    // Usage tracking
+    ordersThisMonth: integer("orders_this_month").default(0),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_subscriptions_user").on(table.userId),
+    stripeSubIdx: index("idx_subscriptions_stripe").on(table.stripeSubscriptionId),
+  })
+);
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+// ========================
+// PAYMENTS (Order Payment Records)
+// ========================
+export const payments = pgTable(
+  "payments",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    orderId: varchar("order_id").references(() => scheduledOrders.id),
+    
+    // Payment provider info
+    provider: varchar("provider", { length: 50 }).notNull(), // 'stripe', 'coinbase'
+    providerPaymentId: varchar("provider_payment_id", { length: 255 }),
+    providerSessionId: varchar("provider_session_id", { length: 255 }),
+    
+    // Payment details
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("USD"),
+    status: varchar("status", { length: 50 }).default("pending").notNull(),
+    // Status: 'pending', 'completed', 'failed', 'refunded'
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_payments_user").on(table.userId),
+    orderIdx: index("idx_payments_order").on(table.orderId),
+    providerIdx: index("idx_payments_provider").on(table.providerPaymentId),
+  })
+);
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+
+// ========================
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;

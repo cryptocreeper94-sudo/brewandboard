@@ -12,6 +12,7 @@ import SchedulePage from "@/pages/schedule";
 import ScanPage from "@/pages/scan";
 import DevelopersPage from "@/pages/developers";
 import PricingPage from "@/pages/pricing";
+import PaymentSuccessPage from "@/pages/payment-success";
 import { MascotButton } from "@/components/MascotButton";
 import { MascotPopover } from "@/components/MascotPopover";
 import { Footer } from "@/components/Footer";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/scan" component={ScanPage} />
       <Route path="/developers" component={DevelopersPage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/payment-success" component={PaymentSuccessPage} />
       <Route component={NotFound} />
     </Switch>
   );

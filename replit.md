@@ -78,10 +78,36 @@ Coffee Talk is a B2B coffee delivery platform connecting business owners and mee
 6. Universal document scanner with OCR
 7. 12 vendor catalog with full menus (coffee + smoothies)
 
-## Stripe Integration
-- User is adding STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY to secrets
-- Checkout and subscription management coming soon
-- See Developers page Integration Roadmap for implementation tasks
+## Payment Integration (IMPLEMENTED)
+
+### Stripe Integration
+- **Status**: Fully implemented
+- **Required Secrets**: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY
+- **Optional**: STRIPE_WEBHOOK_SECRET (for webhook signature verification)
+- **Features**:
+  - Subscription checkout for all tiers (Starter, Professional, Enterprise)
+  - One-time order payments
+  - 14-day free trial on subscriptions
+  - Webhook handlers for payment/subscription status updates
+
+### Coinbase Commerce Integration
+- **Status**: Fully implemented (placeholder - needs API key)
+- **Required Secrets**: COINBASE_COMMERCE_API_KEY
+- **Optional**: COINBASE_COMMERCE_WEBHOOK_SECRET (for webhook signature verification)
+- **Features**:
+  - Crypto payments (BTC, ETH, USDC)
+  - Order payment checkout
+  - Webhook handlers for payment status updates
+
+### Payment Files
+- `/server/payments.ts` - All payment routes (Stripe + Coinbase Commerce)
+- `/client/src/pages/pricing.tsx` - Subscription checkout UI
+- `/client/src/pages/payment-success.tsx` - Payment confirmation page
+- `/client/src/components/PaymentCheckout.tsx` - Reusable payment modal
+
+### Database Tables
+- `subscriptions` - User subscription status, Stripe IDs, tier info
+- `payments` - Payment records for orders (Stripe + Coinbase)
 
 ## Future Plans
 - Google Calendar integration (available via Replit integration)

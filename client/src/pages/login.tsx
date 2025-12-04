@@ -225,95 +225,147 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Latte Art Card */}
+            {/* Feature Cards Row - Horizontal Scroll on Mobile, Grid on Desktop */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-1 md:col-span-3 lg:col-span-3 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
+              className="col-span-2 md:col-span-6 lg:col-span-12"
             >
-              <img 
-                src={latteArtImage} 
-                alt="Artisan Latte Art" 
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
-                <p 
-                  className="text-sm md:text-xl font-bold text-white"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  Artisan Craft
-                </p>
-                <p className="text-stone-300 text-[10px] md:text-xs hidden md:block">Handcrafted with passion</p>
-              </div>
-            </motion.div>
+              {/* Mobile: Horizontal Scroll Carousel */}
+              <div className="lg:hidden overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-transparent -mx-3 px-3">
+                <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
+                  {/* Artisan Craft */}
+                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                    <img 
+                      src={latteArtImage} 
+                      alt="Artisan Latte Art" 
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        Artisan Craft
+                      </p>
+                      <p className="text-stone-300 text-[10px]">Handcrafted</p>
+                    </div>
+                  </div>
 
-            {/* Meeting Image Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="col-span-1 md:col-span-3 lg:col-span-3 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[120px] md:min-h-[200px] group hover-3d"
-            >
-              <img 
-                src={meetingImage} 
-                alt="Corporate Meeting" 
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
-                <p 
-                  className="text-sm md:text-xl font-bold text-white"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  Meeting Ready
-                </p>
-                <p className="text-stone-300 text-[10px] md:text-xs hidden md:block">Impress your clients</p>
-              </div>
-            </motion.div>
+                  {/* Meeting Ready */}
+                  <div className="flex-shrink-0 w-[160px] relative rounded-2xl overflow-hidden min-h-[120px] group hover-3d">
+                    <img 
+                      src={meetingImage} 
+                      alt="Corporate Meeting" 
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        Meeting Ready
+                      </p>
+                      <p className="text-stone-300 text-[10px]">Impress clients</p>
+                    </div>
+                  </div>
 
-            {/* White Glove Service Card - Desktop Only */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.42 }}
-              className="hidden lg:flex lg:col-span-3 rounded-2xl md:rounded-3xl p-5 lg:p-6 flex-col justify-between min-h-[200px] hover-3d coffee-glow"
-              style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
-            >
-              <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-amber-200" />
-              </div>
-              <div>
-                <p 
-                  className="text-lg lg:text-xl font-bold text-white mb-1"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  White Glove
-                </p>
-                <p className="text-stone-300 text-xs">Premium concierge service</p>
-              </div>
-            </motion.div>
+                  {/* White Glove */}
+                  <div 
+                    className="flex-shrink-0 w-[160px] rounded-2xl p-4 flex flex-col justify-between min-h-[120px] hover-3d coffee-glow"
+                    style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-amber-200" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        White Glove
+                      </p>
+                      <p className="text-stone-300 text-[10px]">Premium service</p>
+                    </div>
+                  </div>
 
-            {/* Local Roasters Card - Desktop Only */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.44 }}
-              className="hidden lg:flex lg:col-span-3 rounded-2xl md:rounded-3xl p-5 lg:p-6 flex-col justify-between min-h-[200px] hover-3d"
-              style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
-            >
-              <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                <Coffee className="h-5 w-5 text-amber-200" />
+                  {/* Local Roasters */}
+                  <div 
+                    className="flex-shrink-0 w-[160px] rounded-2xl p-4 flex flex-col justify-between min-h-[120px] hover-3d"
+                    style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Coffee className="h-4 w-4 text-amber-200" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        Local Roasters
+                      </p>
+                      <p className="text-stone-300 text-[10px]">Nashville's finest</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p 
-                  className="text-lg lg:text-xl font-bold text-white mb-1"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
+
+              {/* Desktop: 4-column Grid */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+                {/* Artisan Craft */}
+                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                  <img 
+                    src={latteArtImage} 
+                    alt="Artisan Latte Art" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      Artisan Craft
+                    </p>
+                    <p className="text-stone-300 text-xs">Handcrafted with passion</p>
+                  </div>
+                </div>
+
+                {/* Meeting Ready */}
+                <div className="relative rounded-3xl overflow-hidden min-h-[200px] group hover-3d">
+                  <img 
+                    src={meetingImage} 
+                    alt="Corporate Meeting" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26, 15, 10, 0.85) 0%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      Meeting Ready
+                    </p>
+                    <p className="text-stone-300 text-xs">Impress your clients</p>
+                  </div>
+                </div>
+
+                {/* White Glove */}
+                <div 
+                  className="rounded-3xl p-6 flex flex-col justify-between min-h-[200px] hover-3d coffee-glow"
+                  style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
                 >
-                  Local Roasters
-                </p>
-                <p className="text-stone-300 text-xs">Nashville's finest beans</p>
+                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-amber-200" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      White Glove
+                    </p>
+                    <p className="text-stone-300 text-xs">Premium concierge service</p>
+                  </div>
+                </div>
+
+                {/* Local Roasters */}
+                <div 
+                  className="rounded-3xl p-6 flex flex-col justify-between min-h-[200px] hover-3d"
+                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
+                >
+                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                    <Coffee className="h-5 w-5 text-amber-200" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      Local Roasters
+                    </p>
+                    <p className="text-stone-300 text-xs">Nashville's finest beans</p>
+                  </div>
+                </div>
               </div>
             </motion.div>
 

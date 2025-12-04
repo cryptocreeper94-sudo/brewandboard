@@ -11,7 +11,15 @@ export function Footer() {
       <div className="container max-w-5xl mx-auto px-4 py-3">
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <span>Powered by</span>
-          <span className="font-serif font-semibold text-foreground">Darkwave Studios, LLC</span>
+          <a 
+            href="https://darkwavestudios.io" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-serif font-semibold text-foreground hover:text-amber-600 transition-colors underline-offset-2 hover:underline"
+            data-testid="link-darkwave"
+          >
+            Darkwave Studios, LLC
+          </a>
           <span className="mx-1">•</span>
           <span>&copy; 2025</span>
         </div>

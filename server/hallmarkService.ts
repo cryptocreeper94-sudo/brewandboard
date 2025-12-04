@@ -526,3 +526,62 @@ export async function getHallmarkStats(): Promise<{
     activeProfiles: profiles.length,
   };
 }
+
+// Admin search - search all hallmarks across users
+export async function searchAllHallmarks(options: {
+  query?: string;
+  type?: 'all' | 'company' | 'user';
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{
+  hallmarks: Hallmark[];
+  total: number;
+  hasMore: boolean;
+}> {
+  const { query, type = 'all', status, limit = 50, offset = 0 } = options;
+  
+  let allHallmarks = await db.select()
+    .from(hallmarks)
+    .orderBy(desc(hallmarks.issuedAt));
+  
+  // Filter by type
+  if (type === 'company') {
+    allHallmarks = allHallmarks.filter(h => h.isCompanyHallmark);
+  } else if (type === 'user') {
+    allHallmarks = allHallmarks.filter(h => !h.isCompanyHallmark);
+  }
+  
+  // Filter by status
+  if (status && status !== 'all') {
+    allHallmarks = allHallmarks.filter(h => h.status === status);
+  }
+  
+  // Search by query (serial number, content hash, asset name, prefix)
+  if (query && query.trim()) {
+    const searchTerm = query.toLowerCase().trim();
+    allHallmarks = allHallmarks.filter(h => 
+      h.serialNumber.toLowerCase().includes(searchTerm) ||
+      (h.contentHash && h.contentHash.toLowerCase().includes(searchTerm)) ||
+      (h.assetName && h.assetName.toLowerCase().includes(searchTerm)) ||
+      h.prefix.toLowerCase().includes(searchTerm) ||
+      (h.userId && h.userId.toLowerCase().includes(searchTerm))
+    );
+  }
+  
+  const total = allHallmarks.length;
+  const paginatedHallmarks = allHallmarks.slice(offset, offset + limit);
+  
+  return {
+    hallmarks: paginatedHallmarks,
+    total,
+    hasMore: offset + limit < total,
+  };
+}
+
+// Get all user hallmark profiles for admin
+export async function getAllUserProfiles(): Promise<UserHallmarkProfile[]> {
+  return await db.select()
+    .from(userHallmarkProfiles)
+    .orderBy(desc(userHallmarkProfiles.createdAt));
+}

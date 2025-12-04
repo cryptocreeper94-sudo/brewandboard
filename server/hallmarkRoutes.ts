@@ -435,4 +435,40 @@ export function registerHallmarkRoutes(app: Express) {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // ========================
+  // ADMIN SEARCH (Cross-tenant)
+  // ========================
+  
+  app.get('/api/hallmark/admin/search', async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string | undefined;
+      const type = (req.query.type as 'all' | 'company' | 'user') || 'all';
+      const status = req.query.status as string | undefined;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const result = await hallmarkService.searchAllHallmarks({
+        query,
+        type,
+        status,
+        limit,
+        offset
+      });
+      
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get all user profiles for admin
+  app.get('/api/hallmark/admin/profiles', async (req: Request, res: Response) => {
+    try {
+      const profiles = await hallmarkService.getAllUserProfiles();
+      res.json(profiles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 }

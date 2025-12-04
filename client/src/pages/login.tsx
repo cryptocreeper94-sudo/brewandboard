@@ -572,12 +572,21 @@ export default function LandingPage() {
                           {/* Menu Preview */}
                           <div className="space-y-1.5 border-t border-stone-100 pt-3">
                             <p className="text-[9px] md:text-[10px] text-stone-400 uppercase tracking-wider font-medium">Featured</p>
-                            {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
-                              <div key={item.id} className="flex justify-between items-center">
-                                <span className="text-stone-700 text-[11px] md:text-xs line-clamp-1">{item.name}</span>
-                                <span className="font-semibold text-[11px] md:text-xs flex-shrink-0 ml-2" style={{ color: '#5c4033' }}>${item.price.toFixed(2)}</span>
-                              </div>
-                            ))}
+                            {(() => {
+                              const preferredItems = shop.menu.filter(item => 
+                                item.category === 'Catering' || item.category === 'Coffee' || 
+                                item.category === 'Donuts' || item.category === 'Juice' ||
+                                item.category === 'Milk Tea' || item.category === 'Specialty' ||
+                                item.category === 'Biscuits' || item.category === 'Breakfast'
+                              );
+                              const items = preferredItems.length > 0 ? preferredItems : shop.menu;
+                              return items.slice(0, 2).map((item) => (
+                                <div key={item.id} className="flex justify-between items-center">
+                                  <span className="text-stone-700 text-[11px] md:text-xs line-clamp-1">{item.name}</span>
+                                  <span className="font-semibold text-[11px] md:text-xs flex-shrink-0 ml-2" style={{ color: '#5c4033' }}>${item.price.toFixed(2)}</span>
+                                </div>
+                              ));
+                            })()}
                           </div>
                         </div>
 

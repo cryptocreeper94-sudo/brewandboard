@@ -41,6 +41,21 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
+function getTypeBadge(type: Shop['type']) {
+  const badges: Record<Shop['type'], { label: string; className: string }> = {
+    coffee: { label: 'Coffee', className: 'bg-amber-700/80 text-amber-100' },
+    smoothie: { label: 'Smoothie', className: 'bg-green-700/80 text-green-100' },
+    both: { label: 'Coffee & Smoothie', className: 'bg-teal-700/80 text-teal-100' },
+    bakery: { label: 'Bakery', className: 'bg-pink-700/80 text-pink-100' },
+    chain: { label: 'National Chain', className: 'bg-blue-700/80 text-blue-100' },
+    donut: { label: 'Donuts', className: 'bg-rose-700/80 text-rose-100' },
+    juice: { label: 'Juice Bar', className: 'bg-lime-700/80 text-lime-100' },
+    boba: { label: 'Bubble Tea', className: 'bg-purple-700/80 text-purple-100' },
+    breakfast: { label: 'Breakfast', className: 'bg-orange-700/80 text-orange-100' },
+  };
+  return badges[type] || { label: type, className: 'bg-gray-700/80 text-gray-100' };
+}
+
 export default function FindBaristasPage() {
   const [zipcode, setZipcode] = useState("");
   const [searchedZip, setSearchedZip] = useState<string | null>(null);
@@ -224,9 +239,14 @@ export default function FindBaristasPage() {
                                   <h3 className="text-amber-100 font-medium">{shop.name}</h3>
                                   <p className="text-amber-200/50 text-sm">{shop.location}</p>
                                 </div>
-                                <Badge className="bg-amber-500 text-white border-none flex-shrink-0">
-                                  {shop.rating} <Star className="h-3 w-3 ml-0.5 fill-current" />
-                                </Badge>
+                                <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                                  <Badge className="bg-amber-500 text-white border-none">
+                                    {shop.rating} <Star className="h-3 w-3 ml-0.5 fill-current" />
+                                  </Badge>
+                                  <Badge className={`${getTypeBadge(shop.type).className} text-[10px] border-none`}>
+                                    {getTypeBadge(shop.type).label}
+                                  </Badge>
+                                </div>
                               </div>
                               
                               <p className="text-amber-200/40 text-xs mt-1 flex items-center gap-1">
@@ -301,9 +321,14 @@ export default function FindBaristasPage() {
                                       <h3 className="text-amber-100 font-medium">{shop.name}</h3>
                                       <p className="text-amber-200/50 text-sm">{shop.location}</p>
                                     </div>
-                                    <Badge className="bg-amber-500 text-white border-none flex-shrink-0">
-                                      {shop.rating} <Star className="h-3 w-3 ml-0.5 fill-current" />
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                                      <Badge className="bg-amber-500 text-white border-none">
+                                        {shop.rating} <Star className="h-3 w-3 ml-0.5 fill-current" />
+                                      </Badge>
+                                      <Badge className={`${getTypeBadge(shop.type).className} text-[10px] border-none`}>
+                                        {getTypeBadge(shop.type).label}
+                                      </Badge>
+                                    </div>
                                   </div>
                                   
                                   <p className="text-amber-200/40 text-xs mt-1 flex items-center gap-1">

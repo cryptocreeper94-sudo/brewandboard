@@ -3,8 +3,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Coffee, Clock, MapPin, Star, ArrowRight, Users, Utensils } from "lucide-react";
+import { Coffee, Clock, MapPin, Star, ArrowRight, Sparkles } from "lucide-react";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
 
 import baristaImage from "@assets/generated_images/professional_barista.png";
@@ -34,287 +33,346 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col relative overflow-hidden bg-background">
+    <div className="min-h-screen w-full bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
       
-      {/* Hero Section - Nashville Baristas */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img 
-            src={coffeeShopImage} 
-            alt="Nashville Coffee Shop" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 container max-w-6xl mx-auto px-6 py-16">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            
-            {/* Left - Copy */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-white space-y-6"
-            >
-              <div className="inline-flex items-center gap-2 bg-amber-600/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 py-2">
-                <Coffee className="h-4 w-4 text-amber-400" />
-                <span className="text-amber-200 text-sm font-medium">Nashville's Coffee Concierge</span>
-              </div>
-
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Nashville Baristas,
-                <br />
-                <span className="text-amber-400">Delivered to Your Meetings</span>
-              </h1>
-
-              <p className="text-lg text-gray-300 leading-relaxed max-w-lg">
-                Premium coffee from Nashville's finest roasters, delivered straight to your boardroom. 
-                Just give us 2 hours notice.
-              </p>
-
-              {/* Key Benefits */}
-              <div className="flex flex-wrap gap-3 pt-2">
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-                  <Clock className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm">2-Hour Lead Time</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-                  <Star className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm">Curated Roasters</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-                  <Users className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm">Meeting-Ready</span>
-                </div>
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button
-                  onClick={handleExplore}
-                  size="lg"
-                  className="h-14 px-8 bg-amber-600 hover:bg-amber-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all group"
-                  data-testid="button-explore"
-                >
-                  See Vendors & Menus
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button
-                  onClick={() => setLocation("/schedule")}
-                  variant="outline"
-                  size="lg"
-                  className="h-14 px-8 border-white/30 text-white hover:bg-white/10 text-lg rounded-xl"
-                  data-testid="button-schedule"
-                >
-                  Schedule Delivery
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Right - Barista Image Stack */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="hidden md:block relative"
-            >
-              <div className="relative">
-                <img 
-                  src={baristaImage} 
-                  alt="Professional Nashville Barista" 
-                  className="w-full max-w-md mx-auto rounded-2xl shadow-2xl"
-                />
-                <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-xl overflow-hidden shadow-xl border-4 border-background">
-                  <img 
-                    src={latteArtImage} 
-                    alt="Artisan Latte Art" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2-Hour Promise Strip */}
-      <section className="bg-amber-600 py-4">
-        <div className="container max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-6 text-white">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              <span className="font-medium">2-Hour Minimum Notice</span>
-            </div>
-            <span className="hidden sm:block text-amber-200">•</span>
-            <span className="hidden sm:block">Carafes, Pastries & Artisan Espresso</span>
-            <span className="hidden md:block text-amber-200">•</span>
-            <span className="hidden md:block">Delivered to Your Door</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Vendor Showcase */}
-      <section className="py-16 bg-card">
-        <div className="container max-w-6xl mx-auto px-6">
+      {/* Elegant Header */}
+      <header className="py-6 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3"
           >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
-              <span className="text-sm font-medium text-amber-600 uppercase tracking-wider">Trusted Nashville Partners</span>
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 flex items-center justify-center shadow-lg">
+              <Coffee className="h-6 w-6 text-amber-100" />
             </div>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-              Our Curated Roasters
-            </h2>
-            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-              We partner with Nashville's finest coffee shops to bring you premium quality for every meeting.
-            </p>
+            <div>
+              <h1 className="font-serif text-2xl font-bold text-stone-800 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Coffee Talk
+              </h1>
+              <p className="text-xs text-amber-700 font-medium tracking-widest uppercase">Nashville Concierge</p>
+            </div>
           </motion.div>
 
-          {/* Vendor Cards */}
-          <ScrollArea className="w-full">
-            <div className="flex gap-6 pb-4">
-              {COFFEE_SHOPS.map((shop, index) => (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Button
+              onClick={handleExplore}
+              className="bg-stone-800 hover:bg-stone-900 text-white rounded-full px-6"
+              data-testid="button-explore-header"
+            >
+              Enter
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* Bento Grid Layout */}
+      <main className="px-6 md:px-12 pb-12">
+        <div className="max-w-7xl mx-auto">
+          
+          {/* Main Bento Grid */}
+          <div className="grid grid-cols-12 gap-4 md:gap-6">
+            
+            {/* Hero Card - Large */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="col-span-12 lg:col-span-8 row-span-2 relative rounded-3xl overflow-hidden bg-stone-900 min-h-[400px] md:min-h-[500px] group"
+            >
+              <img 
+                src={coffeeShopImage} 
+                alt="Nashville Coffee Shop" 
+                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              
+              <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end">
                 <motion.div
-                  key={shop.id}
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex-shrink-0 w-[320px] bg-background rounded-2xl overflow-hidden shadow-lg border border-border/50 group"
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                 >
+                  <div className="inline-flex items-center gap-2 bg-amber-600/90 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
+                    <Sparkles className="h-4 w-4 text-amber-100" />
+                    <span className="text-amber-50 text-sm font-medium tracking-wide">Nashville's Premier Service</span>
+                  </div>
+                  
+                  <h2 
+                    className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Artisan Coffee,<br />
+                    <span className="text-amber-300 italic">Delivered with Grace</span>
+                  </h2>
+                  
+                  <p className="text-lg text-stone-300 max-w-xl mb-8 leading-relaxed">
+                    Experience Nashville's finest baristas at your next meeting. 
+                    Premium carafes, artisan pastries — simply give us two hours notice.
+                  </p>
+
+                  <div className="flex flex-wrap gap-4">
+                    <Button
+                      onClick={handleExplore}
+                      size="lg"
+                      className="h-14 px-8 bg-amber-600 hover:bg-amber-700 text-white text-lg font-medium rounded-full shadow-xl hover:shadow-2xl transition-all"
+                      data-testid="button-explore"
+                    >
+                      View Our Vendors
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                    <Button
+                      onClick={() => setLocation("/schedule")}
+                      variant="outline"
+                      size="lg"
+                      className="h-14 px-8 border-white/40 text-white hover:bg-white/10 rounded-full backdrop-blur-sm"
+                      data-testid="button-schedule"
+                    >
+                      Schedule Delivery
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* 2-Hour Promise Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="col-span-12 sm:col-span-6 lg:col-span-4 bg-gradient-to-br from-amber-600 to-amber-800 rounded-3xl p-6 md:p-8 flex flex-col justify-between min-h-[200px]"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                <Clock className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 
+                  className="text-3xl md:text-4xl font-bold text-white mb-2"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  2 Hours
+                </h3>
+                <p className="text-amber-100 text-lg">
+                  Minimum notice for guaranteed delivery to your meeting
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Barista Image Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="col-span-12 sm:col-span-6 lg:col-span-4 relative rounded-3xl overflow-hidden min-h-[250px] group"
+            >
+              <img 
+                src={baristaImage} 
+                alt="Nashville Barista" 
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <p 
+                  className="text-2xl font-bold text-white"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Expert Baristas
+                </p>
+                <p className="text-amber-200 text-sm">Nashville's finest craftspeople</p>
+              </div>
+            </motion.div>
+
+            {/* Latte Art Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="col-span-6 lg:col-span-4 relative rounded-3xl overflow-hidden min-h-[200px] group"
+            >
+              <img 
+                src={latteArtImage} 
+                alt="Artisan Latte Art" 
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <p 
+                  className="text-xl font-bold text-white"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Artisan Craft
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Meeting Image Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="col-span-6 lg:col-span-4 relative rounded-3xl overflow-hidden min-h-[200px] group"
+            >
+              <img 
+                src={meetingImage} 
+                alt="Corporate Meeting" 
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <p 
+                  className="text-xl font-bold text-white"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Meeting Ready
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Vendors Section Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="col-span-12 pt-8 pb-4"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+                <Star className="h-5 w-5 text-amber-600 fill-amber-600" />
+                <span className="text-sm font-medium text-amber-700 tracking-widest uppercase">Our Curated Partners</span>
+                <Star className="h-5 w-5 text-amber-600 fill-amber-600" />
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+              </div>
+              <h3 
+                className="text-3xl md:text-4xl font-bold text-stone-800 text-center"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Nashville's Finest Roasters
+              </h3>
+            </motion.div>
+
+            {/* Vendor Cards - Bento Style */}
+            {COFFEE_SHOPS.slice(0, 4).map((shop, index) => (
+              <motion.div
+                key={shop.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className={`${
+                  index === 0 ? 'col-span-12 md:col-span-6 lg:col-span-5' :
+                  index === 1 ? 'col-span-12 md:col-span-6 lg:col-span-7' :
+                  index === 2 ? 'col-span-12 md:col-span-7 lg:col-span-7' :
+                  'col-span-12 md:col-span-5 lg:col-span-5'
+                } bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-stone-100 group`}
+              >
+                <div className="flex flex-col sm:flex-row h-full">
                   {/* Vendor Image */}
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative w-full sm:w-2/5 h-48 sm:h-auto overflow-hidden">
                     <img 
                       src={shop.image} 
                       alt={shop.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3">
-                      <Badge className="bg-amber-500 text-white border-none">
-                        {shop.rating} <Star className="h-3 w-3 ml-1 fill-current" />
+                      <Badge className="bg-amber-500 text-white border-none shadow-lg">
+                        <Star className="h-3 w-3 mr-1 fill-current" />
+                        {shop.rating}
                       </Badge>
                     </div>
                   </div>
 
                   {/* Vendor Info */}
-                  <div className="p-5">
-                    <h3 className="font-serif text-xl font-bold text-foreground">{shop.name}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3" /> {shop.location}
-                    </p>
-                    <p className="text-sm text-amber-600 font-medium mt-1">{shop.specialty}</p>
+                  <div className="flex-1 p-6 flex flex-col justify-between">
+                    <div>
+                      <h4 
+                        className="text-2xl font-bold text-stone-800 mb-1"
+                        style={{ fontFamily: "'Playfair Display', serif" }}
+                      >
+                        {shop.name}
+                      </h4>
+                      <p className="text-sm text-stone-500 flex items-center gap-1 mb-2">
+                        <MapPin className="h-3 w-3" /> {shop.location}
+                      </p>
+                      <p className="text-amber-700 font-medium text-sm mb-4">{shop.specialty}</p>
 
-                    {/* Sample Menu Items */}
-                    <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <Utensils className="h-3 w-3" />
-                        <span className="font-medium">Popular for Meetings:</span>
+                      {/* Menu Preview */}
+                      <div className="space-y-2 border-t border-stone-100 pt-4">
+                        <p className="text-xs text-stone-400 uppercase tracking-wider font-medium">Featured Items</p>
+                        {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
+                          <div key={item.id} className="flex justify-between items-center">
+                            <span className="text-stone-700 text-sm">{item.name}</span>
+                            <span className="text-amber-700 font-semibold text-sm">${item.price.toFixed(2)}</span>
+                          </div>
+                        ))}
                       </div>
-                      {shop.menu.filter(item => item.category === 'Catering' || item.category === 'Coffee').slice(0, 2).map((item) => (
-                        <div key={item.id} className="flex justify-between items-center text-sm">
-                          <span className="text-foreground">{item.name}</span>
-                          <span className="text-amber-600 font-semibold">${item.price.toFixed(2)}</span>
-                        </div>
-                      ))}
                     </div>
 
                     <Button 
                       onClick={handleExplore}
-                      className="w-full mt-4 bg-amber-600 hover:bg-amber-700 text-white"
+                      className="mt-4 bg-stone-800 hover:bg-stone-900 text-white rounded-full"
                       data-testid={`button-view-menu-${shop.id}`}
                     >
                       View Full Menu
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </div>
-      </section>
+                </div>
+              </motion.div>
+            ))}
 
-      {/* Meeting-Focused Section */}
-      <section className="py-16 bg-background">
-        <div className="container max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Bottom CTA */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="col-span-12 bg-gradient-to-r from-stone-800 via-stone-900 to-stone-800 rounded-3xl p-8 md:p-12 text-center"
             >
-              <img 
-                src={meetingImage} 
-                alt="Corporate Meeting with Coffee" 
-                className="rounded-2xl shadow-xl"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-                Perfect for Every Meeting
-              </h2>
-              <p className="text-muted-foreground text-lg">
-                From quick team huddles to all-day conferences, we've got you covered with premium Nashville coffee.
-              </p>
-
-              <div className="space-y-4">
-                {[
-                  { title: "Boardroom-Ready Carafes", desc: "Hot, fresh coffee that serves 10-12 people" },
-                  { title: "Pastry Boxes for Teams", desc: "Assorted artisan pastries and breakfast items" },
-                  { title: "White-Glove Setup", desc: "We handle the delivery so you can focus on business" },
-                ].map((feature, i) => (
-                  <div key={i} className="flex gap-4 items-start">
-                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <Coffee className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">{feature.title}</h4>
-                      <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={handleExplore}
-                size="lg"
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-                data-testid="button-get-started"
+              <h3 
+                className="text-3xl md:text-4xl font-bold text-white mb-4"
+                style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+                Ready to Elevate Your Next Meeting?
+              </h3>
+              <p className="text-stone-300 text-lg max-w-2xl mx-auto mb-8">
+                Experience the convenience of Nashville's finest coffee, delivered with white-glove service. 
+                Just two hours notice is all we need.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Button
+                  onClick={handleExplore}
+                  size="lg"
+                  className="h-14 px-10 bg-amber-600 hover:bg-amber-700 text-white text-lg font-medium rounded-full"
+                  data-testid="button-get-started"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
             </motion.div>
+
           </div>
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border/30 bg-card/50">
-        <span>Powered by </span>
-        <a 
-          href="https://darkwavestudios.io" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="font-serif font-semibold text-foreground hover:text-amber-600 transition-colors"
-        >
-          Darkwave Studios, LLC
-        </a>
-        <span> • &copy; 2025</span>
+      <footer className="py-8 text-center border-t border-stone-200 bg-white/50">
+        <p className="text-sm text-stone-500">
+          Powered by{' '}
+          <a 
+            href="https://darkwavestudios.io" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-serif font-semibold text-stone-700 hover:text-amber-600 transition-colors"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Darkwave Studios, LLC
+          </a>
+          {' '}• © 2025
+        </p>
       </footer>
     </div>
   );

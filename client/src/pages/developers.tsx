@@ -53,6 +53,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessCardPreview } from "@/components/BusinessCard";
+import { DocumentExportPanel } from "@/components/DocumentExport";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -1050,6 +1051,18 @@ export default function DevelopersPage() {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Professional Document Export */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.295 }}
+          className="mb-12"
+        >
+          <DocumentExportPanel 
+            hallmarkCode={companyHallmarks.length > 0 ? companyHallmarks[0]?.serialNumber : undefined} 
+          />
         </motion.div>
 
         <motion.div

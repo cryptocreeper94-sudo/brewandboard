@@ -161,7 +161,11 @@ Two-tier blockchain verification system for document authenticity:
 
 ### Frontend Components
 - `/client/src/components/HallmarkBadge.tsx` - Visual badge with QR code
+- `/client/src/components/BusinessCard.tsx` - Digital business card with PDF export
+- `/client/src/components/DocumentExport.tsx` - Professional document PDF generator
 - `/client/src/pages/verify.tsx` - Public verification page
+- `/client/src/pages/my-hallmarks.tsx` - User's personal hallmarks search and display
+- `/client/src/pages/admin.tsx` - Admin panel (PIN 4444) for read-only system monitoring
 - `/client/src/pages/blockchain-tutorial.tsx` - Educational explainer
 - `/client/src/pages/hallmark-success.tsx` - Post-mint confirmation
 

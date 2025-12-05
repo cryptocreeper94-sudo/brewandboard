@@ -1124,3 +1124,279 @@ export const insertTeamChatMessageSchema = createInsertSchema(teamChatMessages).
 });
 export type InsertTeamChatMessage = z.infer<typeof insertTeamChatMessageSchema>;
 export type TeamChatMessage = typeof teamChatMessages.$inferSelect;
+
+// ========================
+// VIRTUAL MEETINGS (Multi-Location Host Orders)
+// ========================
+export const virtualMeetings = pgTable(
+  "virtual_meetings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Host info
+    hostUserId: varchar("host_user_id").references(() => users.id),
+    hostName: varchar("host_name", { length: 255 }).notNull(),
+    hostEmail: varchar("host_email", { length: 255 }).notNull(),
+    hostCompany: varchar("host_company", { length: 255 }),
+    
+    // Meeting details
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    
+    // Scheduling (stored in UTC, display in timezone)
+    meetingDate: date("meeting_date").notNull(),
+    meetingTime: varchar("meeting_time", { length: 10 }).notNull(), // HH:MM format
+    timezone: varchar("timezone", { length: 50 }).default("America/Chicago"),
+    
+    // Lead time (minimum hours before meeting for ordering)
+    leadTimeHours: integer("lead_time_hours").default(4),
+    
+    // Budget settings
+    budgetType: varchar("budget_type", { length: 20 }).default("per_person"), // 'per_person' | 'total'
+    perPersonBudgetCents: integer("per_person_budget_cents").default(1500), // $15 default
+    totalBudgetCents: integer("total_budget_cents"),
+    
+    // Delivery scope
+    deliveryScope: varchar("delivery_scope", { length: 20 }).default("local"), // 'local' | 'nationwide'
+    deliveryProvider: varchar("delivery_provider", { length: 30 }).default("manual"),
+    // Values: 'manual', 'local', 'doordash', 'uber_eats'
+    
+    // Status workflow
+    status: varchar("status", { length: 30 }).default("draft").notNull(),
+    // Status: 'draft', 'collecting', 'ready_to_order', 'ordering', 'ordered', 'delivered', 'completed', 'cancelled'
+    
+    // Invite token for sharing
+    inviteToken: varchar("invite_token", { length: 64 }).unique(),
+    
+    // Notes
+    hostNotes: text("host_notes"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    hostIdx: index("idx_virtual_meetings_host").on(table.hostUserId),
+    dateIdx: index("idx_virtual_meetings_date").on(table.meetingDate),
+    statusIdx: index("idx_virtual_meetings_status").on(table.status),
+    tokenIdx: index("idx_virtual_meetings_token").on(table.inviteToken),
+  })
+);
+
+export const insertVirtualMeetingSchema = createInsertSchema(virtualMeetings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertVirtualMeeting = z.infer<typeof insertVirtualMeetingSchema>;
+export type VirtualMeeting = typeof virtualMeetings.$inferSelect;
+
+// ========================
+// VIRTUAL ATTENDEES (People receiving orders)
+// ========================
+export const virtualAttendees = pgTable(
+  "virtual_attendees",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    meetingId: varchar("meeting_id").notNull().references(() => virtualMeetings.id),
+    
+    // Attendee info
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 20 }),
+    
+    // Delivery address
+    addressLine1: varchar("address_line1", { length: 255 }),
+    addressLine2: varchar("address_line2", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 2 }),
+    zipCode: varchar("zip_code", { length: 10 }),
+    
+    // Location label (e.g., "Downtown Job Site", "Brentwood Office")
+    locationLabel: varchar("location_label", { length: 255 }),
+    
+    // Delivery instructions
+    deliveryInstructions: text("delivery_instructions"),
+    
+    // Individual invite token
+    attendeeToken: varchar("attendee_token", { length: 64 }).unique(),
+    
+    // Status
+    inviteStatus: varchar("invite_status", { length: 20 }).default("pending"),
+    // Status: 'pending', 'invited', 'viewed', 'submitted', 'declined'
+    
+    submittedAt: timestamp("submitted_at"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    meetingIdx: index("idx_virtual_attendees_meeting").on(table.meetingId),
+    tokenIdx: index("idx_virtual_attendees_token").on(table.attendeeToken),
+    statusIdx: index("idx_virtual_attendees_status").on(table.inviteStatus),
+  })
+);
+
+export const insertVirtualAttendeeSchema = createInsertSchema(virtualAttendees).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertVirtualAttendee = z.infer<typeof insertVirtualAttendeeSchema>;
+export type VirtualAttendee = typeof virtualAttendees.$inferSelect;
+
+// ========================
+// VIRTUAL SELECTIONS (What each attendee ordered)
+// ========================
+export const virtualSelections = pgTable(
+  "virtual_selections",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    attendeeId: varchar("attendee_id").notNull().references(() => virtualAttendees.id),
+    
+    // Selected items (JSON array)
+    items: jsonb("items").$type<Array<{
+      name: string;
+      quantity: number;
+      priceCents: number;
+      category?: string; // coffee, pastry, etc.
+      notes?: string;
+      vendorName?: string;
+    }>>().default([]),
+    
+    // Totals (in cents for precision)
+    subtotalCents: integer("subtotal_cents").default(0),
+    
+    // Budget status
+    budgetStatus: varchar("budget_status", { length: 20 }).default("under"),
+    // Status: 'under', 'at', 'over'
+    overageCents: integer("overage_cents").default(0),
+    
+    // Special requests
+    specialRequests: text("special_requests"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    attendeeIdx: index("idx_virtual_selections_attendee").on(table.attendeeId),
+  })
+);
+
+export const insertVirtualSelectionSchema = createInsertSchema(virtualSelections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertVirtualSelection = z.infer<typeof insertVirtualSelectionSchema>;
+export type VirtualSelection = typeof virtualSelections.$inferSelect;
+
+// ========================
+// VIRTUAL ORDERS (Actual delivery orders per attendee)
+// ========================
+export const virtualOrders = pgTable(
+  "virtual_orders",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    meetingId: varchar("meeting_id").notNull().references(() => virtualMeetings.id),
+    attendeeId: varchar("attendee_id").notNull().references(() => virtualAttendees.id),
+    
+    // Provider info
+    provider: varchar("provider", { length: 30 }).default("manual"),
+    // Values: 'manual', 'local', 'doordash', 'uber_eats'
+    providerOrderId: varchar("provider_order_id", { length: 255 }),
+    
+    // Order status
+    status: varchar("status", { length: 30 }).default("pending"),
+    // Status: 'pending', 'placing', 'placed', 'confirmed', 'preparing', 'en_route', 'delivered', 'failed', 'cancelled'
+    
+    // Tracking
+    estimatedDelivery: timestamp("estimated_delivery"),
+    trackingUrl: text("tracking_url"),
+    
+    // Cost breakdown (cents)
+    subtotalCents: integer("subtotal_cents").default(0),
+    deliveryFeeCents: integer("delivery_fee_cents").default(0),
+    serviceFeeCents: integer("service_fee_cents").default(0),
+    taxCents: integer("tax_cents").default(0),
+    tipCents: integer("tip_cents").default(0),
+    totalCents: integer("total_cents").default(0),
+    
+    // Delivery proof
+    deliveredAt: timestamp("delivered_at"),
+    deliveryPhotoUrl: text("delivery_photo_url"),
+    
+    // Webhook data (for future integrations)
+    webhookPayload: jsonb("webhook_payload"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    meetingIdx: index("idx_virtual_orders_meeting").on(table.meetingId),
+    attendeeIdx: index("idx_virtual_orders_attendee").on(table.attendeeId),
+    statusIdx: index("idx_virtual_orders_status").on(table.status),
+  })
+);
+
+export const insertVirtualOrderSchema = createInsertSchema(virtualOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertVirtualOrder = z.infer<typeof insertVirtualOrderSchema>;
+export type VirtualOrder = typeof virtualOrders.$inferSelect;
+
+// ========================
+// VIRTUAL MEETING EVENTS (Timeline/Audit Trail)
+// ========================
+export const virtualMeetingEvents = pgTable(
+  "virtual_meeting_events",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    meetingId: varchar("meeting_id").notNull().references(() => virtualMeetings.id),
+    attendeeId: varchar("attendee_id").references(() => virtualAttendees.id),
+    
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    // Types: 'created', 'invite_sent', 'invite_viewed', 'selection_submitted', 
+    // 'budget_exceeded', 'order_placed', 'order_confirmed', 'out_for_delivery', 
+    // 'delivered', 'failed', 'cancelled', 'completed'
+    
+    message: text("message"),
+    metadata: jsonb("metadata").$type<Record<string, any>>(),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    meetingIdx: index("idx_virtual_meeting_events_meeting").on(table.meetingId),
+    typeIdx: index("idx_virtual_meeting_events_type").on(table.eventType),
+  })
+);
+
+export const insertVirtualMeetingEventSchema = createInsertSchema(virtualMeetingEvents).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertVirtualMeetingEvent = z.infer<typeof insertVirtualMeetingEventSchema>;
+export type VirtualMeetingEvent = typeof virtualMeetingEvents.$inferSelect;
+
+// Virtual Meeting Constants
+export const VIRTUAL_MEETING_STATUSES = ['draft', 'collecting', 'ready_to_order', 'ordering', 'ordered', 'delivered', 'completed', 'cancelled'] as const;
+export const VIRTUAL_ATTENDEE_STATUSES = ['pending', 'invited', 'viewed', 'submitted', 'declined'] as const;
+export const VIRTUAL_ORDER_STATUSES = ['pending', 'placing', 'placed', 'confirmed', 'preparing', 'en_route', 'delivered', 'failed', 'cancelled'] as const;
+export const DELIVERY_PROVIDERS = ['manual', 'local', 'doordash', 'uber_eats'] as const;
+export const BUDGET_TYPES = ['per_person', 'total'] as const;
+export const DELIVERY_SCOPES = ['local', 'nationwide'] as const;
+
+// Default menu items for quick selection (generic items that work anywhere)
+export const QUICK_MENU_ITEMS = [
+  { id: 'coffee-reg', name: 'Regular Coffee', priceCents: 350, category: 'coffee' },
+  { id: 'coffee-latte', name: 'Latte', priceCents: 550, category: 'coffee' },
+  { id: 'coffee-cappuccino', name: 'Cappuccino', priceCents: 525, category: 'coffee' },
+  { id: 'coffee-cold-brew', name: 'Cold Brew', priceCents: 475, category: 'coffee' },
+  { id: 'tea-hot', name: 'Hot Tea', priceCents: 300, category: 'tea' },
+  { id: 'pastry-muffin', name: 'Muffin', priceCents: 375, category: 'pastry' },
+  { id: 'pastry-croissant', name: 'Croissant', priceCents: 425, category: 'pastry' },
+  { id: 'pastry-danish', name: 'Danish', priceCents: 400, category: 'pastry' },
+  { id: 'donut-glazed', name: 'Glazed Donut', priceCents: 175, category: 'donut' },
+  { id: 'donut-dozen', name: 'Dozen Donuts', priceCents: 1599, category: 'donut' },
+  { id: 'bagel', name: 'Bagel with Cream Cheese', priceCents: 450, category: 'pastry' },
+  { id: 'breakfast-sandwich', name: 'Breakfast Sandwich', priceCents: 695, category: 'food' },
+] as const;

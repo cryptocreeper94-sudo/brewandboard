@@ -36,7 +36,11 @@ import {
   Croissant,
   UtensilsCrossed,
   Settings2,
-  MessageCircle
+  MessageCircle,
+  UserCheck,
+  Send,
+  Building2,
+  Globe2
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
@@ -912,6 +916,103 @@ const { itemCount } = useCart();
               </Link>
             ))}
           </div>
+        </motion.div>
+
+        {/* Virtual Host Feature - Hero Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-serif text-lg">Virtual Host</h3>
+              <Badge variant="secondary" className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-[10px]">
+                NEW
+              </Badge>
+            </div>
+          </div>
+          
+          <Link href="/virtual-host">
+            <motion.div
+              whileHover={{ scale: 1.01, y: -2 }}
+              whileTap={{ scale: 0.99 }}
+              className="relative overflow-hidden rounded-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 30%, #3d2418 60%, #5c4033 100%)'
+              }}
+              data-testid="card-virtual-host"
+            >
+              {/* Animated shine overlay */}
+              <motion.div 
+                className="absolute inset-0 opacity-20"
+                animate={{
+                  background: [
+                    'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 45%, transparent 50%)',
+                    'linear-gradient(105deg, transparent 60%, rgba(255,255,255,0.3) 65%, transparent 70%)',
+                    'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 45%, transparent 50%)',
+                  ]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              
+              {/* Decorative elements */}
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full" />
+              <div className="absolute -right-4 -bottom-12 w-24 h-24 bg-white/5 rounded-full" />
+              
+              <div className="relative z-10 p-5 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  {/* Left content */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-12 w-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <UserCheck className="h-6 w-6 text-amber-300" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif text-xl text-white font-bold">Order for Your Team</h4>
+                        <p className="text-sm text-[#d4c4b0]">Multi-location catering made easy</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-white/70 mb-4 max-w-lg">
+                      Hosting a meeting with attendees at different locations? Let each person pick their own brews & boards, 
+                      delivered right to their desk — Nashville or nationwide.
+                    </p>
+                    
+                    {/* Feature badges */}
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                        <Building2 className="h-3.5 w-3.5 text-amber-300" />
+                        <span className="text-xs text-white/90">Local Nashville</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 relative">
+                        <Globe2 className="h-3.5 w-3.5 text-blue-300" />
+                        <span className="text-xs text-white/90">Nationwide</span>
+                        <Badge className="absolute -top-2 -right-2 text-[8px] px-1.5 py-0 bg-blue-500/80 border-none text-white">Soon</Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                        <Send className="h-3.5 w-3.5 text-emerald-300" />
+                        <span className="text-xs text-white/90">Budget Controls</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right CTA */}
+                  <div className="flex md:flex-col items-center gap-3">
+                    <Button 
+                      className="text-white font-semibold shine-effect whitespace-nowrap"
+                      style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
+                      data-testid="button-start-virtual-host"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Get Started
+                    </Button>
+                    <span className="text-xs text-white/50">2-hour lead time</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
         </motion.div>
 
         {/* Curated Vendors - Coffee & Beverages */}

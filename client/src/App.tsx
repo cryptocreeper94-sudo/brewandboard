@@ -24,6 +24,8 @@ import InvestorPage from "@/pages/investor";
 import FindBaristasPage from "@/pages/find-baristas";
 import FranchisePage from "@/pages/franchise";
 import RegionalDashboard from "@/pages/regional";
+import VirtualHostPage from "@/pages/virtual-host";
+import VirtualOrderPage from "@/pages/virtual-order";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/find-baristas" component={FindBaristasPage} />
       <Route path="/franchise" component={FranchisePage} />
       <Route path="/regional" component={RegionalDashboard} />
+      <Route path="/virtual-host" component={VirtualHostPage} />
+      <Route path="/virtual-order/:token" component={VirtualOrderPage} />
       <Route component={NotFound} />
     </Switch>
   );

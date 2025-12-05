@@ -892,14 +892,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createVirtualSelection(selection: InsertVirtualSelection): Promise<VirtualSelection> {
-    const [newSelection] = await db.insert(virtualSelections).values(selection).returning();
+    const [newSelection] = await db.insert(virtualSelections).values(selection as any).returning();
     return newSelection;
   }
 
   async updateVirtualSelection(id: string, selection: Partial<InsertVirtualSelection>): Promise<VirtualSelection> {
     const [updated] = await db
       .update(virtualSelections)
-      .set({ ...selection, updatedAt: new Date() })
+      .set({ ...selection, updatedAt: new Date() } as any)
       .where(eq(virtualSelections.id, id))
       .returning();
     return updated;

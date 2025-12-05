@@ -189,6 +189,13 @@ export default function InvestorPage() {
                     </div>
                   </div>
                 </div>
+                
+                <Link href="/franchise">
+                  <Button className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white" data-testid="button-franchise">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    View Franchise Opportunities
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </motion.div>

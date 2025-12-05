@@ -22,6 +22,7 @@ import TermsPage from "@/pages/terms";
 import ContactPage from "@/pages/contact";
 import InvestorPage from "@/pages/investor";
 import FindBaristasPage from "@/pages/find-baristas";
+import FranchisePage from "@/pages/franchise";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/investor" component={InvestorPage} />
       <Route path="/find-baristas" component={FindBaristasPage} />
+      <Route path="/franchise" component={FranchisePage} />
       <Route component={NotFound} />
     </Switch>
   );

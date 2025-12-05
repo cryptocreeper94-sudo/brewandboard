@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   ChevronLeft,
   Shield,
@@ -25,6 +25,9 @@ import {
   Server,
   CreditCard,
   Bitcoin,
+  Code2,
+  Building2,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +50,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_PIN = "4444";
+const DEVELOPER_PIN = "0424";
+const PARTNER_PIN = "4444";
+const REGIONAL_MANAGER_PIN = "5555";
 
 interface Hallmark {
   id: number;
@@ -106,6 +111,7 @@ function StatusIndicator({ status }: { status: string }) {
 
 export default function AdminPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(true);
   const [pin, setPin] = useState("");
@@ -142,14 +148,42 @@ export default function AdminPage() {
     }
   }, [isAuthenticated]);
 
-  const handlePinSubmit = () => {
+  const handlePinSubmit = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      if (pin === ADMIN_PIN) {
+    setTimeout(async () => {
+      if (pin === DEVELOPER_PIN) {
         localStorage.setItem("coffee_admin_auth", "true");
         setIsAuthenticated(true);
         setShowPinDialog(false);
-        toast({ title: "Admin Access Granted", description: "Welcome to the Admin Panel" });
+        toast({ title: "Developer Access Granted", description: "Welcome to the Developer Portal" });
+      } else if (pin === PARTNER_PIN) {
+        try {
+          const response = await fetch("/api/regional/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin: PARTNER_PIN })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem("regional_session", JSON.stringify({
+              token: data.token,
+              manager: data.manager,
+              region: data.region
+            }));
+            toast({ title: "Partner Access Granted", description: "Welcome, Partner!" });
+            setLocation("/regional");
+          } else {
+            toast({ title: "Access Error", description: "Partner login failed", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Access Error", description: "Connection failed", variant: "destructive" });
+        }
+      } else if (pin === REGIONAL_MANAGER_PIN) {
+        toast({ 
+          title: "Regional Manager", 
+          description: "Use this PIN on the Regional Dashboard to create your account" 
+        });
+        setLocation("/regional");
       } else {
         toast({ title: "Access Denied", description: "Invalid PIN", variant: "destructive" });
       }
@@ -276,23 +310,39 @@ export default function AdminPage() {
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-2xl">
               <Shield className="h-10 w-10 text-white" />
             </div>
-            <h1 className="font-serif text-3xl font-bold text-white mb-2">Admin Panel</h1>
-            <p className="text-slate-400 mb-8">Brew & Board Coffee System Administration</p>
+            <h1 className="font-serif text-3xl font-bold text-white mb-2">Admin Portal</h1>
+            <p className="text-slate-400 mb-8">Brew & Board Coffee — Secure Access</p>
           </motion.div>
         </div>
 
         <Dialog open={showPinDialog} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-[320px] bg-slate-900 border-slate-700">
+          <DialogContent className="sm:max-w-[380px] bg-slate-900 border-slate-700">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-white">
                 <Lock className="h-5 w-5 text-amber-500" />
-                Admin Access
+                Admin / Developer Login
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <p className="text-sm text-slate-400">
-                Enter admin PIN to access system controls.
+                Enter your access PIN to continue.
               </p>
+              
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-center">
+                  <Code2 className="h-4 w-4 mx-auto mb-1 text-emerald-400" />
+                  <span className="text-slate-400">Developer</span>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-center">
+                  <Building2 className="h-4 w-4 mx-auto mb-1 text-amber-400" />
+                  <span className="text-slate-400">Partner</span>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-center">
+                  <MapPin className="h-4 w-4 mx-auto mb-1 text-blue-400" />
+                  <span className="text-slate-400">Regional</span>
+                </div>
+              </div>
+
               <Input
                 type="password"
                 placeholder="Enter 4-digit PIN"
@@ -305,7 +355,7 @@ export default function AdminPage() {
                 autoFocus
               />
               <div className="flex gap-2">
-                <Link href="/" className="flex-1">
+                <Link href="/dashboard" className="flex-1">
                   <Button variant="outline" className="w-full border-slate-700 text-slate-300">
                     Cancel
                   </Button>
@@ -338,15 +388,15 @@ export default function AdminPage() {
             </Link>
             <div>
               <h1 className="font-serif text-3xl font-bold flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
-                  <Shield className="h-6 w-6 text-white" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
+                  <Code2 className="h-6 w-6 text-white" />
                 </div>
-                Admin Panel
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  View Only
+                Developer Portal
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  Full Access
                 </Badge>
               </h1>
-              <p className="text-slate-400 mt-1">System monitoring and hallmark registry</p>
+              <p className="text-slate-400 mt-1">System monitoring, hallmark registry & blockchain tools</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

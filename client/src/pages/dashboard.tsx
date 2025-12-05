@@ -856,13 +856,8 @@ const { itemCount } = useCart();
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-2"
+          className="flex flex-col items-center gap-1"
         >
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span className="font-medium">Quick Search</span>
-            <span className="text-muted-foreground/60">• Search the web or visit URLs</span>
-          </div>
           <WebSearch />
         </motion.div>
         
@@ -876,7 +871,7 @@ const { itemCount } = useCart();
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <div className="grid grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {quickActions.map((action, index) => (
               <Link key={action.id} href={action.href}>
                 <motion.div
@@ -885,7 +880,7 @@ const { itemCount } = useCart();
                   transition={{ delay: 0.1 + index * 0.08, type: "spring", stiffness: 100 }}
                   whileHover={{ scale: 1.03, y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`relative h-[120px] sm:h-[150px] bg-gradient-to-br ${action.gradient} text-white rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
+                  className={`relative h-[100px] md:h-[130px] bg-gradient-to-br ${action.gradient} text-white rounded-xl md:rounded-2xl p-3 md:p-4 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
                   data-testid={`button-${action.id}`}
                 >
                   {/* Animated shine effect */}
@@ -896,22 +891,22 @@ const { itemCount } = useCart();
                     }}
                   />
                   {/* Decorative circles */}
-                  <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
-                  <div className="absolute -right-2 -bottom-8 w-16 h-16 bg-white/10 rounded-full" />
+                  <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full" />
+                  <div className="absolute -right-2 -bottom-6 w-14 h-14 bg-white/10 rounded-full" />
                   
                   <div className="relative z-10">
                     <motion.div 
-                      className="h-9 w-9 sm:h-12 sm:w-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center shadow-inner"
+                      className="h-8 w-8 md:h-10 md:w-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-inner"
                       whileHover={{ rotate: 5 }}
                     >
-                      <action.icon className="h-4 w-4 sm:h-6 sm:w-6" />
+                      <action.icon className="h-4 w-4 md:h-5 md:w-5" />
                     </motion.div>
                   </div>
                   <div className="relative z-10">
-                    <h4 className="font-serif text-xs sm:text-base font-bold leading-tight mb-0.5 sm:mb-1">
+                    <h4 className="font-serif text-sm md:text-base font-bold leading-tight line-clamp-1">
                       {action.title}
                     </h4>
-                    <p className="text-[10px] sm:text-xs text-white/80 hidden sm:block">{action.subtitle}</p>
+                    <p className="text-[10px] md:text-xs text-white/80 line-clamp-1 hidden md:block">{action.subtitle}</p>
                   </div>
                 </motion.div>
               </Link>

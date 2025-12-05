@@ -57,6 +57,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { SettingsMenu } from "@/components/SettingsMenu";
 import { ItemCustomizationModal } from "@/components/ItemCustomizationModal";
 import { TeamChat } from "@/components/TeamChat";
+import { MascotButton } from "@/components/MascotButton";
 import {
   Dialog,
   DialogContent,
@@ -1244,6 +1245,9 @@ const { itemCount } = useCart();
 
       {/* Team Chat for Operators */}
       <TeamChat />
+
+      {/* Floating Mascot AI Assistant Button */}
+      <MascotButton />
     </div>
   );
 }

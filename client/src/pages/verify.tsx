@@ -81,11 +81,12 @@ export default function VerifyPage() {
           <XCircle className="w-20 h-20 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2 font-serif">Verification Failed</h1>
           <p className="text-red-300 mb-6">{error || "Unable to verify this hallmark"}</p>
-          <Link href="/">
-            <a className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              Return to Brew & Board
-            </a>
+          <Link 
+            href="/"
+            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Brew & Board
           </Link>
         </div>
       </div>
@@ -97,14 +98,13 @@ export default function VerifyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0f0a] to-[#0d0705] flex items-center justify-center p-4">
       {/* Back Button */}
-      <Link href="/dashboard">
-        <a 
-          className="fixed top-4 left-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-amber-400 hover:text-amber-300 rounded-full transition-all backdrop-blur-sm border border-slate-600/50"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </a>
+      <Link 
+        href="/dashboard"
+        className="fixed top-4 left-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-amber-400 hover:text-amber-300 rounded-full transition-all backdrop-blur-sm border border-slate-600/50 z-50"
+        data-testid="button-back"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
       </Link>
       
       <div 
@@ -255,11 +255,12 @@ export default function VerifyPage() {
           <p className="text-xs text-slate-500">
             Blockchain-verified authenticity powered by Solana
           </p>
-          <Link href="/">
-            <a className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm">
-              <ArrowLeft className="w-4 h-4" />
-              Visit Brew & Board
-            </a>
+          <Link 
+            href="/"
+            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Visit Brew & Board
           </Link>
         </div>
       </div>

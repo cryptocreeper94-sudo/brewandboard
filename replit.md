@@ -48,6 +48,14 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Recent Changes (December 2024)
+- **v1.0.13**: Tiered Access System with Partner Dashboard
+  - Partner role (PIN 4444): Full read access, sees all regional managers
+  - Regional Manager role (PIN 5555): View-only access to their territory
+  - Mandatory PIN change on first login with blocking UI overlay
+  - Personalized welcome modal for Partner (Sid) with business vision
+  - Accordion-style Team Overview showing all managers (Partner-only)
+  - Session restore properly handles modals and data fetching
+  - Premium UI with gradients, sparkles, and polished bento-style layout
 - **v1.0.12**: Regional Manager Security Enhancements
   - Server-side session tokens using crypto.randomBytes (CSPRNG)
   - Session expiration (24 hours) with server-side validation

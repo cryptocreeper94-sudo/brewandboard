@@ -86,6 +86,18 @@ export default function RegionalDashboard() {
         setRegion(data.region);
         setIsAuthenticated(true);
         fetchStats(data.token);
+        
+        // Partner: fetch all managers
+        if (data.manager.role === "partner") {
+          fetchAllManagers(data.token);
+        }
+        
+        // Check if PIN change is still required
+        if (data.manager.mustChangePin) {
+          setShowPinChangeModal(true);
+        } else if (data.manager.role === "partner" && !data.manager.hasSeenWelcome) {
+          setShowWelcomeModal(true);
+        }
       }
     }
   }, []);
@@ -283,6 +295,19 @@ export default function RegionalDashboard() {
       if (data.token) {
         // Fetch stats using the server-generated token
         fetchStats(data.token);
+        
+        // If partner, fetch all managers
+        if (data.manager.role === "partner") {
+          fetchAllManagers(data.token);
+        }
+      }
+
+      // Check if PIN change is required
+      if (data.manager.mustChangePin) {
+        setShowPinChangeModal(true);
+      } else if (data.manager.role === "partner" && !data.manager.hasSeenWelcome) {
+        // Show welcome modal for partner if not seen
+        setShowWelcomeModal(true);
       }
 
       toast({
@@ -419,8 +444,34 @@ export default function RegionalDashboard() {
     );
   }
 
+  // Block access if PIN change is required
+  const isPinChangeRequired = manager?.mustChangePin === true;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
+      {/* Blocking overlay when PIN change required */}
+      {isPinChangeRequired && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center">
+          <Card className="max-w-md mx-4 border-0 shadow-2xl">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center">
+                <Lock className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">PIN Change Required</h3>
+              <p className="text-muted-foreground mb-4">
+                Please set your personal PIN to continue accessing the dashboard.
+              </p>
+              <Button 
+                onClick={() => setShowPinChangeModal(true)}
+                className="w-full bg-gradient-to-r from-amber-600 to-orange-600"
+              >
+                Set My PIN Now
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 py-6">
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -746,6 +797,328 @@ export default function RegionalDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Partner Team Accordion Section - Only visible to Partners */}
+      {manager?.role === "partner" && (
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <Card className="border-0 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    Team Overview 
+                    <Sparkles className="h-4 w-4 text-yellow-300" />
+                  </CardTitle>
+                  <CardDescription className="text-purple-200">
+                    All regional managers across territories
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {allManagers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No regional managers yet</p>
+                  <p className="text-sm">New managers can join with PIN 5555</p>
+                </div>
+              ) : (
+                <Accordion type="single" collapsible className="space-y-3">
+                  {allManagers.map((mgr, index) => {
+                    const mgrRegion = allRegions.find(r => r.id === mgr.regionId);
+                    return (
+                      <AccordionItem 
+                        key={mgr.id} 
+                        value={mgr.id}
+                        className="border rounded-xl overflow-hidden bg-gradient-to-r from-slate-50 to-white shadow-sm hover:shadow-md transition-all"
+                      >
+                        <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                              {mgr.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">{mgr.name}</span>
+                                {mgr.role === "partner" && (
+                                  <Badge className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs">
+                                    <Star className="h-3 w-3 mr-1" /> Partner
+                                  </Badge>
+                                )}
+                                {mgr.role === "regional_manager" && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Regional Manager
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {mgrRegion?.name || "Unassigned"} • {mgr.title}
+                              </p>
+                            </div>
+                            <div className="text-right mr-4">
+                              {mgr.isActive ? (
+                                <Badge className="bg-green-100 text-green-700 border-green-200">
+                                  <CheckCircle className="h-3 w-3 mr-1" /> Active
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">Inactive</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                            <div className="bg-slate-50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <Mail className="h-4 w-4" />
+                                <span className="text-xs font-medium">EMAIL</span>
+                              </div>
+                              <p className="text-sm font-medium truncate">{mgr.email}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <MapPin className="h-4 w-4" />
+                                <span className="text-xs font-medium">TERRITORY</span>
+                              </div>
+                              <p className="text-sm font-medium">
+                                {mgrRegion ? `${mgrRegion.name}, ${mgrRegion.state}` : "Not assigned"}
+                              </p>
+                            </div>
+                            <div className="bg-slate-50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <Target className="h-4 w-4" />
+                                <span className="text-xs font-medium">SALES TARGET</span>
+                              </div>
+                              <p className="text-sm font-medium">
+                                ${parseFloat(mgr.salesTarget || "0").toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* PIN Change Modal */}
+      <Dialog open={showPinChangeModal} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl text-white">
+                <Lock className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl">Set Your Personal PIN</DialogTitle>
+                <DialogDescription>
+                  Create a unique 4-digit PIN for secure access
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Security First</p>
+                  <p className="text-amber-700">Choose a PIN you'll remember but others can't guess. Avoid birthdays or simple patterns.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="newPin">New PIN</Label>
+                <Input
+                  id="newPin"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="••••"
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="text-center text-2xl tracking-[0.5em] font-mono"
+                  data-testid="input-new-pin"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPin">Confirm PIN</Label>
+                <Input
+                  id="confirmPin"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="••••"
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="text-center text-2xl tracking-[0.5em] font-mono"
+                  data-testid="input-confirm-pin"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <Button 
+            onClick={handlePinChange}
+            disabled={pinChangeLoading || newPin.length !== 4 || confirmPin.length !== 4}
+            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+            data-testid="button-save-pin"
+          >
+            {pinChangeLoading ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <CheckCircle className="h-4 w-4 mr-2" />
+            )}
+            Save My PIN
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Welcome Modal for Sid (Partner) */}
+      <Dialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="text-center mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", duration: 0.6 }}
+                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-2xl mb-4 shadow-2xl"
+              >
+                <Sparkles className="h-10 w-10 text-white" />
+              </motion.div>
+              <DialogTitle className="text-3xl font-serif bg-gradient-to-r from-purple-600 to-orange-600 bg-clip-text text-transparent">
+                Welcome to the Team, Sid!
+              </DialogTitle>
+              <DialogDescription className="text-lg mt-2">
+                Your partner journey with Brew & Board begins now
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Vision Section */}
+            <div className="bg-gradient-to-r from-slate-50 to-purple-50 rounded-xl p-6 border border-purple-100">
+              <h3 className="font-serif text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <Target className="h-5 w-5 text-purple-600" />
+                Our Vision
+              </h3>
+              <p className="text-slate-600 leading-relaxed">
+                Brew & Board is reimagining B2B catering for Nashville's thriving business community. 
+                We connect meeting planners with premium local vendors—coffee roasters, artisan bakeries, 
+                and specialty food providers—delivering curated experiences that elevate every business meeting.
+              </p>
+            </div>
+
+            {/* Growth Strategy */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+              <h3 className="font-serif text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-amber-600" />
+                Scaling Together
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-700">1</div>
+                  <div>
+                    <p className="font-semibold text-slate-700">Nashville First</p>
+                    <p className="text-slate-500">Dominate the local market with premium service</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-700">2</div>
+                  <div>
+                    <p className="font-semibold text-slate-700">Regional Expansion</p>
+                    <p className="text-slate-500">Build regional manager network across Tennessee</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-700">3</div>
+                  <div>
+                    <p className="font-semibold text-slate-700">Franchise Model</p>
+                    <p className="text-slate-500">Enable entrepreneurs with proven playbook</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-700">4</div>
+                  <div>
+                    <p className="font-semibold text-slate-700">National Brand</p>
+                    <p className="text-slate-500">Become the go-to B2B catering platform</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Partner Role */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+              <h3 className="font-serif text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <Star className="h-5 w-5 text-green-600" />
+                Your Role as Partner
+              </h3>
+              <ul className="space-y-2 text-slate-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>Full visibility into all business operations and metrics</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>Oversee all regional managers and territories</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>Access to customer database and CRM insights</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>Strategic decision-making input on growth initiatives</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Revenue Potential */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <h3 className="font-serif text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                Revenue Model
+              </h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-blue-600">15%</p>
+                  <p className="text-xs text-slate-500">Service Fee</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-purple-600">$29-199</p>
+                  <p className="text-xs text-slate-500">Subscriptions</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-600">$25K+</p>
+                  <p className="text-xs text-slate-500">Franchise Fees</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t">
+            <Button 
+              onClick={acknowledgeWelcome}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-6 text-lg"
+              data-testid="button-acknowledge-welcome"
+            >
+              <Sparkles className="h-5 w-5 mr-2" />
+              Let's Build Something Great Together
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

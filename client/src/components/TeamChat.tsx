@@ -97,16 +97,23 @@ export function TeamChat() {
       {/* Chat Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center shine-effect"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center shine-effect ring-2 ring-[#d4c4b0]/20"
         style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.1, boxShadow: '0 0 30px rgba(92, 64, 51, 0.5)' }}
         whileTap={{ scale: 0.95 }}
         data-testid="button-toggle-chat"
       >
         {isOpen ? (
           <X className="h-6 w-6 text-white" />
         ) : (
-          <MessageCircle className="h-6 w-6 text-white" />
+          <>
+            <MessageCircle className="h-6 w-6 text-white" />
+            {messages.length > 0 && !isOpen && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
+                {messages.length > 9 ? '9+' : messages.length}
+              </span>
+            )}
+          </>
         )}
       </motion.button>
 
@@ -166,9 +173,19 @@ export function TeamChat() {
                           </AvatarFallback>
                         </Avatar>
                         <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-stone-400">{msg.senderName}</span>
-                            <span className="text-xs text-stone-500">{formatTime(msg.createdAt)}</span>
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-xs font-medium text-stone-300">{msg.senderName}</span>
+                            {msg.senderRole && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                                msg.senderRole === 'Developer' ? 'bg-purple-500/20 text-purple-300' :
+                                msg.senderRole === 'Partner' ? 'bg-amber-500/20 text-amber-300' :
+                                msg.senderRole === 'Regional Manager' ? 'bg-emerald-500/20 text-emerald-300' :
+                                'bg-stone-500/20 text-stone-400'
+                              }`}>
+                                {msg.senderRole}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-stone-500">{formatTime(msg.createdAt)}</span>
                           </div>
                           <div
                             className={`px-3 py-2 rounded-xl text-sm ${

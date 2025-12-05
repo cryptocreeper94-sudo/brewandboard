@@ -103,13 +103,21 @@ export function ItemCustomizationModal({ isOpen, onClose, product, shop }: ItemC
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] to-[#2d1810] border-[#3d2418]/30">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="font-serif text-xl text-stone-100">
-            {product.name}
-          </DialogTitle>
-          <p className="text-stone-300/60 text-sm">{product.description}</p>
-          <p className="text-[#d4c4b0] font-semibold mt-1">${product.price.toFixed(2)}</p>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] via-[#2d1810] to-[#1a0f09] border-[#5c4033]/30 shadow-2xl">
+        <DialogHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <DialogTitle className="font-serif text-xl text-stone-100 tracking-wide">
+                {product.name}
+              </DialogTitle>
+              <p className="text-stone-400 text-sm mt-1 leading-relaxed">{product.description}</p>
+            </div>
+            <div className="text-right">
+              <span className="text-xs text-stone-500 uppercase tracking-wider">Starting at</span>
+              <p className="text-[#d4c4b0] font-bold text-lg">${product.price.toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#5c4033]/50 to-transparent mt-3" />
         </DialogHeader>
 
         <ScrollArea className="max-h-[50vh] pr-4">
@@ -117,41 +125,55 @@ export function ItemCustomizationModal({ isOpen, onClose, product, shop }: ItemC
             {hasModifiers && product.modifiers?.map(group => (
               <div key={group.id} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-stone-100 font-medium text-sm">
-                    {group.name}
-                    {group.required && <span className="text-red-400 ml-1">*</span>}
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-stone-100 font-medium text-sm tracking-wide">
+                      {group.name}
+                    </h4>
+                    {group.required && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 uppercase tracking-wider">
+                        Required
+                      </span>
+                    )}
+                  </div>
                   {group.multiSelect && (
-                    <span className="text-xs text-stone-400">Select multiple</span>
+                    <span className="text-[10px] text-stone-400 bg-stone-800/50 px-2 py-0.5 rounded">Choose any</span>
                   )}
                 </div>
 
                 {group.multiSelect ? (
-                  <div className="space-y-2">
-                    {group.options.map(option => (
-                      <div
-                        key={option.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Checkbox
-                            id={`${group.id}-${option.id}`}
-                            checked={(selectedModifiers[group.id] || []).some(o => o.id === option.id)}
-                            onCheckedChange={(checked) => handleModifierChange(group, option, !!checked)}
-                            className="border-[#5c4033] data-[state=checked]:bg-[#5c4033]"
-                          />
-                          <Label
-                            htmlFor={`${group.id}-${option.id}`}
-                            className="text-stone-200 text-sm cursor-pointer"
-                          >
-                            {option.name}
-                          </Label>
+                  <div className="space-y-1.5">
+                    {group.options.map(option => {
+                      const isSelected = (selectedModifiers[group.id] || []).some(o => o.id === option.id);
+                      return (
+                        <div
+                          key={option.id}
+                          className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                            isSelected 
+                              ? 'bg-[#5c4033]/30 border border-[#5c4033]/50 shadow-lg' 
+                              : 'bg-black/20 border border-transparent hover:bg-black/30 hover:border-[#5c4033]/20'
+                          }`}
+                          onClick={() => handleModifierChange(group, option, !isSelected)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              id={`${group.id}-${option.id}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => handleModifierChange(group, option, !!checked)}
+                              className="border-[#5c4033] data-[state=checked]:bg-[#5c4033] data-[state=checked]:border-[#5c4033]"
+                            />
+                            <Label
+                              htmlFor={`${group.id}-${option.id}`}
+                              className={`text-sm cursor-pointer transition-colors ${isSelected ? 'text-stone-100 font-medium' : 'text-stone-300'}`}
+                            >
+                              {option.name}
+                            </Label>
+                          </div>
+                          {option.price > 0 && (
+                            <span className={`text-xs font-medium ${isSelected ? 'text-[#d4c4b0]' : 'text-stone-400'}`}>+${option.price.toFixed(2)}</span>
+                          )}
                         </div>
-                        {option.price > 0 && (
-                          <span className="text-[#d4c4b0] text-xs">+${option.price.toFixed(2)}</span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <RadioGroup
@@ -162,31 +184,39 @@ export function ItemCustomizationModal({ isOpen, onClose, product, shop }: ItemC
                         handleModifierChange(group, option, true);
                       }
                     }}
-                    className="space-y-2"
+                    className="space-y-1.5"
                   >
-                    {group.options.map(option => (
-                      <div
-                        key={option.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem
-                            value={option.id}
-                            id={`${group.id}-${option.id}`}
-                            className="border-[#5c4033] text-[#5c4033]"
-                          />
-                          <Label
-                            htmlFor={`${group.id}-${option.id}`}
-                            className="text-stone-200 text-sm cursor-pointer"
-                          >
-                            {option.name}
-                          </Label>
+                    {group.options.map(option => {
+                      const isSelected = selectedModifiers[group.id]?.[0]?.id === option.id;
+                      return (
+                        <div
+                          key={option.id}
+                          className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                            isSelected 
+                              ? 'bg-[#5c4033]/30 border border-[#5c4033]/50 shadow-lg' 
+                              : 'bg-black/20 border border-transparent hover:bg-black/30 hover:border-[#5c4033]/20'
+                          }`}
+                          onClick={() => handleModifierChange(group, option, true)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <RadioGroupItem
+                              value={option.id}
+                              id={`${group.id}-${option.id}`}
+                              className="border-[#5c4033] text-[#5c4033]"
+                            />
+                            <Label
+                              htmlFor={`${group.id}-${option.id}`}
+                              className={`text-sm cursor-pointer transition-colors ${isSelected ? 'text-stone-100 font-medium' : 'text-stone-300'}`}
+                            >
+                              {option.name}
+                            </Label>
+                          </div>
+                          {option.price > 0 && (
+                            <span className={`text-xs font-medium ${isSelected ? 'text-[#d4c4b0]' : 'text-stone-400'}`}>+${option.price.toFixed(2)}</span>
+                          )}
                         </div>
-                        {option.price > 0 && (
-                          <span className="text-[#d4c4b0] text-xs">+${option.price.toFixed(2)}</span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </RadioGroup>
                 )}
               </div>
@@ -205,26 +235,26 @@ export function ItemCustomizationModal({ isOpen, onClose, product, shop }: ItemC
           </div>
         </ScrollArea>
 
-        <div className="pt-4 border-t border-[#3d2418]/30 space-y-3">
+        <div className="pt-4 border-t border-[#5c4033]/30 space-y-4">
           {/* Quantity selector */}
-          <div className="flex items-center justify-between">
-            <span className="text-stone-200 text-sm">Quantity</span>
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between bg-black/20 p-3 rounded-xl">
+            <span className="text-stone-200 text-sm font-medium">Quantity</span>
+            <div className="flex items-center gap-4">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="h-8 w-8 p-0 border-[#5c4033] text-[#d4c4b0]"
+                className="h-9 w-9 p-0 border-[#5c4033] text-[#d4c4b0] hover:bg-[#5c4033]/20 rounded-full"
                 data-testid="button-decrease-qty"
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className="text-stone-100 font-semibold w-8 text-center">{quantity}</span>
+              <span className="text-stone-100 font-bold text-lg w-8 text-center">{quantity}</span>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setQuantity(quantity + 1)}
-                className="h-8 w-8 p-0 border-[#5c4033] text-[#d4c4b0]"
+                className="h-9 w-9 p-0 border-[#5c4033] text-[#d4c4b0] hover:bg-[#5c4033]/20 rounded-full"
                 data-testid="button-increase-qty"
               >
                 <Plus className="h-4 w-4" />
@@ -234,21 +264,21 @@ export function ItemCustomizationModal({ isOpen, onClose, product, shop }: ItemC
 
           {/* Modifiers summary */}
           {getModifiersTotal() > 0 && (
-            <div className="text-xs text-stone-400 flex justify-between">
-              <span>Customizations:</span>
-              <span>+${getModifiersTotal().toFixed(2)}</span>
+            <div className="text-sm flex justify-between items-center px-1">
+              <span className="text-stone-400">Customizations</span>
+              <span className="text-[#d4c4b0] font-medium">+${getModifiersTotal().toFixed(2)}</span>
             </div>
           )}
 
           {/* Add to cart button */}
           <Button
             onClick={handleAddToCart}
-            className="w-full text-white shine-effect"
+            className="w-full h-12 text-white font-semibold text-base shine-effect shadow-lg hover:shadow-xl transition-all"
             style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
             data-testid="button-add-to-cart-confirm"
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to Cart - ${getTotalPrice().toFixed(2)}
+            <ShoppingCart className="h-5 w-5 mr-2" />
+            Add to Cart · ${getTotalPrice().toFixed(2)}
           </Button>
         </div>
       </DialogContent>

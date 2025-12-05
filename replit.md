@@ -47,7 +47,21 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **Email Service**: Resend
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
+## Current Version
+**v1.0.16** - December 2024
+
 ## Recent Changes (December 2024)
+- **v1.0.16**: Premium UI Polish & Payment Integration
+  - Polished item customization modal with luxury gradient styling
+  - Enhanced option selection with visual feedback (glow on select)
+  - Role badges in team chat (Developer, Partner, Regional Manager)
+  - Message count badge on team chat button
+  - Stripe Tax code ready - awaiting dashboard configuration
+  - All checkout sessions (subscriptions, orders, hallmarks) have automatic_tax enabled
+  - Added Stripe Tax setup checklist to Developer Portal with direct links
+  - Verified Stripe and Coinbase Commerce integrations are active
+  - Professional animations and transitions throughout
+
 - **v1.0.15**: Stripe Tax Integration & Menu Customization
   - Enabled Stripe Tax automatic collection on all checkout sessions
   - Stripe now handles state/local tax calculation at checkout
@@ -107,3 +121,35 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **v1.0.7**: Expanded vendor catalog to 37+ locations with new categories
   - Added donut shops, juice bars, bubble tea, and Nashville breakfast spots
   - New vendor type badges with color-coded categories
+
+## Roadmap (Upcoming Features)
+
+### v1.1.0 - Delivery Integration
+- DoorDash Drive API for automated delivery dispatch
+- Real-time driver tracking and ETA updates
+- Uber Direct as backup delivery provider
+- Proof of delivery with photos
+
+### v1.2.0 - Calendar & Notifications
+- Google Calendar integration for order scheduling
+- Push notifications for order status
+- Twilio SMS alerts for delivery updates
+- Recurring order support
+
+### v1.3.0 - Analytics & Insights
+- Business dashboard with order analytics
+- Revenue tracking and forecasting
+- Popular items and vendor performance
+- Customer retention metrics
+
+### v1.4.0 - Advanced Features
+- Multi-vendor orders (split orders)
+- Saved order templates ("My Regular Order")
+- Loyalty rewards program
+- Corporate accounts with invoicing
+
+### Future Considerations
+- Mobile app (React Native)
+- Vendor self-service portal
+- AI-powered order recommendations
+- White-label franchise solution

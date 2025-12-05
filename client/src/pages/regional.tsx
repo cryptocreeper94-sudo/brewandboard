@@ -99,12 +99,13 @@ export default function RegionalDashboard() {
         setIsAuthenticated(true);
         fetchStats(data.token);
         
-        // Partner: fetch all managers
-        if (data.manager.role === "partner") {
+        // Partner or Demo Partner: fetch all managers (full access)
+        const hasPartnerAccess = data.manager.role === "partner" || data.manager.role === "demo_partner";
+        if (hasPartnerAccess) {
           fetchAllManagers(data.token);
         }
         
-        // Check if PIN change is still required
+        // Check if PIN change is still required (demo partners skip this)
         if (data.manager.mustChangePin) {
           setShowPinChangeModal(true);
         } else if (data.manager.role === "partner" && !data.manager.hasSeenWelcome) {
@@ -316,13 +317,14 @@ export default function RegionalDashboard() {
         // Fetch stats using the server-generated token
         fetchStats(data.token);
         
-        // If partner, fetch all managers
-        if (data.manager.role === "partner") {
+        // If partner or demo partner, fetch all managers (full access)
+        const hasPartnerAccess = data.manager.role === "partner" || data.manager.role === "demo_partner";
+        if (hasPartnerAccess) {
           fetchAllManagers(data.token);
         }
       }
 
-      // Check if PIN change is required
+      // Check if PIN change is required (demo partners skip this)
       if (data.manager.mustChangePin) {
         setShowPinChangeModal(true);
       } else if (data.manager.role === "partner" && !data.manager.hasSeenWelcome) {
@@ -849,8 +851,8 @@ export default function RegionalDashboard() {
         </Tabs>
       </div>
 
-      {/* Partner Team Accordion Section - Only visible to Partners */}
-      {manager?.role === "partner" && (
+      {/* Partner Team Accordion Section - Visible to Partners and Demo Partners */}
+      {(manager?.role === "partner" || manager?.role === "demo_partner") && (
         <div className="max-w-7xl mx-auto px-4 pb-8">
           <Card className="border-0 shadow-xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
@@ -897,6 +899,11 @@ export default function RegionalDashboard() {
                                 {mgr.role === "partner" && (
                                   <Badge className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs">
                                     <Star className="h-3 w-3 mr-1" /> Partner
+                                  </Badge>
+                                )}
+                                {mgr.role === "demo_partner" && (
+                                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs">
+                                    <Star className="h-3 w-3 mr-1" /> Demo
                                   </Badge>
                                 )}
                                 {mgr.role === "regional_manager" && (

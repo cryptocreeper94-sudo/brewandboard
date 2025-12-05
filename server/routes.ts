@@ -1248,7 +1248,7 @@ export async function registerRoutes(
   // Master PINs for initial access
   const MASTER_PINS = {
     PARTNER: "4444",      // Sid - Partner level, full access, sees all managers
-    PARTNER2: "5555"      // Second Partner - full access, sees all managers
+    DEMO: "5555"          // Demo partner login - 2-day session for potential partners
   };
 
   // Regional manager login by PIN (rate-limited in production)
@@ -1263,22 +1263,21 @@ export async function registerRoutes(
       
       // Check if using master PIN to create new account
       if (!manager) {
-        if (pin === MASTER_PINS.PARTNER || pin === MASTER_PINS.PARTNER2) {
-          // Check if this specific partner PIN already has an account
+        if (pin === MASTER_PINS.PARTNER) {
+          // Check if Sid's partner account already exists
           const existingManagers = await storage.getRegionalManagers({ isActive: true });
-          const pinAlreadyUsed = existingManagers.some(m => m.role === "partner" && m.name === (pin === MASTER_PINS.PARTNER ? "Sid" : "Partner"));
+          const partnerExists = existingManagers.some(m => m.role === "partner" && m.name === "Sid");
           
-          if (pinAlreadyUsed) {
+          if (partnerExists) {
             return res.status(400).json({ 
               error: "Partner account already exists. Please use your personal PIN to login." 
             });
           }
           
-          // Create partner account (one-time registration)
+          // Create Sid's partner account (one-time registration)
           const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
-          const partnerName = pin === MASTER_PINS.PARTNER ? "Sid" : "Partner";
           manager = await storage.createRegionalManager({
-            name: partnerName,
+            name: "Sid",
             email: `partner_${Date.now()}@brewandboard.coffee`,
             phone: "",
             pin: pin,
@@ -1289,6 +1288,29 @@ export async function registerRoutes(
             mustChangePin: true,
             hasSeenWelcome: false
           });
+        } else if (pin === MASTER_PINS.DEMO) {
+          // Demo partner login - creates temporary demo account or reuses existing
+          const existingManagers = await storage.getRegionalManagers({ isActive: true });
+          const demoExists = existingManagers.find(m => m.role === "demo_partner");
+          
+          if (demoExists) {
+            manager = demoExists;
+          } else {
+            // Create demo partner account
+            const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
+            manager = await storage.createRegionalManager({
+              name: "Demo Partner",
+              email: `demo_${Date.now()}@brewandboard.coffee`,
+              phone: "",
+              pin: pin,
+              role: "demo_partner",
+              regionId: nashvilleRegion?.id || null,
+              title: "Demo Partner",
+              isActive: true,
+              mustChangePin: false,  // Demo doesn't require PIN change
+              hasSeenWelcome: false
+            });
+          }
         } else {
           // Constant-time-ish delay to prevent timing attacks
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -1308,7 +1330,10 @@ export async function registerRoutes(
       
       // Generate server-side session token
       const token = generateSessionToken();
-      const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+      // Demo partners get 2-day sessions, regular users get 24 hours
+      const isDemo = manager.role === "demo_partner";
+      const sessionDuration = isDemo ? (2 * 24 * 60 * 60 * 1000) : (24 * 60 * 60 * 1000);
+      const expiresAt = Date.now() + sessionDuration;
       
       regionalSessions.set(token, {
         managerId: manager.id,
@@ -1318,7 +1343,13 @@ export async function registerRoutes(
       
       // Return manager WITHOUT PIN for security, WITH token
       const { pin: _, ...safeManager } = manager;
-      res.json({ manager: safeManager, region, token });
+      res.json({ 
+        manager: safeManager, 
+        region, 
+        token,
+        isDemo,
+        sessionExpiresIn: isDemo ? "2 days" : "24 hours"
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1338,7 +1369,7 @@ export async function registerRoutes(
       }
       
       // Check if PIN is a master PIN
-      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.PARTNER2) {
+      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.DEMO) {
         return res.status(400).json({ error: "This PIN is reserved. Please choose a different PIN." });
       }
       
@@ -1379,7 +1410,7 @@ export async function registerRoutes(
     }
   });
   
-  // Get all regional managers (partner only - for accordion view)
+  // Get all regional managers (partner/demo_partner only - for accordion view)
   app.get("/api/regional/all-managers", async (req, res) => {
     try {
       const session = await verifyRegionalSession(req);
@@ -1387,9 +1418,10 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // Verify this user is a partner
+      // Verify this user is a partner or demo partner (full access roles)
       const manager = await storage.getRegionalManager(session.managerId);
-      if (!manager || manager.role !== "partner") {
+      const hasPartnerAccess = manager?.role === "partner" || manager?.role === "demo_partner";
+      if (!manager || !hasPartnerAccess) {
         return res.status(403).json({ error: "Partner access required" });
       }
       

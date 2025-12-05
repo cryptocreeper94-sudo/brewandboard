@@ -27,6 +27,8 @@ import {
   type InsertRegionalManager,
   type TerritoryAssignment,
   type InsertTerritoryAssignment,
+  type TeamChatMessage,
+  type InsertTeamChatMessage,
   users,
   crmNotes,
   clients,
@@ -40,7 +42,8 @@ import {
   franchiseInquiries,
   regions,
   regionalManagers,
-  territoryAssignments
+  territoryAssignments,
+  teamChatMessages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -145,6 +148,10 @@ export interface IStorage {
   
   // Health Check
   checkDatabaseHealth(): Promise<boolean>;
+  
+  // Team Chat
+  getTeamChatMessages(limit?: number): Promise<TeamChatMessage[]>;
+  createTeamChatMessage(message: InsertTeamChatMessage): Promise<TeamChatMessage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -721,6 +728,22 @@ export class DatabaseStorage implements IStorage {
     } catch {
       return false;
     }
+  }
+
+  // ========================
+  // TEAM CHAT
+  // ========================
+  async getTeamChatMessages(limit: number = 50): Promise<TeamChatMessage[]> {
+    return await db
+      .select()
+      .from(teamChatMessages)
+      .orderBy(desc(teamChatMessages.createdAt))
+      .limit(limit);
+  }
+
+  async createTeamChatMessage(message: InsertTeamChatMessage): Promise<TeamChatMessage> {
+    const [newMessage] = await db.insert(teamChatMessages).values(message).returning();
+    return newMessage;
   }
 }
 

@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Shop, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES } from '@/lib/mock-data';
+import { Product, Shop, ModifierOption, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES } from '@/lib/mock-data';
+
+export interface SelectedModifier {
+  groupId: string;
+  groupName: string;
+  option: ModifierOption;
+}
 
 export interface CartItem {
   vendorId: string;
@@ -7,9 +13,12 @@ export interface CartItem {
   itemId: string;
   name: string;
   description: string;
-  price: number;
+  basePrice: number;
+  price: number; // total with modifiers
   quantity: number;
   category: string;
+  selectedModifiers?: SelectedModifier[];
+  specialInstructions?: string;
 }
 
 export interface VendorLocation {
@@ -24,9 +33,9 @@ interface CartContextType {
   vendorId: string | null;
   vendorName: string | null;
   vendorLocation: VendorLocation | null;
-  addItem: (vendor: Shop, product: Product) => void;
-  removeItem: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
+  addItem: (vendor: Shop, product: Product, modifiers?: SelectedModifier[], specialInstructions?: string) => void;
+  removeItem: (itemId: string, modifiersKey?: string) => void;
+  updateQuantity: (itemId: string, quantity: number, modifiersKey?: string) => void;
   clearCart: () => void;
   getItemQuantity: (itemId: string) => number;
   calculateDeliveryFee: (deliveryLat: number, deliveryLng: number) => { baseFee: number; extendedFee: number; distance: number; isExtended: boolean };
@@ -62,6 +71,11 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
     Math.sin(dLng / 2) * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+function getModifiersKey(modifiers?: SelectedModifier[]): string {
+  if (!modifiers || modifiers.length === 0) return '';
+  return modifiers.map(m => `${m.groupId}:${m.option.id}`).sort().join('|');
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -100,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }));
   }, [items, vendorId, vendorName, vendorLocation, gratuityOption, customGratuity]);
 
-  const addItem = (vendor: Shop, product: Product) => {
+  const addItem = (vendor: Shop, product: Product, modifiers?: SelectedModifier[], specialInstructions?: string) => {
     if (vendorId && vendorId !== vendor.id) {
       if (!confirm(`Your cart has items from ${vendorName}. Would you like to clear it and start a new order from ${vendor.name}?`)) {
         return;
@@ -112,48 +126,73 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setVendorName(vendor.name);
     setVendorLocation({ lat: vendor.lat, lng: vendor.lng });
 
+    // Calculate total price with modifiers
+    const modifierTotal = modifiers?.reduce((sum, m) => sum + m.option.price, 0) || 0;
+    const totalPrice = product.price + modifierTotal;
+    const modifiersKey = getModifiersKey(modifiers);
+
     setItems(prev => {
-      const existing = prev.find(item => item.itemId === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.itemId === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+      // Check if item with same modifiers already exists
+      const existingIndex = prev.findIndex(
+        item => item.itemId === product.id && getModifiersKey(item.selectedModifiers) === modifiersKey
+      );
+
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + 1,
+        };
+        return updated;
       }
+
       return [...prev, {
         vendorId: vendor.id,
         vendorName: vendor.name,
         itemId: product.id,
         name: product.name,
         description: product.description,
-        price: product.price,
+        basePrice: product.price,
+        price: totalPrice,
         quantity: 1,
-        category: product.category
+        category: product.category,
+        selectedModifiers: modifiers,
+        specialInstructions,
       }];
     });
   };
 
-  const removeItem = (itemId: string) => {
+  const removeItem = (itemId: string, modifiersKey?: string) => {
     setItems(prev => {
-      const newItems = prev.filter(item => item.itemId !== itemId);
-      if (newItems.length === 0) {
+      const filtered = prev.filter(item => {
+        if (item.itemId !== itemId) return true;
+        if (modifiersKey !== undefined) {
+          return getModifiersKey(item.selectedModifiers) !== modifiersKey;
+        }
+        return false;
+      });
+      if (filtered.length === 0) {
         setVendorId(null);
         setVendorName(null);
+        setVendorLocation(null);
       }
-      return newItems;
+      return filtered;
     });
   };
 
-  const updateQuantity = (itemId: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number, modifiersKey?: string) => {
     if (quantity <= 0) {
-      removeItem(itemId);
+      removeItem(itemId, modifiersKey);
       return;
     }
     setItems(prev =>
-      prev.map(item =>
-        item.itemId === itemId ? { ...item, quantity } : item
-      )
+      prev.map(item => {
+        if (item.itemId !== itemId) return item;
+        if (modifiersKey !== undefined && getModifiersKey(item.selectedModifiers) !== modifiersKey) {
+          return item;
+        }
+        return { ...item, quantity };
+      })
     );
   };
 
@@ -167,19 +206,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const getItemQuantity = (itemId: string) => {
-    const item = items.find(i => i.itemId === itemId);
-    return item?.quantity || 0;
+    return items
+      .filter(item => item.itemId === itemId)
+      .reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const calculateDeliveryFee = (deliveryLat: number, deliveryLng: number) => {
     if (!vendorLocation) {
       return { baseFee: DELIVERY_FEE, extendedFee: 0, distance: 0, isExtended: false };
     }
-    const distance = calculateDistance(vendorLocation.lat, vendorLocation.lng, deliveryLat, deliveryLng);
+
+    const distance = calculateDistance(
+      vendorLocation.lat,
+      vendorLocation.lng,
+      deliveryLat,
+      deliveryLng
+    );
+
     const isExtended = distance > EXTENDED_DELIVERY_RADIUS_MILES;
+    const extendedFee = isExtended ? EXTENDED_DELIVERY_PREMIUM : 0;
+
     return {
       baseFee: DELIVERY_FEE,
-      extendedFee: isExtended ? EXTENDED_DELIVERY_PREMIUM : 0,
+      extendedFee,
       distance,
       isExtended
     };
@@ -187,16 +236,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const salesTax = subtotal * TN_SALES_TAX_RATE; // TN sales tax on subtotal only
+  const salesTax = subtotal * TN_SALES_TAX_RATE;
   const serviceFee = subtotal * SERVICE_FEE_RATE;
-  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
-  
-  // Enforce 18% auto-gratuity for orders $100+, otherwise use selected option
+  const deliveryFee = DELIVERY_FEE;
+
+  // Auto-gratuity logic: $100+ orders get mandatory 18%
   const isAutoGratuity = subtotal >= AUTO_GRATUITY_THRESHOLD;
-  const gratuityAmount = isAutoGratuity 
-    ? subtotal * AUTO_GRATUITY_RATE 
-    : (gratuityOption === 'custom' ? customGratuity : subtotal * (gratuityOption / 100));
-  
+
+  const gratuityAmount = (() => {
+    if (isAutoGratuity) {
+      // Forced 18% for large orders
+      return subtotal * AUTO_GRATUITY_RATE;
+    }
+    // User-selected tip for smaller orders
+    if (gratuityOption === 'custom') {
+      return customGratuity;
+    }
+    if (gratuityOption === 0) {
+      return 0;
+    }
+    return subtotal * (gratuityOption / 100);
+  })();
+
   const total = subtotal + salesTax + serviceFee + deliveryFee + gratuityAmount;
 
   return (
@@ -222,7 +283,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isAutoGratuity,
       setGratuityOption,
       setCustomGratuity,
-      total
+      total,
     }}>
       {children}
     </CartContext.Provider>
@@ -231,7 +292,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;

@@ -1402,5 +1402,41 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // TEAM CHAT ROUTES
+  // ========================
+  
+  app.get("/api/team-chat/messages", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const messages = await storage.getTeamChatMessages(limit);
+      // Reverse to get chronological order (oldest first)
+      res.json(messages.reverse());
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/team-chat/messages", async (req, res) => {
+    try {
+      const { senderId, senderName, senderRole, message } = req.body;
+      
+      if (!senderId || !senderName || !message) {
+        return res.status(400).json({ error: "senderId, senderName, and message are required" });
+      }
+      
+      const newMessage = await storage.createTeamChatMessage({
+        senderId,
+        senderName,
+        senderRole: senderRole || null,
+        message
+      });
+      
+      res.json(newMessage);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

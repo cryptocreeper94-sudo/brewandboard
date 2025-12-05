@@ -34,10 +34,12 @@ import {
   Navigation,
   Cookie,
   Croissant,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Settings2,
+  MessageCircle
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { COFFEE_SHOPS } from "@/lib/mock-data";
+import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,8 @@ import { RegistrationPopup } from "@/components/RegistrationPopup";
 import { LoginPopup } from "@/components/LoginPopup";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { SettingsMenu } from "@/components/SettingsMenu";
+import { ItemCustomizationModal } from "@/components/ItemCustomizationModal";
+import { TeamChat } from "@/components/TeamChat";
 import {
   Dialog,
   DialogContent,
@@ -98,6 +102,7 @@ interface NewsItem {
 function CuratedRoastersCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [customizeItem, setCustomizeItem] = useState<{ product: Product; shop: Shop } | null>(null);
   const { addItem, getItemQuantity, itemCount } = useCart();
   const { toast } = useToast();
   const shops = COFFEE_SHOPS.slice(0, 8);
@@ -252,15 +257,22 @@ function CuratedRoastersCarousel() {
                               className={`min-w-[70px] shine-effect ${qty > 0 ? "text-white" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
                               style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
-                                addItem(shop, item);
-                                toast({
-                                  title: "Added to Cart",
-                                  description: `${item.name} added`
-                                });
+                                if (item.modifiers && item.modifiers.length > 0) {
+                                  setCustomizeItem({ product: item, shop });
+                                } else {
+                                  addItem(shop, item);
+                                  toast({
+                                    title: "Added to Cart",
+                                    description: `${item.name} added`
+                                  });
+                                }
                               }}
                               data-testid={`button-add-${item.id}`}
                             >
-                              {qty > 0 ? `${qty} in cart` : "Add"}
+                              {item.modifiers && item.modifiers.length > 0 ? (
+                                <Settings2 className="h-3 w-3 mr-1" />
+                              ) : null}
+                              {qty > 0 ? `${qty}` : "Add"}
                             </Button>
                           </div>
                         );
@@ -292,6 +304,15 @@ function CuratedRoastersCarousel() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {customizeItem && (
+        <ItemCustomizationModal
+          isOpen={!!customizeItem}
+          onClose={() => setCustomizeItem(null)}
+          product={customizeItem.product}
+          shop={customizeItem.shop}
+        />
+      )}
     </motion.div>
   );
 }
@@ -299,6 +320,7 @@ function CuratedRoastersCarousel() {
 function FeaturedBoardsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [customizeItem, setCustomizeItem] = useState<{ product: Product; shop: Shop } | null>(null);
   const { addItem, getItemQuantity, itemCount } = useCart();
   const { toast } = useToast();
   
@@ -467,16 +489,24 @@ function FeaturedBoardsCarousel() {
                               className={`shine-effect text-xs h-7 px-2 ${qty > 0 ? "text-white border-none" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
                               style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
-                                addItem(shop, item);
-                                toast({
-                                  title: "Added to cart",
-                                  description: `${item.name} - $${item.price.toFixed(2)}`,
-                                });
+                                if (item.modifiers && item.modifiers.length > 0) {
+                                  setCustomizeItem({ product: item, shop });
+                                } else {
+                                  addItem(shop, item);
+                                  toast({
+                                    title: "Added to cart",
+                                    description: `${item.name} - $${item.price.toFixed(2)}`,
+                                  });
+                                }
                               }}
                               data-testid={`button-add-boards-${item.id}`}
                             >
-                              <Plus className="h-3 w-3 mr-1" />
-                              {qty > 0 ? `${qty} in cart` : "Add"}
+                              {item.modifiers && item.modifiers.length > 0 ? (
+                                <Settings2 className="h-3 w-3 mr-1" />
+                              ) : (
+                                <Plus className="h-3 w-3 mr-1" />
+                              )}
+                              {qty > 0 ? `${qty}` : "Add"}
                             </Button>
                           </div>
                         );
@@ -508,6 +538,15 @@ function FeaturedBoardsCarousel() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {customizeItem && (
+        <ItemCustomizationModal
+          isOpen={!!customizeItem}
+          onClose={() => setCustomizeItem(null)}
+          product={customizeItem.product}
+          shop={customizeItem.shop}
+        />
+      )}
     </motion.div>
   );
 }
@@ -1101,6 +1140,9 @@ const { itemCount } = useCart();
 
       {/* Install App Prompt */}
       <InstallPrompt />
+
+      {/* Team Chat for Operators */}
+      <TeamChat />
     </div>
   );
 }

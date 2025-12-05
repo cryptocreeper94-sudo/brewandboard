@@ -1096,3 +1096,31 @@ export type TerritoryAssignment = typeof territoryAssignments.$inferSelect;
 // Regional Manager Role Types
 export const MANAGER_ROLES = ['regional_manager', 'super_manager', 'admin'] as const;
 export const REGION_STATUSES = ['active', 'pending', 'inactive'] as const;
+
+// ========================
+// TEAM CHAT MESSAGES (For Operators)
+// ========================
+export const teamChatMessages = pgTable(
+  "team_chat_messages",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    senderId: varchar("sender_id").notNull(),
+    senderName: varchar("sender_name", { length: 100 }).notNull(),
+    senderRole: varchar("sender_role", { length: 50 }),
+    
+    message: text("message").notNull(),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`).notNull(),
+  },
+  (table) => ({
+    createdAtIdx: index("idx_team_chat_created").on(table.createdAt),
+  })
+);
+
+export const insertTeamChatMessageSchema = createInsertSchema(teamChatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertTeamChatMessage = z.infer<typeof insertTeamChatMessageSchema>;
+export type TeamChatMessage = typeof teamChatMessages.$inferSelect;

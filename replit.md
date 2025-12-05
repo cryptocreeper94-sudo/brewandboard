@@ -48,9 +48,16 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.0** - December 2024
+**v1.1.1** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.1**: AI Mascot Chat & Virtual Host Polish
+  - Restored cute coffee mug AI mascot to dashboard (floating bottom-right)
+  - Added text chat input to mascot - click keyboard button to type messages
+  - Voice recognition still works via microphone button
+  - Mascot responds with friendly AI-like messages
+  - Improved mascot z-index and positioning for visibility
+
 - **v1.1.0**: Virtual Host Feature - Multi-Location Ordering
   - New Virtual Host feature allowing meeting hosts to order for attendees at different locations
   - Database schema: virtual_meetings, virtual_attendees, virtual_selections, virtual_orders, virtual_events tables

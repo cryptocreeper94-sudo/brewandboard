@@ -52,6 +52,7 @@ import {
   Rocket,
   Award,
   BarChart3,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -668,6 +669,91 @@ export default function DevelopersPage() {
                   }`}>
                     {overallStatus.message}
                   </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* System Access Credentials */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="mb-8"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-900 text-white">
+              <CardTitle className="flex items-center gap-2 font-serif text-xl">
+                <Key className="h-5 w-5 text-amber-400" />
+                System Access Credentials
+                <Badge className="bg-red-500/20 text-red-300 border-red-400/30 ml-2">Admin Only</Badge>
+              </CardTitle>
+              <CardDescription className="text-slate-300">
+                Initial login PINs for onboarding team members
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                      <Code2 className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-purple-800">Developer</p>
+                      <p className="text-xs text-purple-600">Full system access</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-purple-100">
+                    <span className="text-sm text-muted-foreground">Initial PIN:</span>
+                    <code className="font-mono text-lg font-bold text-purple-700 tracking-widest">0424</code>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Access: Developer Hub, Admin Portal</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-amber-800">Partner</p>
+                      <p className="text-xs text-amber-600">Full read access + team view</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-amber-100">
+                    <span className="text-sm text-muted-foreground">Initial PIN:</span>
+                    <code className="font-mono text-lg font-bold text-amber-700 tracking-widest">4444</code>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Access: Regional Portal (/regional)</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-blue-800">Regional Manager</p>
+                      <p className="text-xs text-blue-600">Territory view only</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-blue-100">
+                    <span className="text-sm text-muted-foreground">Initial PIN:</span>
+                    <code className="font-mono text-lg font-bold text-blue-700 tracking-widest">5555</code>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Access: Regional Portal (/regional)</p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800">
+                    <p className="font-medium">Security Note</p>
+                    <p className="text-amber-700">Users are required to change their PIN on first login. Initial PINs are for onboarding only.</p>
+                  </div>
                 </div>
               </div>
             </CardContent>

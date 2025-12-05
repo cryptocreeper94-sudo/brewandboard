@@ -5,7 +5,7 @@ Brew & Board Coffee is a B2B coffee delivery platform designed for business owne
 
 ## User Preferences
 - **Design**: "Nashville Luxury" aesthetic with shimmering dark brown color scheme (#1a0f09 to #5a3620 gradient)
-- **Typography**: Playfair Display for headings, warm amber accents
+- **Typography**: Playfair Display for headings, warm coffee-toned accents (#5c4033)
 - **Weather Widget**: Must remain compact (no large icons covering text)
 - **Portfolio**: Supports both structured industry templates AND open freeform notes
 - **30-day persistence**: Optional with warning about device access
@@ -16,13 +16,13 @@ Brew & Board Coffee is a B2B coffee delivery platform designed for business owne
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a premium "Nashville Luxury" aesthetic with a Bento grid layout on the dashboard. It utilizes Playfair Display for headings and warm amber accents. The overall design emphasizes a sophisticated, user-friendly interface.
+The platform features a premium "Nashville Luxury" aesthetic with a Bento grid layout on the dashboard. It utilizes Playfair Display for headings and dark coffee tones (#1a0f09, #2d1810, #3d2418, #5c4033) with shimmery cream "shine-effect" animations. The overall design emphasizes a sophisticated, user-friendly interface.
 
 ### Technical Implementations
 - **Authentication**: Custom PIN-based login/registration with optional 30-day persistence. Developer PIN (0424) grants full access, and a demo mode is available for the Portfolio feature.
 - **Dashboard**: Features a shimmering dark brown hero, weather widget, vendor scrolling, quick web search, and a live Nashville news feed (WKRN with 5-minute caching).
 - **Portfolio/CRM**: Includes industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes and voice recording capabilities.
-- **Order Scheduling**: Calendar-based coffee delivery scheduling with a 2-hour minimum lead time and detailed service fee breakdowns.
+- **Order Scheduling**: Calendar-based coffee delivery scheduling with a 2-hour minimum lead time, detailed service fee breakdowns, gratuity selector (15%, 18%, 20%, custom), and capacity management (max 4 concurrent orders in 2-hour windows).
 - **Document Scanner**: Universal OCR scanner for creating and sharing PDFs.
 - **Vendor Catalog**: Expanded to include a diverse range of vendors beyond coffee, such as donut shops, juice bars, bubble tea, and breakfast spots, categorized with badges.
 - **Pricing Model**: Concierge pricing with a 15% service fee on one-off orders, distance-based delivery fees, and subscription tiers offering discounts and benefits.
@@ -48,6 +48,15 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Recent Changes (December 2024)
+- **v1.0.14**: Gratuity System & Capacity Management
+  - Added gratuity selector to cart: 15%, 18%, 20%, and custom tip options
+  - Concierge gratuity calculated on subtotal before fees
+  - Capacity management: max 4 concurrent orders per 2-hour window
+  - Server-side validation blocks orders when capacity is full
+  - API endpoint for checking time slot availability (/api/orders/capacity/check)
+  - Dark coffee color scheme (#1a0f09, #2d1810, #3d2418, #5c4033) applied globally
+  - Shimmery cream "shine-effect" CSS class applied to all buttons and banners
+  - Order email notifications via Resend with branded dark coffee template
 - **v1.0.13**: Tiered Access System with Partner Dashboard
   - Partner role (PIN 4444): Full read access, sees all regional managers
   - Regional Manager role (PIN 5555): View-only access to their territory

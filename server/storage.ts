@@ -83,6 +83,7 @@ export interface IStorage {
   createScheduledOrder(order: InsertScheduledOrder): Promise<ScheduledOrder>;
   updateScheduledOrder(id: string, order: Partial<InsertScheduledOrder>): Promise<ScheduledOrder>;
   deleteScheduledOrder(id: string): Promise<void>;
+  getConcurrentOrdersCount(date: string, time: string, windowHours: number): Promise<number>;
   
   // Order Events
   getOrderEvents(orderId: string): Promise<OrderEvent[]>;
@@ -349,6 +350,36 @@ export class DatabaseStorage implements IStorage {
   async deleteScheduledOrder(id: string): Promise<void> {
     await db.delete(orderEvents).where(eq(orderEvents.orderId, id));
     await db.delete(scheduledOrders).where(eq(scheduledOrders.id, id));
+  }
+
+  async getConcurrentOrdersCount(date: string, time: string, windowHours: number): Promise<number> {
+    const targetDateTime = new Date(`${date}T${time}`);
+    const windowStart = new Date(targetDateTime.getTime() - (windowHours / 2) * 60 * 60 * 1000);
+    const windowEnd = new Date(targetDateTime.getTime() + (windowHours / 2) * 60 * 60 * 1000);
+    
+    const windowStartDate = windowStart.toISOString().split('T')[0];
+    const windowEndDate = windowEnd.toISOString().split('T')[0];
+    const windowStartTime = windowStart.toTimeString().slice(0, 5);
+    const windowEndTime = windowEnd.toTimeString().slice(0, 5);
+    
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(scheduledOrders)
+      .where(
+        and(
+          or(
+            eq(scheduledOrders.status, 'scheduled'),
+            eq(scheduledOrders.status, 'confirmed'),
+            eq(scheduledOrders.status, 'preparing'),
+            eq(scheduledOrders.status, 'out_for_delivery')
+          ),
+          sql`(${scheduledOrders.scheduledDate} || 'T' || ${scheduledOrders.scheduledTime})::timestamp 
+              BETWEEN ${windowStart.toISOString()}::timestamp 
+              AND ${windowEnd.toISOString()}::timestamp`
+        )
+      );
+    
+    return Number(result[0]?.count || 0);
   }
 
   // ========================

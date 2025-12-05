@@ -17,6 +17,8 @@ export interface VendorLocation {
   lng: number;
 }
 
+export type GratuityOption = 0 | 15 | 18 | 20 | 'custom';
+
 interface CartContextType {
   items: CartItem[];
   vendorId: string | null;
@@ -32,6 +34,11 @@ interface CartContextType {
   itemCount: number;
   serviceFee: number;
   deliveryFee: number;
+  gratuityOption: GratuityOption;
+  customGratuity: number;
+  gratuityAmount: number;
+  setGratuityOption: (option: GratuityOption) => void;
+  setCustomGratuity: (amount: number) => void;
   total: number;
 }
 
@@ -57,6 +64,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [vendorName, setVendorName] = useState<string | null>(null);
   const [vendorLocation, setVendorLocation] = useState<VendorLocation | null>(null);
+  const [gratuityOption, setGratuityOption] = useState<GratuityOption>(18);
+  const [customGratuity, setCustomGratuity] = useState<number>(0);
 
   useEffect(() => {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
@@ -67,6 +76,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setVendorId(parsed.vendorId || null);
         setVendorName(parsed.vendorName || null);
         setVendorLocation(parsed.vendorLocation || null);
+        setGratuityOption(parsed.gratuityOption ?? 18);
+        setCustomGratuity(parsed.customGratuity ?? 0);
       } catch (e) {
         console.error('Failed to parse cart:', e);
       }
@@ -78,9 +89,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items,
       vendorId,
       vendorName,
-      vendorLocation
+      vendorLocation,
+      gratuityOption,
+      customGratuity
     }));
-  }, [items, vendorId, vendorName, vendorLocation]);
+  }, [items, vendorId, vendorName, vendorLocation, gratuityOption, customGratuity]);
 
   const addItem = (vendor: Shop, product: Product) => {
     if (vendorId && vendorId !== vendor.id) {
@@ -144,6 +157,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setVendorId(null);
     setVendorName(null);
     setVendorLocation(null);
+    setGratuityOption(18);
+    setCustomGratuity(0);
   };
 
   const getItemQuantity = (itemId: string) => {
@@ -169,7 +184,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const serviceFee = subtotal * SERVICE_FEE_RATE;
   const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
-  const total = subtotal + serviceFee + deliveryFee;
+  
+  const gratuityAmount = gratuityOption === 'custom' 
+    ? customGratuity 
+    : subtotal * (gratuityOption / 100);
+  
+  const total = subtotal + serviceFee + deliveryFee + gratuityAmount;
 
   return (
     <CartContext.Provider value={{
@@ -187,6 +207,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       serviceFee,
       deliveryFee,
+      gratuityOption,
+      customGratuity,
+      gratuityAmount,
+      setGratuityOption,
+      setCustomGratuity,
       total
     }}>
       {children}

@@ -68,7 +68,7 @@ const shopImages: Record<string, string> = {
 
 const FloatingBean = ({ delay, duration, x, size }: { delay: number; duration: number; x: number; size: number }) => (
   <motion.div
-    className="absolute text-amber-600/30"
+    className="absolute"
     initial={{ y: "100vh", x: `${x}vw`, rotate: 0, opacity: 0 }}
     animate={{ 
       y: "-20vh", 
@@ -81,7 +81,7 @@ const FloatingBean = ({ delay, duration, x, size }: { delay: number; duration: n
       repeat: Infinity,
       ease: "linear"
     }}
-    style={{ fontSize: size }}
+    style={{ fontSize: size, color: 'rgba(92, 64, 51, 0.3)' }}
   >
     ☕
   </motion.div>
@@ -146,7 +146,7 @@ function CuratedRoastersCarousel() {
           
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
             <div className="flex justify-between items-start mb-3">
-              <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none text-sm px-3 py-1">
+              <Badge className="text-white hover:opacity-90 border-none text-sm px-3 py-1" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
                 {shop.rating} <Star className="h-3.5 w-3.5 ml-1 fill-current" />
               </Badge>
               {currentIndex === 0 && (
@@ -197,11 +197,11 @@ function CuratedRoastersCarousel() {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                idx === currentIndex 
-                  ? 'bg-amber-600 w-6' 
-                  : 'bg-amber-600/30 hover:bg-amber-600/50'
-              }`}
+              className={`w-2 h-2 rounded-full transition-all`}
+              style={{ 
+                background: idx === currentIndex ? '#3d2418' : 'rgba(61, 36, 24, 0.3)',
+                width: idx === currentIndex ? '1.5rem' : undefined
+              }}
               data-testid={`button-carousel-dot-${idx}`}
             />
           ))}
@@ -210,13 +210,13 @@ function CuratedRoastersCarousel() {
       
       {/* Menu Modal */}
       <Dialog open={showMenu} onOpenChange={setShowMenu}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] to-[#2d1810] border-amber-800/30">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] to-[#2d1810] border-[#3d2418]/30">
           <DialogHeader className="pb-2">
-            <DialogTitle className="font-serif text-2xl text-amber-100 flex items-center gap-3">
-              <Coffee className="h-6 w-6 text-amber-500" />
+            <DialogTitle className="font-serif text-2xl text-stone-100 flex items-center gap-3">
+              <Coffee className="h-6 w-6 text-[#d4c4b0]" />
               {shop.name}
             </DialogTitle>
-            <p className="text-amber-200/60 text-sm flex items-center gap-1">
+            <p className="text-stone-300/60 text-sm flex items-center gap-1">
               <MapPin className="h-3 w-3" /> {shop.location}
             </p>
           </DialogHeader>
@@ -225,7 +225,7 @@ function CuratedRoastersCarousel() {
             <div className="space-y-6">
               {categories.map(category => (
                 <div key={category}>
-                  <h4 className="text-amber-400 font-semibold text-sm uppercase tracking-wider mb-3 border-b border-amber-800/30 pb-2">
+                  <h4 className="text-[#d4c4b0] font-semibold text-sm uppercase tracking-wider mb-3 border-b border-[#3d2418]/30 pb-2">
                     {category}
                   </h4>
                   <div className="space-y-2">
@@ -240,19 +240,17 @@ function CuratedRoastersCarousel() {
                             data-testid={`menu-item-${item.id}`}
                           >
                             <div className="flex-1 min-w-0">
-                              <h5 className="text-amber-100 font-medium text-sm">{item.name}</h5>
-                              <p className="text-amber-200/50 text-xs truncate">{item.description}</p>
+                              <h5 className="text-stone-100 font-medium text-sm">{item.name}</h5>
+                              <p className="text-stone-300/50 text-xs truncate">{item.description}</p>
                             </div>
-                            <span className="text-amber-400 font-semibold text-sm whitespace-nowrap">
+                            <span className="text-[#d4c4b0] font-semibold text-sm whitespace-nowrap">
                               ${item.price.toFixed(2)}
                             </span>
                             <Button
                               size="sm"
                               variant={qty > 0 ? "default" : "outline"}
-                              className={qty > 0 
-                                ? "bg-amber-600 hover:bg-amber-700 min-w-[70px]" 
-                                : "border-amber-600 text-amber-400 hover:bg-amber-600/20 min-w-[70px]"
-                              }
+                              className={`min-w-[70px] shine-effect ${qty > 0 ? "text-white" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
+                              style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
                                 addItem(shop, item);
                                 toast({
@@ -273,11 +271,12 @@ function CuratedRoastersCarousel() {
             </div>
           </ScrollArea>
           
-          <div className="pt-3 border-t border-amber-800/30">
+          <div className="pt-3 border-t border-[#3d2418]/30">
             {itemCount > 0 ? (
               <Link href="/schedule">
                 <Button 
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  className="w-full text-white shine-effect"
+                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
                   onClick={() => setShowMenu(false)}
                   data-testid="button-checkout"
                 >
@@ -286,7 +285,7 @@ function CuratedRoastersCarousel() {
                 </Button>
               </Link>
             ) : (
-              <p className="text-center text-amber-200/50 text-sm py-2">
+              <p className="text-center text-stone-300/50 text-sm py-2">
                 Add items to your cart to checkout
               </p>
             )}
@@ -340,7 +339,7 @@ function FeaturedBoardsCarousel() {
     >
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <Croissant className="h-5 w-5 text-orange-600" />
+          <Croissant className="h-5 w-5" style={{ color: '#5c4033' }} />
           <h3 className="font-serif text-lg">Featured Boards & Treats</h3>
         </div>
         <span className="text-xs font-medium text-muted-foreground">
@@ -362,11 +361,11 @@ function FeaturedBoardsCarousel() {
             alt={shop.name} 
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-orange-900/20" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(26,15,9,0.4) 50%, rgba(45,24,16,0.2) 100%)' }} />
           
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
             <div className="flex justify-between items-start mb-3">
-              <Badge className="bg-orange-500 text-white hover:bg-orange-600 border-none text-sm px-3 py-1">
+              <Badge className="text-white hover:opacity-90 border-none text-sm px-3 py-1" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
                 {shop.rating} <Star className="h-3.5 w-3.5 ml-1 fill-current" />
               </Badge>
               <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none">
@@ -414,11 +413,11 @@ function FeaturedBoardsCarousel() {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                idx === currentIndex 
-                  ? 'bg-orange-600 w-6' 
-                  : 'bg-orange-600/30 hover:bg-orange-600/50'
-              }`}
+              className="w-2 h-2 rounded-full transition-all"
+              style={{ 
+                background: idx === currentIndex ? '#3d2418' : 'rgba(61, 36, 24, 0.3)',
+                width: idx === currentIndex ? '1.5rem' : undefined
+              }}
               data-testid={`button-boards-carousel-dot-${idx}`}
             />
           ))}
@@ -426,13 +425,13 @@ function FeaturedBoardsCarousel() {
       </div>
       
       <Dialog open={showMenu} onOpenChange={setShowMenu}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-orange-950 to-amber-950 border-orange-800/30">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-[#1a0f09] to-[#2d1810] border-[#3d2418]/30">
           <DialogHeader className="pb-2">
-            <DialogTitle className="font-serif text-2xl text-orange-100 flex items-center gap-3">
-              <Croissant className="h-6 w-6 text-orange-500" />
+            <DialogTitle className="font-serif text-2xl text-stone-100 flex items-center gap-3">
+              <Croissant className="h-6 w-6" style={{ color: '#d4c4b0' }} />
               {shop.name}
             </DialogTitle>
-            <p className="text-orange-200/60 text-sm flex items-center gap-1">
+            <p className="text-stone-300/60 text-sm flex items-center gap-1">
               <MapPin className="h-3 w-3" /> {shop.location}
             </p>
           </DialogHeader>
@@ -441,7 +440,7 @@ function FeaturedBoardsCarousel() {
             <div className="space-y-6">
               {categories.map(category => (
                 <div key={category}>
-                  <h4 className="text-orange-400 font-semibold text-sm uppercase tracking-wider mb-3 border-b border-orange-800/30 pb-2">
+                  <h4 className="text-[#d4c4b0] font-semibold text-sm uppercase tracking-wider mb-3 border-b border-[#3d2418]/30 pb-2">
                     {category}
                   </h4>
                   <div className="space-y-2">
@@ -457,26 +456,18 @@ function FeaturedBoardsCarousel() {
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
-                                <h5 className="font-medium text-orange-100 truncate">{item.name}</h5>
-                                <span className="text-orange-300 font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
+                                <h5 className="font-medium text-stone-100 truncate">{item.name}</h5>
+                                <span className="text-[#d4c4b0] font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
                               </div>
-                              <p className="text-xs text-orange-200/50 truncate">{item.description}</p>
+                              <p className="text-xs text-stone-300/50 truncate">{item.description}</p>
                             </div>
                             <Button
                               size="sm"
                               variant={qty > 0 ? "secondary" : "outline"}
-                              className={qty > 0 
-                                ? "bg-orange-600 hover:bg-orange-700 text-white border-none text-xs h-7 px-2" 
-                                : "border-orange-700 text-orange-200 hover:bg-orange-800/30 text-xs h-7 px-2"
-                              }
+                              className={`shine-effect text-xs h-7 px-2 ${qty > 0 ? "text-white border-none" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
+                              style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
-                                addItem({
-                                  id: item.id,
-                                  name: item.name,
-                                  price: item.price,
-                                  shopName: shop.name,
-                                  shopId: shop.id
-                                });
+                                addItem(shop, item);
                                 toast({
                                   title: "Added to cart",
                                   description: `${item.name} - $${item.price.toFixed(2)}`,
@@ -496,11 +487,12 @@ function FeaturedBoardsCarousel() {
             </div>
           </ScrollArea>
           
-          <div className="pt-3 border-t border-orange-800/30">
+          <div className="pt-3 border-t border-[#3d2418]/30">
             {itemCount > 0 ? (
               <Link href="/schedule">
                 <Button 
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full text-white shine-effect"
+                  style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
                   onClick={() => setShowMenu(false)}
                   data-testid="button-boards-checkout"
                 >
@@ -509,7 +501,7 @@ function FeaturedBoardsCarousel() {
                 </Button>
               </Link>
             ) : (
-              <p className="text-center text-orange-200/50 text-sm py-2">
+              <p className="text-center text-stone-300/50 text-sm py-2">
                 Add items to your cart to checkout
               </p>
             )}
@@ -523,8 +515,8 @@ function FeaturedBoardsCarousel() {
 // Weather icon helper
 const getWeatherIcon = (icon: string, className: string = "h-4 w-4") => {
   switch (icon) {
-    case 'sun': return <Sun className={`${className} text-amber-500`} />;
-    case 'cloud-sun': return <CloudSun className={`${className} text-amber-400`} />;
+    case 'sun': return <Sun className={`${className}`} style={{ color: '#d4c4b0' }} />;
+    case 'cloud-sun': return <CloudSun className={`${className}`} style={{ color: '#d4c4b0' }} />;
     case 'cloud': return <Cloud className={`${className} text-gray-400`} />;
     case 'cloud-rain': return <CloudRain className={`${className} text-blue-400`} />;
     case 'cloud-drizzle': return <CloudDrizzle className={`${className} text-blue-300`} />;
@@ -619,8 +611,8 @@ const { itemCount } = useCart();
       subtitle: "Premium catering delivery",
       href: "/schedule",
       icon: Calendar,
-      gradient: "from-amber-800 via-amber-700 to-amber-600",
-      shadowColor: "shadow-amber-800/40"
+      gradient: "from-[#5c4033] via-[#3d2418] to-[#2d1810]",
+      shadowColor: "shadow-[#2d1810]/40"
     },
     {
       id: "find-baristas",
@@ -646,13 +638,13 @@ const { itemCount } = useCart();
       subtitle: "Create & share PDFs",
       href: "/scan",
       icon: Scan,
-      gradient: "from-yellow-900 via-yellow-800 to-amber-700",
-      shadowColor: "shadow-yellow-900/40"
+      gradient: "from-[#4a2c1c] via-[#3d2418] to-[#2d1810]",
+      shadowColor: "shadow-[#2d1810]/40"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50/30 to-background dark:from-amber-950/30 dark:via-background dark:to-background text-foreground pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-background dark:from-[#1a0f09]/30 dark:via-background dark:to-background text-foreground pb-20 overflow-x-hidden">
       {/* Floating Coffee Beans Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingBean delay={0} duration={15} x={10} size={24} />
@@ -730,7 +722,7 @@ const { itemCount } = useCart();
               <h1 className="font-serif text-3xl md:text-5xl text-white font-bold tracking-tight drop-shadow-lg mb-2">
                 Brews & Boards
               </h1>
-              <p className="text-amber-200/90 text-sm md:text-base max-w-md">
+              <p className="text-[#d4c4b0] text-sm md:text-base max-w-md">
                 Coffee, tea, donuts & breakfast boards — delivered with Nashville style
               </p>
               <motion.div 
@@ -740,13 +732,13 @@ const { itemCount } = useCart();
                 transition={{ delay: 0.4 }}
               >
                 <Link href="/schedule">
-                  <Button className="bg-amber-500 text-white hover:bg-amber-400 font-semibold shadow-lg hover:shadow-xl transition-all border border-amber-400/50">
+                  <Button className="text-white font-semibold shadow-lg hover:shadow-xl transition-all shine-effect" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)', borderColor: 'rgba(212,196,176,0.3)' }}>
                     <Calendar className="h-4 w-4 mr-2" />
                     Order Now
                   </Button>
                 </Link>
                 <Link href="/verify/BB-0000000001">
-                  <Button variant="outline" className="border-amber-400/50 text-amber-100 hover:bg-amber-800/30 backdrop-blur-sm">
+                  <Button variant="outline" className="border-[#d4c4b0]/50 text-[#d4c4b0] hover:bg-[#2d1810]/30 backdrop-blur-sm">
                     <Shield className="h-4 w-4 mr-2" />
                     Verified
                   </Button>
@@ -759,7 +751,7 @@ const { itemCount } = useCart();
         
         {/* Wave divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1200 40" className="w-full h-8 fill-amber-50 dark:fill-background" preserveAspectRatio="none">
+          <svg viewBox="0 0 1200 40" className="w-full h-8 fill-stone-100 dark:fill-background" preserveAspectRatio="none">
             <path d="M0,40 L0,20 Q150,0 300,15 T600,10 T900,20 T1200,10 L1200,40 Z" />
           </svg>
         </div>
@@ -770,7 +762,7 @@ const { itemCount } = useCart();
         <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Coffee className="h-5 w-5 text-amber-600" />
+              <Coffee className="h-5 w-5" style={{ color: '#5c4033' }} />
               <span className="text-sm font-medium text-foreground">Brew & Board</span>
             </div>
             <Link href="/verify/BB-0000000001">
@@ -789,7 +781,7 @@ const { itemCount } = useCart();
               variant="ghost"
               size="sm"
               onClick={() => setShowWeatherRadar(true)}
-              className="gap-2 text-xs hover:bg-amber-50 dark:hover:bg-amber-950/30"
+              className="gap-2 text-xs hover:bg-stone-100 dark:hover:bg-[#1a0f09]/30"
               data-testid="button-weather"
             >
               {weather ? getWeatherIcon(weather.current.icon) : <Cloud className="h-4 w-4 text-gray-400" />}
@@ -897,7 +889,7 @@ const { itemCount } = useCart();
         >
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <Newspaper className="h-5 w-5 text-amber-600" />
+              <Newspaper className="h-5 w-5" style={{ color: '#5c4033' }} />
               <h3 className="font-serif text-lg">Nashville News</h3>
               <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">WKRN</span>
             </div>
@@ -943,12 +935,12 @@ const { itemCount } = useCart();
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group bg-card border rounded-xl p-4 hover:border-amber-500/50 hover:shadow-md transition-all"
+                  className="group bg-card border rounded-xl p-4 hover:border-[#5c4033]/50 hover:shadow-md transition-all"
                   data-testid={`news-item-${index}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-amber-600 transition-colors">
+                      <h4 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-[#5c4033] transition-colors">
                         {item.title}
                       </h4>
                       {item.description && (
@@ -965,7 +957,7 @@ const { itemCount } = useCart();
                         })}
                       </p>
                     </div>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+                    <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-[#5c4033] transition-colors flex-shrink-0" />
                   </div>
                 </a>
               ))}
@@ -979,13 +971,13 @@ const { itemCount } = useCart();
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
           <DialogHeader className="p-4 pb-2 border-b">
             <DialogTitle className="flex items-center gap-2 font-serif">
-              <Radar className="h-5 w-5 text-amber-600" />
+              <Radar className="h-5 w-5" style={{ color: '#5c4033' }} />
               Nashville Weather
             </DialogTitle>
           </DialogHeader>
           <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
             {/* Current Conditions - Real Data */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-6">
+            <div className="bg-gradient-to-br from-stone-100 to-stone-50 dark:from-[#1a0f09]/30 dark:to-[#2d1810]/30 rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
@@ -1003,7 +995,7 @@ const { itemCount } = useCart();
                 </div>
               </div>
               
-              <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-amber-200/50 dark:border-amber-800/30">
+              <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-stone-200/50 dark:border-[#3d2418]/30">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                     <Droplets className="h-3 w-3" />

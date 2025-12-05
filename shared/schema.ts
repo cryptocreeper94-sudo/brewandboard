@@ -855,6 +855,12 @@ export type FranchiseInquiry = typeof franchiseInquiries.$inferSelect;
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;
+
+// Capacity Management Constants
+// 2-person team can handle max 3-5 concurrent orders in a 2-hour window
+export const MAX_CONCURRENT_ORDERS = 4; // Conservative middle ground
+export const CAPACITY_WINDOW_HOURS = 2; // Check orders within 2-hour window
+
 export const ORDER_STATUSES = [
   'scheduled',
   'confirmed', 

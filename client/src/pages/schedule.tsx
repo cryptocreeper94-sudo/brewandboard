@@ -86,7 +86,7 @@ interface ScheduledOrder {
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   scheduled: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
   confirmed: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
-  preparing: { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" },
+  preparing: { bg: "bg-stone-100", text: "text-stone-700", border: "border-stone-200" },
   out_for_delivery: { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" },
   delivered: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },
   cancelled: { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" },
@@ -104,7 +104,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function SchedulePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { items: cartItems, vendorName: cartVendorName, vendorLocation, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, total, itemCount, calculateDeliveryFee } = useCart();
+  const { items: cartItems, vendorName: cartVendorName, vendorLocation, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, gratuityOption, customGratuity, gratuityAmount, setGratuityOption, setCustomGratuity, total, itemCount, calculateDeliveryFee } = useCart();
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
@@ -356,13 +356,13 @@ export default function SchedulePage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl"
+            className="mb-6 p-4 bg-gradient-to-r from-stone-100 to-stone-50 border border-stone-200 rounded-xl"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-amber-600" />
-                <span className="font-medium text-amber-900">Your Cart from {cartVendorName}</span>
-                <Badge className="bg-amber-600 text-white">{itemCount} items</Badge>
+                <ShoppingCart className="h-5 w-5" style={{ color: '#5c4033' }} />
+                <span className="font-medium" style={{ color: '#2d1810' }}>Your Cart from {cartVendorName}</span>
+                <Badge className="text-white" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>{itemCount} items</Badge>
               </div>
               <Button
                 variant="ghost"
@@ -380,8 +380,8 @@ export default function SchedulePage() {
               {cartItems.map((item) => (
                 <div key={item.itemId} className="flex items-center justify-between bg-white/60 p-2 rounded-lg">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-amber-900">{item.name}</span>
-                    <span className="text-xs text-amber-600 ml-2">${item.price.toFixed(2)} ea</span>
+                    <span className="text-sm font-medium" style={{ color: '#2d1810' }}>{item.name}</span>
+                    <span className="text-xs ml-2" style={{ color: '#5c4033' }}>${item.price.toFixed(2)} ea</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -417,28 +417,88 @@ export default function SchedulePage() {
               ))}
             </div>
             
-            <div className="flex justify-between items-center pt-2 border-t border-amber-200">
-              <div className="text-sm text-amber-700">
-                <span>Subtotal: ${subtotal.toFixed(2)}</span>
-                <span className="mx-2">+</span>
-                <span>Fee: ${serviceFee.toFixed(2)}</span>
-                <span className="mx-2">+</span>
-                <span>Delivery: ${deliveryFee.toFixed(2)}</span>
+            {/* Gratuity Selector */}
+            <div className="pt-3 border-t border-stone-200 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium" style={{ color: '#2d1810' }}>Concierge Gratuity</span>
+                <span className="text-xs text-muted-foreground">Standard: 18-20%</span>
               </div>
-              <span className="font-bold text-amber-900">Total: ${total.toFixed(2)}</span>
+              <div className="flex gap-2 flex-wrap">
+                {([0, 15, 18, 20] as const).map((pct) => (
+                  <Button
+                    key={pct}
+                    size="sm"
+                    variant={gratuityOption === pct ? "default" : "outline"}
+                    className={`flex-1 min-w-[60px] ${gratuityOption === pct ? "text-white shine-effect" : ""}`}
+                    style={gratuityOption === pct ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                    onClick={() => setGratuityOption(pct)}
+                    data-testid={`button-tip-${pct}`}
+                  >
+                    {pct === 0 ? "None" : `${pct}%`}
+                  </Button>
+                ))}
+                <Button
+                  size="sm"
+                  variant={gratuityOption === 'custom' ? "default" : "outline"}
+                  className={`flex-1 min-w-[60px] ${gratuityOption === 'custom' ? "text-white shine-effect" : ""}`}
+                  style={gratuityOption === 'custom' ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                  onClick={() => setGratuityOption('custom')}
+                  data-testid="button-tip-custom"
+                >
+                  Custom
+                </Button>
+              </div>
+              {gratuityOption === 'custom' && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={customGratuity}
+                    onChange={(e) => setCustomGratuity(parseFloat(e.target.value) || 0)}
+                    className="w-24"
+                    placeholder="0.00"
+                    data-testid="input-custom-tip"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-1 pt-2 border-t border-stone-200">
+              <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
+                <span>Subtotal:</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
+                <span>Service Fee (15%):</span>
+                <span>${serviceFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
+                <span>Delivery:</span>
+                <span>${deliveryFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
+                <span>Gratuity{gratuityOption !== 'custom' && gratuityOption > 0 ? ` (${gratuityOption}%)` : ''}:</span>
+                <span>${gratuityAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold pt-2 border-t border-stone-200 mt-1" style={{ color: '#2d1810' }}>
+                <span>Total:</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
             </div>
           </motion.div>
         )}
 
         {/* Lead Time Disclaimer */}
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+        <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ background: 'linear-gradient(135deg, rgba(92,64,51,0.1) 0%, rgba(61,36,24,0.1) 100%)', border: '1px solid rgba(61,36,24,0.2)' }}>
+          <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: '#5c4033' }} />
           <div className="space-y-2">
-            <p className="text-amber-800 font-medium text-sm">Delivery Lead Time Notice</p>
-            <p className="text-amber-700 text-sm">
+            <p className="font-medium text-sm" style={{ color: '#2d1810' }}>Delivery Lead Time Notice</p>
+            <p className="text-sm" style={{ color: '#3d2418' }}>
               Orders must be placed at least <strong>{MINIMUM_ORDER_LEAD_TIME_HOURS} hours</strong> before your requested delivery time. For guaranteed on-time delivery, we recommend <strong>24+ hours advance notice</strong> when possible.
             </p>
-            <p className="text-amber-600 text-xs">
+            <p className="text-xs" style={{ color: '#5c4033' }}>
               Delivery times are estimated and may vary based on Nashville traffic conditions. Orders placed with less than 4 hours notice are fulfilled on a best-effort basis.
             </p>
           </div>
@@ -487,7 +547,7 @@ export default function SchedulePage() {
                   isSelected 
                     ? "border-primary bg-primary/5 shadow-md" 
                     : isToday 
-                      ? "border-amber-300 bg-amber-50" 
+                      ? "border-[#5c4033] bg-stone-50" 
                       : "border-border hover:border-primary/30"
                 }`}
                 data-testid={`button-day-${format(day, "yyyy-MM-dd")}`}
@@ -500,7 +560,7 @@ export default function SchedulePage() {
                 </div>
                 {dayOrders.length > 0 && (
                   <div className="mt-2 flex items-center gap-1">
-                    <Coffee className="h-3 w-3 text-amber-600" />
+                    <Coffee className="h-3 w-3" style={{ color: '#5c4033' }} />
                     <span className="text-xs font-medium">{dayOrders.length} order{dayOrders.length > 1 ? 's' : ''}</span>
                   </div>
                 )}
@@ -554,8 +614,8 @@ export default function SchedulePage() {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                            <Coffee className="h-5 w-5 text-amber-700" />
+                          <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(92,64,51,0.1)' }}>
+                            <Coffee className="h-5 w-5" style={{ color: '#5c4033' }} />
                           </div>
                           <div>
                             <p className="font-semibold">{order.vendorName || "Coffee Order"}</p>
@@ -771,21 +831,22 @@ export default function SchedulePage() {
 • Contact on arrival: Who should we call when we arrive?"
                   value={newOrder.deliveryInstructions}
                   onChange={(e) => setNewOrder({ ...newOrder, deliveryInstructions: e.target.value })}
-                  className="min-h-[140px] bg-white border-orange-200 focus:border-orange-400 placeholder:text-orange-400/70"
+                  className="min-h-[140px] bg-white placeholder:text-stone-400/70"
+                  style={{ borderColor: 'rgba(61,36,24,0.2)' }}
                   data-testid="input-delivery-instructions"
                 />
                 
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ color: '#3d2418', background: 'rgba(92,64,51,0.1)' }}>
                     <KeyRound className="h-3 w-3" /> Access codes
                   </span>
-                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ color: '#3d2418', background: 'rgba(92,64,51,0.1)' }}>
                     <ParkingCircle className="h-3 w-3" /> Parking info
                   </span>
-                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ color: '#3d2418', background: 'rgba(92,64,51,0.1)' }}>
                     <DoorOpen className="h-3 w-3" /> Entry point
                   </span>
-                  <span className="flex items-center gap-1 text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ color: '#3d2418', background: 'rgba(92,64,51,0.1)' }}>
                     <Phone className="h-3 w-3" /> On-arrival contact
                   </span>
                 </div>
@@ -793,9 +854,9 @@ export default function SchedulePage() {
 
               {/* Order Summary */}
               {orderTotals.subtotal > 0 && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-                  <h4 className="font-medium text-amber-800 flex items-center gap-2">
-                    <Coffee className="h-4 w-4" />
+                <div className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(92,64,51,0.05)', border: '1px solid rgba(61,36,24,0.15)' }}>
+                  <h4 className="font-medium flex items-center gap-2" style={{ color: '#2d1810' }}>
+                    <Coffee className="h-4 w-4" style={{ color: '#5c4033' }} />
                     Order Summary
                   </h4>
                   <div className="space-y-1 text-sm">
@@ -819,16 +880,16 @@ export default function SchedulePage() {
                     </div>
                     {orderTotals.isExtendedDelivery && (
                       <div className="flex justify-between">
-                        <span className="text-orange-600 flex items-center gap-1">
+                        <span className="flex items-center gap-1" style={{ color: '#5c4033' }}>
                           <AlertTriangle className="h-3 w-3" />
                           Extended Delivery (+{orderTotals.deliveryDistance.toFixed(1)} mi)
                         </span>
-                        <span className="text-orange-600">+${orderTotals.extendedFee.toFixed(2)}</span>
+                        <span style={{ color: '#5c4033' }}>+${orderTotals.extendedFee.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between font-semibold pt-2 border-t border-amber-200 mt-2">
+                    <div className="flex justify-between font-semibold pt-2 mt-2" style={{ borderTop: '1px solid rgba(61,36,24,0.15)' }}>
                       <span>Total</span>
-                      <span className="text-amber-700">${orderTotals.total.toFixed(2)}</span>
+                      <span style={{ color: '#3d2418' }}>${orderTotals.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -861,7 +922,7 @@ export default function SchedulePage() {
               <div className="space-y-6">
                 <div className="p-4 bg-muted/30 rounded-lg space-y-2">
                   <div className="flex items-center gap-2">
-                    <Coffee className="h-4 w-4 text-amber-600" />
+                    <Coffee className="h-4 w-4" style={{ color: '#5c4033' }} />
                     <span className="font-medium">{selectedOrder.vendorName || "Coffee Order"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

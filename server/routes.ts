@@ -13,6 +13,8 @@ import {
   insertRegionSchema,
   insertRegionalManagerSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
+  MAX_CONCURRENT_ORDERS,
+  CAPACITY_WINDOW_HOURS,
   HALLMARK_MINTING_FEE,
   FRANCHISE_TIERS
 } from "@shared/schema";
@@ -504,6 +506,37 @@ export async function registerRoutes(
     }
   });
 
+  // Check capacity for a specific time slot
+  app.get("/api/orders/capacity/check", async (req, res) => {
+    try {
+      const date = req.query.date as string;
+      const time = req.query.time as string;
+      
+      if (!date || !time) {
+        return res.status(400).json({ error: "date and time query parameters required" });
+      }
+      
+      const concurrentOrders = await storage.getConcurrentOrdersCount(date, time, CAPACITY_WINDOW_HOURS);
+      const spotsRemaining = Math.max(0, MAX_CONCURRENT_ORDERS - concurrentOrders);
+      
+      res.json({
+        date,
+        time,
+        currentOrders: concurrentOrders,
+        maxOrders: MAX_CONCURRENT_ORDERS,
+        windowHours: CAPACITY_WINDOW_HOURS,
+        spotsRemaining,
+        isAtCapacity: concurrentOrders >= MAX_CONCURRENT_ORDERS,
+        capacityLevel: concurrentOrders === 0 ? 'open' 
+          : concurrentOrders < MAX_CONCURRENT_ORDERS / 2 ? 'low' 
+          : concurrentOrders < MAX_CONCURRENT_ORDERS ? 'medium' 
+          : 'full'
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/orders", async (req, res) => {
     try {
       const validatedData = insertScheduledOrderSchema.parse(req.body);
@@ -516,6 +549,24 @@ export async function registerRoutes(
       if (hoursUntilDelivery < MINIMUM_ORDER_LEAD_TIME_HOURS) {
         return res.status(400).json({ 
           error: `Orders must be placed at least ${MINIMUM_ORDER_LEAD_TIME_HOURS} hours before delivery time to guarantee on-time delivery.` 
+        });
+      }
+      
+      // Check capacity - 2-person team can handle max 4 concurrent orders in 2-hour window
+      const concurrentOrders = await storage.getConcurrentOrdersCount(
+        validatedData.scheduledDate,
+        validatedData.scheduledTime,
+        CAPACITY_WINDOW_HOURS
+      );
+      
+      if (concurrentOrders >= MAX_CONCURRENT_ORDERS) {
+        return res.status(409).json({ 
+          error: `This time slot is at capacity. Our team can handle ${MAX_CONCURRENT_ORDERS} deliveries within a ${CAPACITY_WINDOW_HOURS}-hour window. Please select a different delivery time.`,
+          capacityInfo: {
+            currentOrders: concurrentOrders,
+            maxOrders: MAX_CONCURRENT_ORDERS,
+            windowHours: CAPACITY_WINDOW_HOURS
+          }
         });
       }
       

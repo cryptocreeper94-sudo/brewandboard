@@ -6,7 +6,8 @@ import {
   Building2, Phone, Mail, Briefcase, Calendar, Activity,
   CreditCard, FileText, UserCircle, LogOut, RefreshCw,
   Globe, Target, Clock, CheckCircle, AlertCircle, Download,
-  ChevronDown, ChevronUp, Star, Sparkles, Shield, Lock, AlertTriangle
+  ChevronDown, ChevronUp, Star, Sparkles, Shield, Lock, AlertTriangle,
+  BarChart3, Rocket, Award, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -953,6 +954,245 @@ export default function RegionalDashboard() {
                   })}
                 </Accordion>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Business Intelligence Section - Partner Only */}
+          <Card className="border-0 shadow-xl overflow-hidden mt-6">
+            <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    Business Intelligence 
+                    <Sparkles className="h-4 w-4 text-yellow-300" />
+                  </CardTitle>
+                  <CardDescription className="text-emerald-200">
+                    Valuation tracking, milestones, and growth metrics
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                    <span className="font-semibold text-emerald-800">Current Stage</span>
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-700">MVP</p>
+                  <p className="text-sm text-emerald-600">Pre-Revenue</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold text-blue-800">Est. Valuation</span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-700">$500K - $2M</p>
+                  <p className="text-sm text-blue-600">MVP Stage</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="h-5 w-5 text-purple-600" />
+                    <span className="font-semibold text-purple-800">Market Size</span>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-700">$60B</p>
+                  <p className="text-sm text-purple-600">Corporate Catering</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                    <span className="font-semibold text-amber-800">Growth Rate</span>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-700">50%</p>
+                  <p className="text-sm text-amber-600">Faster than industry</p>
+                </div>
+              </div>
+
+              <div className="border rounded-xl bg-white/50 backdrop-blur p-4">
+                <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-indigo-600" />
+                  Valuation Scenarios
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3 font-semibold">Stage</th>
+                        <th className="text-left py-2 px-3 font-semibold">ARR Target</th>
+                        <th className="text-left py-2 px-3 font-semibold">Multiple</th>
+                        <th className="text-left py-2 px-3 font-semibold">Valuation</th>
+                        <th className="text-left py-2 px-3 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b bg-emerald-50/50">
+                        <td className="py-2 px-3 font-medium">MVP (Current)</td>
+                        <td className="py-2 px-3">Pre-Revenue</td>
+                        <td className="py-2 px-3">-</td>
+                        <td className="py-2 px-3 font-semibold text-emerald-700">$500K - $2M</td>
+                        <td className="py-2 px-3"><Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Active</Badge></td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3 font-medium">Seed</td>
+                        <td className="py-2 px-3">$100K</td>
+                        <td className="py-2 px-3">4-6x</td>
+                        <td className="py-2 px-3 font-semibold">$1.5M - $3M</td>
+                        <td className="py-2 px-3"><Badge variant="outline">Target</Badge></td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3 font-medium">Series A</td>
+                        <td className="py-2 px-3">$500K</td>
+                        <td className="py-2 px-3">5-7x</td>
+                        <td className="py-2 px-3 font-semibold">$5M - $10M</td>
+                        <td className="py-2 px-3"><Badge variant="outline">Milestone</Badge></td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3 font-medium">Growth</td>
+                        <td className="py-2 px-3">$3M</td>
+                        <td className="py-2 px-3">6-10x</td>
+                        <td className="py-2 px-3 font-semibold">$18M - $30M</td>
+                        <td className="py-2 px-3"><Badge variant="outline">Vision</Badge></td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 px-3 font-medium">Scale (ezCater)</td>
+                        <td className="py-2 px-3">$50M+</td>
+                        <td className="py-2 px-3">10x+</td>
+                        <td className="py-2 px-3 font-semibold">$500M+</td>
+                        <td className="py-2 px-3"><Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Aspirational</Badge></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-xl bg-white/50 backdrop-blur p-4">
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Award className="h-5 w-5 text-amber-600" />
+                    Premium Value Drivers
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-transparent">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">Blockchain Verification</p>
+                        <p className="text-xs text-muted-foreground">+10-15% premium</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-transparent">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">B2B Focus</p>
+                        <p className="text-xs text-muted-foreground">+15-20% vs consumer</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-transparent">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">Virtual Host Multi-Location</p>
+                        <p className="text-xs text-muted-foreground">+10% unique capability</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-transparent">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">Franchise Model</p>
+                        <p className="text-xs text-muted-foreground">Scalability multiplier</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-xl bg-white/50 backdrop-blur p-4">
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    Revenue Projections
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-1 px-2 font-semibold text-xs">Tier</th>
+                          <th className="text-left py-1 px-2 font-semibold text-xs">Price</th>
+                          <th className="text-left py-1 px-2 font-semibold text-xs">500 Subs</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b">
+                          <td className="py-1 px-2">Starter</td>
+                          <td className="py-1 px-2">$29/mo</td>
+                          <td className="py-1 px-2 text-emerald-600 font-medium">$174K/yr</td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="py-1 px-2">Professional</td>
+                          <td className="py-1 px-2">$79/mo</td>
+                          <td className="py-1 px-2 text-emerald-600 font-medium">$474K/yr</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 px-2">Enterprise</td>
+                          <td className="py-1 px-2">$199/mo</td>
+                          <td className="py-1 px-2 text-emerald-600 font-medium">$1.19M/yr</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">Plus: 15% service fees, hallmark minting, franchise fees</p>
+                </div>
+              </div>
+
+              <div className="border rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
+                <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-indigo-600" />
+                  Key Metrics to Track
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Monthly Active Users</p>
+                    <p className="text-xl font-bold text-indigo-700">--</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">MRR</p>
+                    <p className="text-xl font-bold text-indigo-700">$0</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Orders/Month</p>
+                    <p className="text-xl font-bold text-indigo-700">--</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Churn Rate</p>
+                    <p className="text-xl font-bold text-indigo-700">--</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3 text-center">Target: NRR &gt;110%, Churn &lt;6%, Rule of 40</p>
+              </div>
+
+              <div className="border rounded-xl bg-white/50 backdrop-blur p-4">
+                <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                  Comparable: ezCater (Market Leader)
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Valuation</p>
+                    <p className="font-bold text-lg">$1.6B</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Total Funding</p>
+                    <p className="font-bold text-lg">$425M+</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Restaurant Network</p>
+                    <p className="font-bold text-lg">82,000+</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Founded</p>
+                    <p className="font-bold text-lg">2007</p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

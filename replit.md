@@ -48,9 +48,16 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.4** - December 2024
+**v1.1.5** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.5**: Dashboard UI Polish & Vendor Portal
+  - Quick Actions now display in single horizontal row (4 columns)
+  - All Quick Action cards use consistent coffee/brown/amber color palette
+  - Fixed Crumbl Cookies vendor image display
+  - Improved static asset serving for vendor images
+  - Dashboard maintains cohesive Nashville Luxury aesthetic
+
 - **v1.1.4**: Vendor Sign-Up Portal
   - New vendor application page (/vendors) for Nashville businesses to join
   - Database schema: vendor_applications table with full business info

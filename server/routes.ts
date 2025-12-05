@@ -1248,6 +1248,7 @@ export async function registerRoutes(
   // Master PINs for initial access
   const MASTER_PINS = {
     PARTNER: "4444",      // Sid - Partner level, full access, sees all managers
+    PARTNER2: "4455",     // Second Partner - full access, sees all managers
     REGIONAL: "5555"      // Regional managers - view only their territory
   };
 
@@ -1263,21 +1264,22 @@ export async function registerRoutes(
       
       // Check if using master PIN to create new account
       if (!manager) {
-        if (pin === MASTER_PINS.PARTNER) {
-          // Check if partner already exists - only allow one partner account
-          const existingPartners = await storage.getRegionalManagers({ isActive: true });
-          const partnerExists = existingPartners.some(m => m.role === "partner");
+        if (pin === MASTER_PINS.PARTNER || pin === MASTER_PINS.PARTNER2) {
+          // Check if this specific partner PIN already has an account
+          const existingManagers = await storage.getRegionalManagers({ isActive: true });
+          const pinAlreadyUsed = existingManagers.some(m => m.role === "partner" && m.name === (pin === MASTER_PINS.PARTNER ? "Sid" : "Partner"));
           
-          if (partnerExists) {
+          if (pinAlreadyUsed) {
             return res.status(400).json({ 
               error: "Partner account already exists. Please use your personal PIN to login." 
             });
           }
           
-          // Create Sid's partner account (one-time registration)
+          // Create partner account (one-time registration)
           const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
+          const partnerName = pin === MASTER_PINS.PARTNER ? "Sid" : "Partner";
           manager = await storage.createRegionalManager({
-            name: "Sid",
+            name: partnerName,
             email: `partner_${Date.now()}@brewandboard.coffee`,
             phone: "",
             pin: pin,

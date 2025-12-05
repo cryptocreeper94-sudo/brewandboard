@@ -1248,8 +1248,7 @@ export async function registerRoutes(
   // Master PINs for initial access
   const MASTER_PINS = {
     PARTNER: "4444",      // Sid - Partner level, full access, sees all managers
-    PARTNER2: "4455",     // Second Partner - full access, sees all managers
-    REGIONAL: "5555"      // Regional managers - view only their territory
+    PARTNER2: "5555"      // Second Partner - full access, sees all managers
   };
 
   // Regional manager login by PIN (rate-limited in production)
@@ -1286,21 +1285,6 @@ export async function registerRoutes(
             role: "partner",
             regionId: nashvilleRegion?.id || null,
             title: "Partner",
-            isActive: true,
-            mustChangePin: true,
-            hasSeenWelcome: false
-          });
-        } else if (pin === MASTER_PINS.REGIONAL) {
-          // Create new regional manager account (onboarding new team members)
-          const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
-          manager = await storage.createRegionalManager({
-            name: "Regional Manager",
-            email: `regional_${Date.now()}@brewandboard.coffee`,
-            phone: "",
-            pin: pin,
-            role: "regional_manager",
-            regionId: nashvilleRegion?.id || null,
-            title: "Regional Manager",
             isActive: true,
             mustChangePin: true,
             hasSeenWelcome: false
@@ -1354,7 +1338,7 @@ export async function registerRoutes(
       }
       
       // Check if PIN is a master PIN
-      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.REGIONAL) {
+      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.PARTNER2) {
         return res.status(400).json({ error: "This PIN is reserved. Please choose a different PIN." });
       }
       

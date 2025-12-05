@@ -31,7 +31,10 @@ import {
   RefreshCw,
   Shield,
   ShoppingCart,
-  Navigation
+  Navigation,
+  Cookie,
+  Croissant,
+  UtensilsCrossed
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
@@ -294,6 +297,229 @@ function CuratedRoastersCarousel() {
   );
 }
 
+function FeaturedBoardsCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const { addItem, getItemQuantity, itemCount } = useCart();
+  const { toast } = useToast();
+  
+  const foodShops = COFFEE_SHOPS.filter(shop => 
+    ['bakery', 'donut', 'breakfast'].includes(shop.type) || 
+    shop.name.includes('Crumbl') || 
+    shop.name.includes('Donut') ||
+    shop.name.includes('Biscuit')
+  ).slice(0, 8);
+  
+  if (foodShops.length === 0) return null;
+  
+  const goNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % foodShops.length);
+  };
+  
+  const goPrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + foodShops.length) % foodShops.length);
+  };
+  
+  const shop = foodShops[currentIndex];
+  const categories = Array.from(new Set(shop.menu.map(item => item.category)));
+  
+  const getTypeLabel = (type: string) => {
+    switch(type) {
+      case 'bakery': return 'Bakery';
+      case 'donut': return 'Donuts';
+      case 'breakfast': return 'Breakfast';
+      default: return 'Treats';
+    }
+  };
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.35 }}
+    >
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <Croissant className="h-5 w-5 text-orange-600" />
+          <h3 className="font-serif text-lg">Featured Boards & Treats</h3>
+        </div>
+        <span className="text-xs font-medium text-muted-foreground">
+          {currentIndex + 1} of {foodShops.length}
+        </span>
+      </div>
+      
+      <div className="relative">
+        <motion.div
+          key={shop.id}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+          className="w-full h-[280px] md:h-[320px] rounded-2xl overflow-hidden relative group cursor-pointer shadow-lg"
+        >
+          <img 
+            src={shop.image} 
+            alt={shop.name} 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-orange-900/20" />
+          
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+            <div className="flex justify-between items-start mb-3">
+              <Badge className="bg-orange-500 text-white hover:bg-orange-600 border-none text-sm px-3 py-1">
+                {shop.rating} <Star className="h-3.5 w-3.5 ml-1 fill-current" />
+              </Badge>
+              <Badge variant="secondary" className="bg-white/20 backdrop-blur-md text-white border-none">
+                {getTypeLabel(shop.type)}
+              </Badge>
+            </div>
+            <h3 className="font-serif text-2xl md:text-3xl font-bold mb-2">{shop.name}</h3>
+            <p className="text-base text-white/80 flex items-center gap-2 mb-4">
+              <MapPin className="h-4 w-4" /> {shop.location}
+            </p>
+            
+            <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 border-white/30"
+                data-testid="button-boards-carousel-prev"
+              >
+                <ChevronLeft className="h-5 w-5 text-white" />
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-white text-black hover:bg-white/90 font-medium"
+                onClick={(e) => { e.stopPropagation(); setShowMenu(true); }}
+                data-testid="button-boards-view-menu"
+              >
+                View Menu
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 border-white/30"
+                data-testid="button-boards-carousel-next"
+              >
+                <ChevronRight className="h-5 w-5 text-white" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+        
+        <div className="flex justify-center gap-2 mt-4">
+          {foodShops.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx === currentIndex 
+                  ? 'bg-orange-600 w-6' 
+                  : 'bg-orange-600/30 hover:bg-orange-600/50'
+              }`}
+              data-testid={`button-boards-carousel-dot-${idx}`}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <Dialog open={showMenu} onOpenChange={setShowMenu}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden bg-gradient-to-br from-orange-950 to-amber-950 border-orange-800/30">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="font-serif text-2xl text-orange-100 flex items-center gap-3">
+              <Croissant className="h-6 w-6 text-orange-500" />
+              {shop.name}
+            </DialogTitle>
+            <p className="text-orange-200/60 text-sm flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> {shop.location}
+            </p>
+          </DialogHeader>
+          
+          <ScrollArea className="max-h-[55vh] pr-4">
+            <div className="space-y-6">
+              {categories.map(category => (
+                <div key={category}>
+                  <h4 className="text-orange-400 font-semibold text-sm uppercase tracking-wider mb-3 border-b border-orange-800/30 pb-2">
+                    {category}
+                  </h4>
+                  <div className="space-y-2">
+                    {shop.menu
+                      .filter(item => item.category === category)
+                      .map(item => {
+                        const qty = getItemQuantity(item.id);
+                        return (
+                          <div 
+                            key={item.id} 
+                            className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+                            data-testid={`boards-menu-item-${item.id}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <h5 className="font-medium text-orange-100 truncate">{item.name}</h5>
+                                <span className="text-orange-300 font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
+                              </div>
+                              <p className="text-xs text-orange-200/50 truncate">{item.description}</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={qty > 0 ? "secondary" : "outline"}
+                              className={qty > 0 
+                                ? "bg-orange-600 hover:bg-orange-700 text-white border-none text-xs h-7 px-2" 
+                                : "border-orange-700 text-orange-200 hover:bg-orange-800/30 text-xs h-7 px-2"
+                              }
+                              onClick={() => {
+                                addItem({
+                                  id: item.id,
+                                  name: item.name,
+                                  price: item.price,
+                                  shopName: shop.name,
+                                  shopId: shop.id
+                                });
+                                toast({
+                                  title: "Added to cart",
+                                  description: `${item.name} - $${item.price.toFixed(2)}`,
+                                });
+                              }}
+                              data-testid={`button-add-boards-${item.id}`}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              {qty > 0 ? `${qty} in cart` : "Add"}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <div className="pt-3 border-t border-orange-800/30">
+            {itemCount > 0 ? (
+              <Link href="/schedule">
+                <Button 
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={() => setShowMenu(false)}
+                  data-testid="button-boards-checkout"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Checkout ({itemCount} items)
+                </Button>
+              </Link>
+            ) : (
+              <p className="text-center text-orange-200/50 text-sm py-2">
+                Add items to your cart to checkout
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
+  );
+}
+
 // Weather icon helper
 const getWeatherIcon = (icon: string, className: string = "h-4 w-4") => {
   switch (icon) {
@@ -499,13 +725,13 @@ const { itemCount } = useCart();
                 className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-3"
               >
                 <Sparkles className="h-3 w-3 text-yellow-200" />
-                <span className="text-xs font-medium text-white">Nashville's Catering Concierge</span>
+                <span className="text-xs font-medium text-white">Nashville's Eclectic Catering Concierge</span>
               </motion.div>
               <h1 className="font-serif text-3xl md:text-5xl text-white font-bold tracking-tight drop-shadow-lg mb-2">
-                Brew & Board
+                Brews & Boards
               </h1>
               <p className="text-amber-200/90 text-sm md:text-base max-w-md">
-                Premium catering delivered for your business meetings
+                Coffee, tea, donuts & breakfast boards — delivered with Nashville style
               </p>
               <motion.div 
                 className="flex gap-3 mt-4 justify-center md:justify-start"
@@ -657,8 +883,11 @@ const { itemCount } = useCart();
           </div>
         </motion.div>
 
-        {/* Curated Roasters - Single Panel Carousel with Arrows */}
+        {/* Curated Vendors - Coffee & Beverages */}
         <CuratedRoastersCarousel />
+
+        {/* Featured Boards & Treats - Food Section */}
+        <FeaturedBoardsCarousel />
 
         {/* Nashville News Section */}
         <motion.div 

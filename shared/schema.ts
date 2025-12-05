@@ -965,3 +965,124 @@ export const FRANCHISE_TIERS = {
 export const FRANCHISE_STATUSES = ['pending', 'approved', 'active', 'suspended', 'terminated'] as const;
 export const FRANCHISE_OWNERSHIP_MODES = ['subscriber_managed', 'franchise_owned'] as const;
 export const FRANCHISE_INQUIRY_STATUSES = ['new', 'contacted', 'qualified', 'negotiating', 'converted', 'declined'] as const;
+
+// ========================
+// REGIONS (Territory Management)
+// ========================
+export const regions = pgTable(
+  "regions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    name: varchar("name", { length: 255 }).notNull(),
+    code: varchar("code", { length: 10 }).notNull().unique(), // e.g., "TN-NASH", "TX-DAL"
+    
+    // Geographic scope
+    state: varchar("state", { length: 2 }).notNull(),
+    cities: text("cities").array(), // List of cities in this region
+    
+    // Status
+    status: varchar("status", { length: 20 }).default("active"), // active, pending, inactive
+    
+    // Business metrics
+    targetRevenue: decimal("target_revenue", { precision: 12, scale: 2 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    codeIdx: index("idx_regions_code").on(table.code),
+    stateIdx: index("idx_regions_state").on(table.state),
+  })
+);
+
+export const insertRegionSchema = createInsertSchema(regions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertRegion = z.infer<typeof insertRegionSchema>;
+export type Region = typeof regions.$inferSelect;
+
+// ========================
+// REGIONAL MANAGERS
+// ========================
+export const regionalManagers = pgTable(
+  "regional_managers",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Manager identity
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    phone: varchar("phone", { length: 20 }),
+    pin: varchar("pin", { length: 10 }).unique(), // Login PIN
+    
+    // Role and region assignment
+    role: varchar("role", { length: 30 }).default("regional_manager"), // regional_manager, super_manager, admin
+    regionId: varchar("region_id").references(() => regions.id),
+    
+    // Professional info for business cards
+    title: varchar("title", { length: 100 }).default("Regional Manager"),
+    photoUrl: text("photo_url"),
+    linkedinUrl: text("linkedin_url"),
+    
+    // Status
+    isActive: boolean("is_active").default(true),
+    hireDate: date("hire_date"),
+    
+    // Performance tracking
+    salesTarget: decimal("sales_target", { precision: 12, scale: 2 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    emailIdx: index("idx_regional_managers_email").on(table.email),
+    regionIdx: index("idx_regional_managers_region").on(table.regionId),
+    pinIdx: index("idx_regional_managers_pin").on(table.pin),
+  })
+);
+
+export const insertRegionalManagerSchema = createInsertSchema(regionalManagers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertRegionalManager = z.infer<typeof insertRegionalManagerSchema>;
+export type RegionalManager = typeof regionalManagers.$inferSelect;
+
+// ========================
+// TERRITORY ASSIGNMENTS (For managers covering multiple regions)
+// ========================
+export const territoryAssignments = pgTable(
+  "territory_assignments",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    managerId: varchar("manager_id").notNull().references(() => regionalManagers.id),
+    regionId: varchar("region_id").notNull().references(() => regions.id),
+    
+    isPrimary: boolean("is_primary").default(false), // Primary territory vs coverage
+    
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"), // Null = ongoing
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    managerIdx: index("idx_territory_assignments_manager").on(table.managerId),
+    regionIdx: index("idx_territory_assignments_region").on(table.regionId),
+  })
+);
+
+export const insertTerritoryAssignmentSchema = createInsertSchema(territoryAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertTerritoryAssignment = z.infer<typeof insertTerritoryAssignmentSchema>;
+export type TerritoryAssignment = typeof territoryAssignments.$inferSelect;
+
+// Regional Manager Role Types
+export const MANAGER_ROLES = ['regional_manager', 'super_manager', 'admin'] as const;
+export const REGION_STATUSES = ['active', 'pending', 'inactive'] as const;

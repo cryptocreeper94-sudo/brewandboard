@@ -21,6 +21,12 @@ import {
   type InsertFranchiseCustodyTransfer,
   type FranchiseInquiry,
   type InsertFranchiseInquiry,
+  type Region,
+  type InsertRegion,
+  type RegionalManager,
+  type InsertRegionalManager,
+  type TerritoryAssignment,
+  type InsertTerritoryAssignment,
   users,
   crmNotes,
   clients,
@@ -31,7 +37,10 @@ import {
   scannedDocuments,
   franchises,
   franchiseCustodyTransfers,
-  franchiseInquiries
+  franchiseInquiries,
+  regions,
+  regionalManagers,
+  territoryAssignments
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -105,6 +114,33 @@ export interface IStorage {
   getFranchiseInquiry(id: string): Promise<FranchiseInquiry | undefined>;
   createFranchiseInquiry(inquiry: InsertFranchiseInquiry): Promise<FranchiseInquiry>;
   updateFranchiseInquiry(id: string, inquiry: Partial<InsertFranchiseInquiry>): Promise<FranchiseInquiry>;
+  
+  // Regions
+  getRegions(): Promise<Region[]>;
+  getRegion(id: string): Promise<Region | undefined>;
+  getRegionByCode(code: string): Promise<Region | undefined>;
+  createRegion(region: InsertRegion): Promise<Region>;
+  updateRegion(id: string, region: Partial<InsertRegion>): Promise<Region>;
+  
+  // Regional Managers
+  getRegionalManagers(options?: { regionId?: string; isActive?: boolean }): Promise<RegionalManager[]>;
+  getRegionalManager(id: string): Promise<RegionalManager | undefined>;
+  getRegionalManagerByPin(pin: string): Promise<RegionalManager | undefined>;
+  getRegionalManagerByEmail(email: string): Promise<RegionalManager | undefined>;
+  createRegionalManager(manager: InsertRegionalManager): Promise<RegionalManager>;
+  updateRegionalManager(id: string, manager: Partial<InsertRegionalManager>): Promise<RegionalManager>;
+  
+  // Territory Assignments
+  getTerritoryAssignments(managerId: string): Promise<TerritoryAssignment[]>;
+  createTerritoryAssignment(assignment: InsertTerritoryAssignment): Promise<TerritoryAssignment>;
+  
+  // Regional Dashboard Aggregates (tenant-scoped)
+  getRegionStats(regionId: string): Promise<{
+    totalClients: number;
+    totalOrders: number;
+    totalRevenue: string;
+    activeManagers: number;
+  }>;
   
   // Health Check
   checkDatabaseHealth(): Promise<boolean>;
@@ -513,6 +549,135 @@ export class DatabaseStorage implements IStorage {
       .where(eq(franchiseInquiries.id, id))
       .returning();
     return updated;
+  }
+
+  // ========================
+  // REGIONS
+  // ========================
+  async getRegions(): Promise<Region[]> {
+    return await db.select().from(regions).orderBy(regions.name);
+  }
+
+  async getRegion(id: string): Promise<Region | undefined> {
+    const [region] = await db.select().from(regions).where(eq(regions.id, id));
+    return region || undefined;
+  }
+
+  async getRegionByCode(code: string): Promise<Region | undefined> {
+    const [region] = await db.select().from(regions).where(eq(regions.code, code));
+    return region || undefined;
+  }
+
+  async createRegion(region: InsertRegion): Promise<Region> {
+    const [newRegion] = await db.insert(regions).values(region).returning();
+    return newRegion;
+  }
+
+  async updateRegion(id: string, region: Partial<InsertRegion>): Promise<Region> {
+    const [updated] = await db
+      .update(regions)
+      .set({ ...region, updatedAt: new Date() })
+      .where(eq(regions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // REGIONAL MANAGERS
+  // ========================
+  async getRegionalManagers(options?: { regionId?: string; isActive?: boolean }): Promise<RegionalManager[]> {
+    let query = db.select().from(regionalManagers);
+    
+    if (options?.regionId && options?.isActive !== undefined) {
+      return await db
+        .select()
+        .from(regionalManagers)
+        .where(and(
+          eq(regionalManagers.regionId, options.regionId),
+          eq(regionalManagers.isActive, options.isActive)
+        ))
+        .orderBy(regionalManagers.name);
+    } else if (options?.regionId) {
+      return await db
+        .select()
+        .from(regionalManagers)
+        .where(eq(regionalManagers.regionId, options.regionId))
+        .orderBy(regionalManagers.name);
+    } else if (options?.isActive !== undefined) {
+      return await db
+        .select()
+        .from(regionalManagers)
+        .where(eq(regionalManagers.isActive, options.isActive))
+        .orderBy(regionalManagers.name);
+    }
+    
+    return await db.select().from(regionalManagers).orderBy(regionalManagers.name);
+  }
+
+  async getRegionalManager(id: string): Promise<RegionalManager | undefined> {
+    const [manager] = await db.select().from(regionalManagers).where(eq(regionalManagers.id, id));
+    return manager || undefined;
+  }
+
+  async getRegionalManagerByPin(pin: string): Promise<RegionalManager | undefined> {
+    const [manager] = await db.select().from(regionalManagers).where(eq(regionalManagers.pin, pin));
+    return manager || undefined;
+  }
+
+  async getRegionalManagerByEmail(email: string): Promise<RegionalManager | undefined> {
+    const [manager] = await db.select().from(regionalManagers).where(eq(regionalManagers.email, email));
+    return manager || undefined;
+  }
+
+  async createRegionalManager(manager: InsertRegionalManager): Promise<RegionalManager> {
+    const [newManager] = await db.insert(regionalManagers).values(manager).returning();
+    return newManager;
+  }
+
+  async updateRegionalManager(id: string, manager: Partial<InsertRegionalManager>): Promise<RegionalManager> {
+    const [updated] = await db
+      .update(regionalManagers)
+      .set({ ...manager, updatedAt: new Date() })
+      .where(eq(regionalManagers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // TERRITORY ASSIGNMENTS
+  // ========================
+  async getTerritoryAssignments(managerId: string): Promise<TerritoryAssignment[]> {
+    return await db
+      .select()
+      .from(territoryAssignments)
+      .where(eq(territoryAssignments.managerId, managerId));
+  }
+
+  async createTerritoryAssignment(assignment: InsertTerritoryAssignment): Promise<TerritoryAssignment> {
+    const [newAssignment] = await db.insert(territoryAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  // ========================
+  // REGIONAL DASHBOARD AGGREGATES
+  // ========================
+  async getRegionStats(regionId: string): Promise<{
+    totalClients: number;
+    totalOrders: number;
+    totalRevenue: string;
+    activeManagers: number;
+  }> {
+    // Get active managers in this region
+    const managers = await this.getRegionalManagers({ regionId, isActive: true });
+    
+    // For now, return placeholder stats - in production, this would aggregate from tenant data
+    // Each manager has their own userId which provides tenant separation
+    return {
+      totalClients: 0,
+      totalOrders: 0,
+      totalRevenue: "0.00",
+      activeManagers: managers.length
+    };
   }
 
   // ========================

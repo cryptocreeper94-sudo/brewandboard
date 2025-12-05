@@ -25,6 +25,16 @@ export function TeamChat() {
   const userName = localStorage.getItem('user_name') || 'Guest';
   const userId = localStorage.getItem('user_id') || 'guest';
   const userRole = localStorage.getItem('user_role') || 'Team Member';
+  const isDev = localStorage.getItem('coffee_dev_mode') === 'true';
+  const isPartner = localStorage.getItem('partner_session') !== null;
+  const isRegionalManager = localStorage.getItem('regional_token') !== null;
+  
+  // Only show team chat for developers, partners, and regional managers
+  const hasAccess = isDev || isPartner || isRegionalManager;
+  
+  if (!hasAccess) {
+    return null;
+  }
 
   const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: ['team-chat'],

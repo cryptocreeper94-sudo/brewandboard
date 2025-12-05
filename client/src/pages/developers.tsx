@@ -514,39 +514,40 @@ export default function DevelopersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay relative">
-      <div className="p-4 md:p-8 max-w-7xl mx-auto relative z-10">
-        <header className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay relative overflow-x-hidden">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto relative z-10 overflow-x-hidden">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-4">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
+              <Button variant="ghost" size="icon" className="hover-3d flex-shrink-0" data-testid="button-back">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div>
+            <div className="min-w-0">
               <motion.h1 
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="font-serif text-4xl font-bold flex items-center gap-3"
+                className="font-serif text-2xl md:text-4xl font-bold flex items-center gap-2 md:gap-3 flex-wrap"
               >
-                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shine-effect">
-                  <Code2 className="h-8 w-8" />
+                <div className="p-1.5 md:p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shine-effect flex-shrink-0">
+                  <Code2 className="h-6 w-6 md:h-8 md:w-8" />
                 </div>
                 <span className="gradient-text">Developer Hub</span>
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
+                  className="hidden md:block"
                 >
                   <Sparkles className="h-6 w-6 text-amber-500" />
                 </motion.div>
               </motion.h1>
-              <p className="text-muted-foreground mt-1">Build amazing integrations with Brew & Board</p>
+              <p className="text-muted-foreground mt-1 text-sm md:text-base">Build amazing integrations with Brew & Board</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <Link href="/dashboard">
-              <Button className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 shadow-lg" data-testid="button-to-main-app">
-                <Home className="h-4 w-4" /> To Main App
+              <Button className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 shadow-lg text-sm" data-testid="button-to-main-app">
+                <Home className="h-4 w-4" /> <span className="hidden sm:inline">To Main</span> App
               </Button>
             </Link>
             <Button 
@@ -556,7 +557,7 @@ export default function DevelopersPage() {
               className="gap-2 text-muted-foreground hover:text-destructive"
               data-testid="button-dev-logout"
             >
-              <Lock className="h-4 w-4" /> Logout
+              <Lock className="h-4 w-4" /> <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </header>

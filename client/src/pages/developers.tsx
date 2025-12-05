@@ -533,10 +533,10 @@ export default function DevelopersPage() {
               <p className="text-muted-foreground mt-1">Build amazing integrations with Brew & Board</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <Button variant="outline" className="gap-2 hover-3d" data-testid="button-home">
-                <Home className="h-4 w-4" /> Dashboard
+              <Button className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 shadow-lg" data-testid="button-to-main-app">
+                <Home className="h-4 w-4" /> To Main App
               </Button>
             </Link>
             <Button 
@@ -550,6 +550,120 @@ export default function DevelopersPage() {
             </Button>
           </div>
         </header>
+
+        {/* System Health Dashboard - First Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-8"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-amber-500/5 to-red-500/5" />
+            <CardHeader className="relative pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                    <Activity className="h-6 w-6 text-amber-600" />
+                    System Health
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    Real-time status of all services
+                    {health.lastChecked && (
+                      <span className="text-xs text-muted-foreground">
+                        • Last checked: {health.lastChecked.toLocaleTimeString()}
+                      </span>
+                    )}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={checkHealth}
+                  disabled={isRefreshing}
+                  className="gap-2"
+                  data-testid="button-refresh-health-top"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="relative pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* API Server */}
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-api-top">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-2">
+                    <Wifi className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="font-medium text-sm">API Server</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <StatusLight status={health.api} size="sm" />
+                    <StatusBadge status={health.api} />
+                  </div>
+                </div>
+                
+                {/* Database */}
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-db-top">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-2">
+                    <Database className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="font-medium text-sm">Database</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <StatusLight status={health.database} size="sm" />
+                    <StatusBadge status={health.database} />
+                  </div>
+                </div>
+                
+                {/* Stripe */}
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-stripe-top">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-2">
+                    <CreditCard className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="font-medium text-sm">Stripe</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <StatusLight status={health.stripe} size="sm" />
+                    <StatusBadge status={health.stripe} />
+                  </div>
+                </div>
+                
+                {/* Coinbase */}
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-coinbase-top">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-2">
+                    <Bitcoin className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="font-medium text-sm">Coinbase</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <StatusLight status={health.coinbase} size="sm" />
+                    <StatusBadge status={health.coinbase} />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Overall Status Summary */}
+              <div className={`mt-4 p-3 rounded-xl border ${
+                overallStatus.status === 'healthy' 
+                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200' 
+                  : overallStatus.status === 'degraded'
+                    ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
+                    : overallStatus.status === 'offline'
+                      ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                      : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-center gap-3">
+                  <StatusLight status={overallStatus.status} size="lg" />
+                  <span className={`text-sm font-semibold ${
+                    overallStatus.status === 'healthy' ? 'text-emerald-700' :
+                    overallStatus.status === 'degraded' ? 'text-amber-700' :
+                    overallStatus.status === 'offline' ? 'text-red-700' : 'text-gray-700'
+                  }`}>
+                    {overallStatus.message}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -642,167 +756,6 @@ export default function DevelopersPage() {
             </motion.div>
           ))}
         </div>
-
-        {/* System Health Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mb-12"
-        >
-          <Card className="premium-card border-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-amber-500/5 to-red-500/5" />
-            <CardHeader className="relative">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 font-serif text-2xl">
-                    <Activity className="h-6 w-6 text-amber-600" />
-                    System Health
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
-                    Real-time status of all services
-                    {health.lastChecked && (
-                      <span className="text-xs text-muted-foreground">
-                        • Last checked: {health.lastChecked.toLocaleTimeString()}
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={checkHealth}
-                  disabled={isRefreshing}
-                  className="gap-2"
-                  data-testid="button-refresh-health"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="relative">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* System Services */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <Server className="h-4 w-4" />
-                    Core Services
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-api-server">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                          <Wifi className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium">API Server</p>
-                          <p className="text-xs text-muted-foreground">Express.js backend</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={health.api} />
-                        <StatusLight status={health.api} size="lg" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-database">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                          <Database className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Database</p>
-                          <p className="text-xs text-muted-foreground">PostgreSQL (Neon)</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={health.database} />
-                        <StatusLight status={health.database} size="lg" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Services */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Payment Services
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-stripe">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                          <CreditCard className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Stripe</p>
-                          <p className="text-xs text-muted-foreground">Cards & subscriptions</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={health.stripe} />
-                        <StatusLight status={health.stripe} size="lg" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-coinbase">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                          <Bitcoin className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Coinbase Commerce</p>
-                          <p className="text-xs text-muted-foreground">Crypto payments</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={health.coinbase} />
-                        <StatusLight status={health.coinbase} size="lg" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Overall Status Summary */}
-              <div className={`mt-6 p-4 rounded-xl border ${
-                overallStatus.status === 'healthy' 
-                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200' 
-                  : overallStatus.status === 'degraded'
-                    ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
-                    : overallStatus.status === 'offline'
-                      ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
-                      : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200'
-              }`}>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-3">
-                    <StatusLight status={overallStatus.status} size="lg" />
-                    <span className={`text-sm font-semibold ${
-                      overallStatus.status === 'healthy' ? 'text-emerald-700' :
-                      overallStatus.status === 'degraded' ? 'text-amber-700' :
-                      overallStatus.status === 'offline' ? 'text-red-700' : 'text-gray-700'
-                    }`}>
-                      {overallStatus.message}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <StatusLight status="healthy" size="sm" /> Operational
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <StatusLight status="degraded" size="sm" /> Degraded
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <StatusLight status="offline" size="sm" /> Offline
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Blockchain Hallmark Dashboard */}
         <motion.div

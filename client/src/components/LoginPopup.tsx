@@ -27,9 +27,37 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const [, setLocation] = useLocation();
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    // Developer PIN bypass - go directly to developers portal
+    if (loginPin === "0424") {
+      const devUser = {
+        id: "developer-admin",
+        email: "dev@brewandboard.coffee",
+        businessName: "Brew & Board Developer",
+        contactName: "Developer Admin",
+        name: "Developer Admin",
+        isDeveloper: true
+      };
+      localStorage.setItem("coffee_user", JSON.stringify(devUser));
+      localStorage.setItem("coffee_dev_auth", "true");
+      localStorage.setItem("user_name", "Developer Admin");
+      localStorage.removeItem("is_guest");
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+      
+      toast({
+        title: "Developer Access Granted",
+        description: "Full access enabled. Welcome to Brew & Board!",
+      });
+      onClose();
+      setLocation("/developers");
+      return;
+    }
     
     try {
       const response = await fetch("/api/auth/login", {

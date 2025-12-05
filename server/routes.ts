@@ -1054,6 +1054,12 @@ export async function registerRoutes(
     return { managerId: session.managerId, regionId: session.regionId };
   };
 
+  // Master PINs for initial access
+  const MASTER_PINS = {
+    PARTNER: "4444",      // Sid - Partner level, full access, sees all managers
+    REGIONAL: "5555"      // Regional managers - view only their territory
+  };
+
   // Regional manager login by PIN (rate-limited in production)
   app.post("/api/regional-managers/login", async (req, res) => {
     try {
@@ -1062,11 +1068,55 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Valid 4-digit PIN is required" });
       }
       
-      const manager = await storage.getRegionalManagerByPin(pin);
+      let manager = await storage.getRegionalManagerByPin(pin);
+      
+      // Check if using master PIN to create new account
       if (!manager) {
-        // Constant-time-ish delay to prevent timing attacks
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return res.status(401).json({ error: "Invalid PIN" });
+        if (pin === MASTER_PINS.PARTNER) {
+          // Check if partner already exists - only allow one partner account
+          const existingPartners = await storage.getRegionalManagers({ isActive: true });
+          const partnerExists = existingPartners.some(m => m.role === "partner");
+          
+          if (partnerExists) {
+            return res.status(400).json({ 
+              error: "Partner account already exists. Please use your personal PIN to login." 
+            });
+          }
+          
+          // Create Sid's partner account (one-time registration)
+          const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
+          manager = await storage.createRegionalManager({
+            name: "Sid",
+            email: `partner_${Date.now()}@brewandboard.coffee`,
+            phone: "",
+            pin: pin,
+            role: "partner",
+            regionId: nashvilleRegion?.id || null,
+            title: "Partner",
+            isActive: true,
+            mustChangePin: true,
+            hasSeenWelcome: false
+          });
+        } else if (pin === MASTER_PINS.REGIONAL) {
+          // Create new regional manager account (onboarding new team members)
+          const nashvilleRegion = await storage.getRegionByCode("TN-NASH");
+          manager = await storage.createRegionalManager({
+            name: "Regional Manager",
+            email: `regional_${Date.now()}@brewandboard.coffee`,
+            phone: "",
+            pin: pin,
+            role: "regional_manager",
+            regionId: nashvilleRegion?.id || null,
+            title: "Regional Manager",
+            isActive: true,
+            mustChangePin: true,
+            hasSeenWelcome: false
+          });
+        } else {
+          // Constant-time-ish delay to prevent timing attacks
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return res.status(401).json({ error: "Invalid PIN" });
+        }
       }
       
       if (!manager.isActive) {
@@ -1092,6 +1142,91 @@ export async function registerRoutes(
       // Return manager WITHOUT PIN for security, WITH token
       const { pin: _, ...safeManager } = manager;
       res.json({ manager: safeManager, region, token });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Update manager PIN (authenticated)
+  app.post("/api/regional-managers/change-pin", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const { newPin } = req.body;
+      if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+        return res.status(400).json({ error: "PIN must be exactly 4 digits" });
+      }
+      
+      // Check if PIN is a master PIN
+      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.REGIONAL) {
+        return res.status(400).json({ error: "This PIN is reserved. Please choose a different PIN." });
+      }
+      
+      // Check if PIN already exists
+      const existing = await storage.getRegionalManagerByPin(newPin);
+      if (existing && existing.id !== session.managerId) {
+        return res.status(400).json({ error: "This PIN is already in use. Please choose a different PIN." });
+      }
+      
+      const updated = await storage.updateRegionalManager(session.managerId, {
+        pin: newPin,
+        mustChangePin: false
+      });
+      
+      const { pin: _, ...safeManager } = updated;
+      res.json({ manager: safeManager, message: "PIN updated successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Mark welcome modal as seen (authenticated)
+  app.post("/api/regional-managers/acknowledge-welcome", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const updated = await storage.updateRegionalManager(session.managerId, {
+        hasSeenWelcome: true
+      });
+      
+      const { pin: _, ...safeManager } = updated;
+      res.json({ manager: safeManager });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get all regional managers (partner only - for accordion view)
+  app.get("/api/regional/all-managers", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Verify this user is a partner
+      const manager = await storage.getRegionalManager(session.managerId);
+      if (!manager || manager.role !== "partner") {
+        return res.status(403).json({ error: "Partner access required" });
+      }
+      
+      // Get all managers (excluding PIN)
+      const allManagers = await storage.getRegionalManagers({ isActive: true });
+      const safeManagers = allManagers.map(m => {
+        const { pin: _, ...safe } = m;
+        return safe;
+      });
+      
+      // Get all regions for reference
+      const allRegions = await storage.getRegions();
+      
+      res.json({ managers: safeManagers, regions: allRegions });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

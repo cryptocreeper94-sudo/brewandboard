@@ -1029,6 +1029,8 @@ export const regionalManagers = pgTable(
     
     // Status
     isActive: boolean("is_active").default(true),
+    mustChangePin: boolean("must_change_pin").default(true), // Force PIN change on first login
+    hasSeenWelcome: boolean("has_seen_welcome").default(false), // Track if welcome modal shown
     hireDate: date("hire_date"),
     
     // Performance tracking

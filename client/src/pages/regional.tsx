@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, MapPin, Users, Package, DollarSign, TrendingUp, 
   Building2, Phone, Mail, Briefcase, Calendar, Activity,
   CreditCard, FileText, UserCircle, LogOut, RefreshCw,
-  Globe, Target, Clock, CheckCircle, AlertCircle, Download
+  Globe, Target, Clock, CheckCircle, AlertCircle, Download,
+  ChevronDown, ChevronUp, Star, Sparkles, Shield, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import QRCode from "react-qr-code";
 
 interface Region {
@@ -31,13 +34,15 @@ interface RegionalManager {
   name: string;
   email: string;
   phone: string | null;
-  pin: string | null;
+  pin?: string | null;
   role: string;
   regionId: string | null;
   title: string | null;
   photoUrl: string | null;
   linkedinUrl: string | null;
   isActive: boolean;
+  mustChangePin?: boolean;
+  hasSeenWelcome?: boolean;
   hireDate: string | null;
   salesTarget: string | null;
 }
@@ -60,6 +65,17 @@ export default function RegionalDashboard() {
   const [region, setRegion] = useState<Region | null>(null);
   const [stats, setStats] = useState<RegionStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Modal states
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showPinChangeModal, setShowPinChangeModal] = useState(false);
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinChangeLoading, setPinChangeLoading] = useState(false);
+  
+  // Partner-only: All managers list
+  const [allManagers, setAllManagers] = useState<RegionalManager[]>([]);
+  const [allRegions, setAllRegions] = useState<Region[]>([]);
 
   useEffect(() => {
     const storedSession = localStorage.getItem("regional_session");
@@ -102,6 +118,132 @@ export default function RegionalDashboard() {
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
+  };
+
+  // Fetch all managers for partner view
+  const fetchAllManagers = async (token?: string) => {
+    const sessionToken = token || getSessionToken();
+    if (!sessionToken) return;
+    
+    try {
+      const response = await fetch("/api/regional/all-managers", {
+        headers: {
+          "x-regional-token": sessionToken
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAllManagers(data.managers || []);
+        setAllRegions(data.regions || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch all managers:", error);
+    }
+  };
+
+  // Handle PIN change
+  const handlePinChange = async () => {
+    if (newPin !== confirmPin) {
+      toast({
+        title: "PINs Don't Match",
+        description: "Please make sure both PINs are the same.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+      toast({
+        title: "Invalid PIN",
+        description: "PIN must be exactly 4 digits.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setPinChangeLoading(true);
+    
+    try {
+      const response = await fetch("/api/regional-managers/change-pin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-regional-token": getSessionToken()
+        },
+        body: JSON.stringify({ newPin })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setManager(data.manager);
+        
+        // Update stored session
+        const storedSession = localStorage.getItem("regional_session");
+        if (storedSession) {
+          const sessionData = JSON.parse(storedSession);
+          sessionData.manager = data.manager;
+          localStorage.setItem("regional_session", JSON.stringify(sessionData));
+        }
+        
+        setShowPinChangeModal(false);
+        setNewPin("");
+        setConfirmPin("");
+        
+        toast({
+          title: "PIN Updated!",
+          description: "Your new PIN is now active. Please remember it for future logins."
+        });
+        
+        // If partner hasn't seen welcome, show welcome modal
+        if (manager?.role === "partner" && !manager?.hasSeenWelcome) {
+          setShowWelcomeModal(true);
+        }
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.error || "Failed to update PIN",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update PIN. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setPinChangeLoading(false);
+    }
+  };
+
+  // Acknowledge welcome modal
+  const acknowledgeWelcome = async () => {
+    try {
+      const response = await fetch("/api/regional-managers/acknowledge-welcome", {
+        method: "POST",
+        headers: {
+          "x-regional-token": getSessionToken()
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setManager(data.manager);
+        
+        // Update stored session
+        const storedSession = localStorage.getItem("regional_session");
+        if (storedSession) {
+          const sessionData = JSON.parse(storedSession);
+          sessionData.manager = data.manager;
+          localStorage.setItem("regional_session", JSON.stringify(sessionData));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to acknowledge welcome:", error);
+    }
+    
+    setShowWelcomeModal(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {

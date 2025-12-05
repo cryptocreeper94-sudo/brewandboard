@@ -20,6 +20,10 @@ export function Footer() {
               <span className="hover:text-amber-300 cursor-pointer transition-colors">Contact</span>
             </Link>
             <span className="mx-0.5">•</span>
+            <Link href="/vendors">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors">Vendors</span>
+            </Link>
+            <span className="mx-0.5">•</span>
             <Link href="/investor">
               <span className="hover:text-amber-300 cursor-pointer transition-colors">Investors</span>
             </Link>

@@ -45,6 +45,7 @@ import { WebSearch } from "@/components/WebSearch";
 import { RegistrationPopup } from "@/components/RegistrationPopup";
 import { LoginPopup } from "@/components/LoginPopup";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { SettingsMenu } from "@/components/SettingsMenu";
 import {
   Dialog,
   DialogContent,
@@ -581,6 +582,8 @@ const { itemCount } = useCart();
                 Sign In
               </Button>
             )}
+            
+            <SettingsMenu />
           </div>
         </div>
       </header>

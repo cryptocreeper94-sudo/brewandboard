@@ -29,6 +29,16 @@ import {
   type InsertTerritoryAssignment,
   type TeamChatMessage,
   type InsertTeamChatMessage,
+  type VirtualMeeting,
+  type InsertVirtualMeeting,
+  type VirtualAttendee,
+  type InsertVirtualAttendee,
+  type VirtualSelection,
+  type InsertVirtualSelection,
+  type VirtualOrder,
+  type InsertVirtualOrder,
+  type VirtualMeetingEvent,
+  type InsertVirtualMeetingEvent,
   users,
   crmNotes,
   clients,
@@ -43,7 +53,12 @@ import {
   regions,
   regionalManagers,
   territoryAssignments,
-  teamChatMessages
+  teamChatMessages,
+  virtualMeetings,
+  virtualAttendees,
+  virtualSelections,
+  virtualOrders,
+  virtualMeetingEvents
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -152,6 +167,37 @@ export interface IStorage {
   // Team Chat
   getTeamChatMessages(limit?: number): Promise<TeamChatMessage[]>;
   createTeamChatMessage(message: InsertTeamChatMessage): Promise<TeamChatMessage>;
+  
+  // Virtual Meetings (Multi-Location Host Orders)
+  getVirtualMeetings(hostUserId?: string): Promise<VirtualMeeting[]>;
+  getVirtualMeeting(id: string): Promise<VirtualMeeting | undefined>;
+  getVirtualMeetingByToken(inviteToken: string): Promise<VirtualMeeting | undefined>;
+  createVirtualMeeting(meeting: InsertVirtualMeeting): Promise<VirtualMeeting>;
+  updateVirtualMeeting(id: string, meeting: Partial<InsertVirtualMeeting>): Promise<VirtualMeeting>;
+  deleteVirtualMeeting(id: string): Promise<void>;
+  
+  // Virtual Attendees
+  getVirtualAttendees(meetingId: string): Promise<VirtualAttendee[]>;
+  getVirtualAttendee(id: string): Promise<VirtualAttendee | undefined>;
+  getVirtualAttendeeByToken(attendeeToken: string): Promise<VirtualAttendee | undefined>;
+  createVirtualAttendee(attendee: InsertVirtualAttendee): Promise<VirtualAttendee>;
+  updateVirtualAttendee(id: string, attendee: Partial<InsertVirtualAttendee>): Promise<VirtualAttendee>;
+  deleteVirtualAttendee(id: string): Promise<void>;
+  
+  // Virtual Selections
+  getVirtualSelection(attendeeId: string): Promise<VirtualSelection | undefined>;
+  createVirtualSelection(selection: InsertVirtualSelection): Promise<VirtualSelection>;
+  updateVirtualSelection(id: string, selection: Partial<InsertVirtualSelection>): Promise<VirtualSelection>;
+  
+  // Virtual Orders
+  getVirtualOrders(meetingId: string): Promise<VirtualOrder[]>;
+  getVirtualOrder(id: string): Promise<VirtualOrder | undefined>;
+  createVirtualOrder(order: InsertVirtualOrder): Promise<VirtualOrder>;
+  updateVirtualOrder(id: string, order: Partial<InsertVirtualOrder>): Promise<VirtualOrder>;
+  
+  // Virtual Meeting Events
+  getVirtualMeetingEvents(meetingId: string): Promise<VirtualMeetingEvent[]>;
+  createVirtualMeetingEvent(event: InsertVirtualMeetingEvent): Promise<VirtualMeetingEvent>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -744,6 +790,165 @@ export class DatabaseStorage implements IStorage {
   async createTeamChatMessage(message: InsertTeamChatMessage): Promise<TeamChatMessage> {
     const [newMessage] = await db.insert(teamChatMessages).values(message).returning();
     return newMessage;
+  }
+
+  // ========================
+  // VIRTUAL MEETINGS
+  // ========================
+  async getVirtualMeetings(hostUserId?: string): Promise<VirtualMeeting[]> {
+    if (hostUserId) {
+      return await db
+        .select()
+        .from(virtualMeetings)
+        .where(eq(virtualMeetings.hostUserId, hostUserId))
+        .orderBy(desc(virtualMeetings.createdAt));
+    }
+    return await db.select().from(virtualMeetings).orderBy(desc(virtualMeetings.createdAt));
+  }
+
+  async getVirtualMeeting(id: string): Promise<VirtualMeeting | undefined> {
+    const [meeting] = await db.select().from(virtualMeetings).where(eq(virtualMeetings.id, id));
+    return meeting || undefined;
+  }
+
+  async getVirtualMeetingByToken(inviteToken: string): Promise<VirtualMeeting | undefined> {
+    const [meeting] = await db.select().from(virtualMeetings).where(eq(virtualMeetings.inviteToken, inviteToken));
+    return meeting || undefined;
+  }
+
+  async createVirtualMeeting(meeting: InsertVirtualMeeting): Promise<VirtualMeeting> {
+    const [newMeeting] = await db.insert(virtualMeetings).values(meeting).returning();
+    return newMeeting;
+  }
+
+  async updateVirtualMeeting(id: string, meeting: Partial<InsertVirtualMeeting>): Promise<VirtualMeeting> {
+    const [updated] = await db
+      .update(virtualMeetings)
+      .set({ ...meeting, updatedAt: new Date() })
+      .where(eq(virtualMeetings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteVirtualMeeting(id: string): Promise<void> {
+    // Delete all related records first
+    const attendees = await this.getVirtualAttendees(id);
+    for (const attendee of attendees) {
+      await db.delete(virtualSelections).where(eq(virtualSelections.attendeeId, attendee.id));
+    }
+    await db.delete(virtualOrders).where(eq(virtualOrders.meetingId, id));
+    await db.delete(virtualMeetingEvents).where(eq(virtualMeetingEvents.meetingId, id));
+    await db.delete(virtualAttendees).where(eq(virtualAttendees.meetingId, id));
+    await db.delete(virtualMeetings).where(eq(virtualMeetings.id, id));
+  }
+
+  // ========================
+  // VIRTUAL ATTENDEES
+  // ========================
+  async getVirtualAttendees(meetingId: string): Promise<VirtualAttendee[]> {
+    return await db
+      .select()
+      .from(virtualAttendees)
+      .where(eq(virtualAttendees.meetingId, meetingId))
+      .orderBy(virtualAttendees.name);
+  }
+
+  async getVirtualAttendee(id: string): Promise<VirtualAttendee | undefined> {
+    const [attendee] = await db.select().from(virtualAttendees).where(eq(virtualAttendees.id, id));
+    return attendee || undefined;
+  }
+
+  async getVirtualAttendeeByToken(attendeeToken: string): Promise<VirtualAttendee | undefined> {
+    const [attendee] = await db.select().from(virtualAttendees).where(eq(virtualAttendees.attendeeToken, attendeeToken));
+    return attendee || undefined;
+  }
+
+  async createVirtualAttendee(attendee: InsertVirtualAttendee): Promise<VirtualAttendee> {
+    const [newAttendee] = await db.insert(virtualAttendees).values(attendee).returning();
+    return newAttendee;
+  }
+
+  async updateVirtualAttendee(id: string, attendee: Partial<InsertVirtualAttendee>): Promise<VirtualAttendee> {
+    const [updated] = await db
+      .update(virtualAttendees)
+      .set(attendee)
+      .where(eq(virtualAttendees.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteVirtualAttendee(id: string): Promise<void> {
+    await db.delete(virtualSelections).where(eq(virtualSelections.attendeeId, id));
+    await db.delete(virtualOrders).where(eq(virtualOrders.attendeeId, id));
+    await db.delete(virtualAttendees).where(eq(virtualAttendees.id, id));
+  }
+
+  // ========================
+  // VIRTUAL SELECTIONS
+  // ========================
+  async getVirtualSelection(attendeeId: string): Promise<VirtualSelection | undefined> {
+    const [selection] = await db.select().from(virtualSelections).where(eq(virtualSelections.attendeeId, attendeeId));
+    return selection || undefined;
+  }
+
+  async createVirtualSelection(selection: InsertVirtualSelection): Promise<VirtualSelection> {
+    const [newSelection] = await db.insert(virtualSelections).values(selection).returning();
+    return newSelection;
+  }
+
+  async updateVirtualSelection(id: string, selection: Partial<InsertVirtualSelection>): Promise<VirtualSelection> {
+    const [updated] = await db
+      .update(virtualSelections)
+      .set({ ...selection, updatedAt: new Date() })
+      .where(eq(virtualSelections.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // VIRTUAL ORDERS
+  // ========================
+  async getVirtualOrders(meetingId: string): Promise<VirtualOrder[]> {
+    return await db
+      .select()
+      .from(virtualOrders)
+      .where(eq(virtualOrders.meetingId, meetingId))
+      .orderBy(virtualOrders.createdAt);
+  }
+
+  async getVirtualOrder(id: string): Promise<VirtualOrder | undefined> {
+    const [order] = await db.select().from(virtualOrders).where(eq(virtualOrders.id, id));
+    return order || undefined;
+  }
+
+  async createVirtualOrder(order: InsertVirtualOrder): Promise<VirtualOrder> {
+    const [newOrder] = await db.insert(virtualOrders).values(order).returning();
+    return newOrder;
+  }
+
+  async updateVirtualOrder(id: string, order: Partial<InsertVirtualOrder>): Promise<VirtualOrder> {
+    const [updated] = await db
+      .update(virtualOrders)
+      .set({ ...order, updatedAt: new Date() })
+      .where(eq(virtualOrders.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // VIRTUAL MEETING EVENTS
+  // ========================
+  async getVirtualMeetingEvents(meetingId: string): Promise<VirtualMeetingEvent[]> {
+    return await db
+      .select()
+      .from(virtualMeetingEvents)
+      .where(eq(virtualMeetingEvents.meetingId, meetingId))
+      .orderBy(desc(virtualMeetingEvents.createdAt));
+  }
+
+  async createVirtualMeetingEvent(event: InsertVirtualMeetingEvent): Promise<VirtualMeetingEvent> {
+    const [newEvent] = await db.insert(virtualMeetingEvents).values(event).returning();
+    return newEvent;
   }
 }
 

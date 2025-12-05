@@ -1438,5 +1438,398 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // VIRTUAL HOST ROUTES (Multi-Location Orders)
+  // ========================
+  
+  // Generate random token for invites
+  const generateToken = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 32; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  };
+
+  // Get all virtual meetings for a host
+  app.get("/api/virtual-meetings", async (req, res) => {
+    try {
+      const hostUserId = req.query.hostUserId as string | undefined;
+      const meetings = await storage.getVirtualMeetings(hostUserId);
+      res.json(meetings);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a specific virtual meeting with all details
+  app.get("/api/virtual-meetings/:id", async (req, res) => {
+    try {
+      const meeting = await storage.getVirtualMeeting(req.params.id);
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      // Get all related data
+      const attendees = await storage.getVirtualAttendees(meeting.id);
+      const orders = await storage.getVirtualOrders(meeting.id);
+      const events = await storage.getVirtualMeetingEvents(meeting.id);
+      
+      // Get selections for each attendee
+      const attendeesWithSelections = await Promise.all(
+        attendees.map(async (attendee) => {
+          const selection = await storage.getVirtualSelection(attendee.id);
+          return { ...attendee, selection };
+        })
+      );
+      
+      res.json({
+        ...meeting,
+        attendees: attendeesWithSelections,
+        orders,
+        events
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get virtual meeting by invite token (public)
+  app.get("/api/virtual-meetings/invite/:token", async (req, res) => {
+    try {
+      const meeting = await storage.getVirtualMeetingByToken(req.params.token);
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      // Return limited info for public view
+      res.json({
+        id: meeting.id,
+        title: meeting.title,
+        description: meeting.description,
+        meetingDate: meeting.meetingDate,
+        meetingTime: meeting.meetingTime,
+        timezone: meeting.timezone,
+        hostName: meeting.hostName,
+        hostCompany: meeting.hostCompany,
+        budgetType: meeting.budgetType,
+        perPersonBudgetCents: meeting.perPersonBudgetCents,
+        deliveryScope: meeting.deliveryScope,
+        status: meeting.status
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a new virtual meeting
+  app.post("/api/virtual-meetings", async (req, res) => {
+    try {
+      const inviteToken = generateToken();
+      
+      const meeting = await storage.createVirtualMeeting({
+        ...req.body,
+        inviteToken,
+        status: 'draft'
+      });
+      
+      // Create initial event
+      await storage.createVirtualMeetingEvent({
+        meetingId: meeting.id,
+        eventType: 'created',
+        message: `Meeting "${meeting.title}" created`
+      });
+      
+      res.json(meeting);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a virtual meeting
+  app.patch("/api/virtual-meetings/:id", async (req, res) => {
+    try {
+      const meeting = await storage.updateVirtualMeeting(req.params.id, req.body);
+      res.json(meeting);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a virtual meeting
+  app.delete("/api/virtual-meetings/:id", async (req, res) => {
+    try {
+      await storage.deleteVirtualMeeting(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add attendees to a meeting
+  app.post("/api/virtual-meetings/:id/attendees", async (req, res) => {
+    try {
+      const meetingId = req.params.id;
+      const { attendees } = req.body;
+      
+      if (!Array.isArray(attendees)) {
+        return res.status(400).json({ error: "attendees must be an array" });
+      }
+      
+      const meeting = await storage.getVirtualMeeting(meetingId);
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      const createdAttendees = [];
+      
+      for (const attendee of attendees) {
+        const attendeeToken = generateToken();
+        const created = await storage.createVirtualAttendee({
+          meetingId,
+          name: attendee.name,
+          email: attendee.email || null,
+          phone: attendee.phone || null,
+          locationLabel: attendee.locationLabel || null,
+          addressLine1: attendee.addressLine1 || null,
+          addressLine2: attendee.addressLine2 || null,
+          city: attendee.city || null,
+          state: attendee.state || null,
+          zipCode: attendee.zipCode || null,
+          deliveryInstructions: attendee.deliveryInstructions || null,
+          attendeeToken,
+          inviteStatus: 'pending'
+        });
+        createdAttendees.push(created);
+      }
+      
+      // Update meeting status to collecting
+      await storage.updateVirtualMeeting(meetingId, { status: 'collecting' });
+      
+      // Log event
+      await storage.createVirtualMeetingEvent({
+        meetingId,
+        eventType: 'invite_sent',
+        message: `${attendees.length} attendee(s) added to meeting`
+      });
+      
+      res.json(createdAttendees);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Get attendee by token (public - for attendee to fill in their order)
+  app.get("/api/virtual-attendee/:token", async (req, res) => {
+    try {
+      const attendee = await storage.getVirtualAttendeeByToken(req.params.token);
+      if (!attendee) {
+        return res.status(404).json({ error: "Attendee not found" });
+      }
+      
+      const meeting = await storage.getVirtualMeeting(attendee.meetingId);
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      const selection = await storage.getVirtualSelection(attendee.id);
+      
+      // Mark as viewed if pending
+      if (attendee.inviteStatus === 'pending' || attendee.inviteStatus === 'invited') {
+        await storage.updateVirtualAttendee(attendee.id, { inviteStatus: 'viewed' });
+        await storage.createVirtualMeetingEvent({
+          meetingId: meeting.id,
+          attendeeId: attendee.id,
+          eventType: 'invite_viewed',
+          message: `${attendee.name} viewed their invite`
+        });
+      }
+      
+      res.json({
+        attendee,
+        meeting: {
+          id: meeting.id,
+          title: meeting.title,
+          description: meeting.description,
+          meetingDate: meeting.meetingDate,
+          meetingTime: meeting.meetingTime,
+          timezone: meeting.timezone,
+          hostName: meeting.hostName,
+          hostCompany: meeting.hostCompany,
+          budgetType: meeting.budgetType,
+          perPersonBudgetCents: meeting.perPersonBudgetCents,
+          deliveryScope: meeting.deliveryScope,
+          status: meeting.status
+        },
+        selection
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Attendee submits their order selection
+  app.post("/api/virtual-attendee/:token/submit", async (req, res) => {
+    try {
+      const attendee = await storage.getVirtualAttendeeByToken(req.params.token);
+      if (!attendee) {
+        return res.status(404).json({ error: "Attendee not found" });
+      }
+      
+      const meeting = await storage.getVirtualMeeting(attendee.meetingId);
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      const { items, specialRequests, addressLine1, addressLine2, city, state, zipCode, deliveryInstructions } = req.body;
+      
+      // Update attendee address if provided
+      if (addressLine1) {
+        await storage.updateVirtualAttendee(attendee.id, {
+          addressLine1,
+          addressLine2: addressLine2 || null,
+          city: city || null,
+          state: state || null,
+          zipCode: zipCode || null,
+          deliveryInstructions: deliveryInstructions || null,
+          inviteStatus: 'submitted',
+          submittedAt: new Date()
+        });
+      } else {
+        await storage.updateVirtualAttendee(attendee.id, {
+          inviteStatus: 'submitted',
+          submittedAt: new Date()
+        });
+      }
+      
+      // Calculate subtotal
+      const subtotalCents = items.reduce((sum: number, item: any) => 
+        sum + (item.priceCents * item.quantity), 0
+      );
+      
+      // Check budget
+      const budgetCents = meeting.perPersonBudgetCents || 1500;
+      const budgetStatus = subtotalCents <= budgetCents ? 'under' : 'over';
+      const overageCents = subtotalCents > budgetCents ? subtotalCents - budgetCents : 0;
+      
+      // Check if selection already exists
+      const existingSelection = await storage.getVirtualSelection(attendee.id);
+      
+      if (existingSelection) {
+        await storage.updateVirtualSelection(existingSelection.id, {
+          items,
+          subtotalCents,
+          budgetStatus,
+          overageCents,
+          specialRequests: specialRequests || null
+        });
+      } else {
+        await storage.createVirtualSelection({
+          attendeeId: attendee.id,
+          items,
+          subtotalCents,
+          budgetStatus,
+          overageCents,
+          specialRequests: specialRequests || null
+        });
+      }
+      
+      // Log event
+      await storage.createVirtualMeetingEvent({
+        meetingId: meeting.id,
+        attendeeId: attendee.id,
+        eventType: 'selection_submitted',
+        message: `${attendee.name} submitted their order ($${(subtotalCents / 100).toFixed(2)})`
+      });
+      
+      if (budgetStatus === 'over') {
+        await storage.createVirtualMeetingEvent({
+          meetingId: meeting.id,
+          attendeeId: attendee.id,
+          eventType: 'budget_exceeded',
+          message: `${attendee.name} exceeded budget by $${(overageCents / 100).toFixed(2)}`
+        });
+      }
+      
+      res.json({ success: true, budgetStatus, overageCents });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update attendee
+  app.patch("/api/virtual-attendees/:id", async (req, res) => {
+    try {
+      const attendee = await storage.updateVirtualAttendee(req.params.id, req.body);
+      res.json(attendee);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete attendee
+  app.delete("/api/virtual-attendees/:id", async (req, res) => {
+    try {
+      await storage.deleteVirtualAttendee(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create simulated orders for demo (Coming Soon feature)
+  app.post("/api/virtual-meetings/:id/simulate-orders", async (req, res) => {
+    try {
+      const meetingId = req.params.id;
+      const meeting = await storage.getVirtualMeeting(meetingId);
+      
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      const attendees = await storage.getVirtualAttendees(meetingId);
+      const createdOrders = [];
+      
+      for (const attendee of attendees) {
+        if (attendee.inviteStatus !== 'submitted') continue;
+        
+        const selection = await storage.getVirtualSelection(attendee.id);
+        if (!selection) continue;
+        
+        const order = await storage.createVirtualOrder({
+          meetingId,
+          attendeeId: attendee.id,
+          provider: meeting.deliveryScope === 'local' ? 'local' : 'manual',
+          status: 'placed',
+          subtotalCents: selection.subtotalCents || 0,
+          deliveryFeeCents: 350,
+          serviceFeeCents: Math.round((selection.subtotalCents || 0) * 0.15),
+          taxCents: Math.round((selection.subtotalCents || 0) * 0.0925),
+          tipCents: 0,
+          totalCents: (selection.subtotalCents || 0) + 350 + 
+            Math.round((selection.subtotalCents || 0) * 0.15) + 
+            Math.round((selection.subtotalCents || 0) * 0.0925)
+        });
+        
+        createdOrders.push(order);
+        
+        await storage.createVirtualMeetingEvent({
+          meetingId,
+          attendeeId: attendee.id,
+          eventType: 'order_placed',
+          message: `Order placed for ${attendee.name}`
+        });
+      }
+      
+      // Update meeting status
+      await storage.updateVirtualMeeting(meetingId, { status: 'ordered' });
+      
+      res.json({ orders: createdOrders, count: createdOrders.length });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

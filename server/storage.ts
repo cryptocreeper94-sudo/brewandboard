@@ -15,6 +15,12 @@ import {
   type InsertOrderEvent,
   type ScannedDocument,
   type InsertScannedDocument,
+  type Franchise,
+  type InsertFranchise,
+  type FranchiseCustodyTransfer,
+  type InsertFranchiseCustodyTransfer,
+  type FranchiseInquiry,
+  type InsertFranchiseInquiry,
   users,
   crmNotes,
   clients,
@@ -22,7 +28,10 @@ import {
   crmMeetings,
   scheduledOrders,
   orderEvents,
-  scannedDocuments
+  scannedDocuments,
+  franchises,
+  franchiseCustodyTransfers,
+  franchiseInquiries
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -77,6 +86,25 @@ export interface IStorage {
   updateScannedDocument(id: string, doc: Partial<InsertScannedDocument>): Promise<ScannedDocument>;
   deleteScannedDocument(id: string): Promise<void>;
   searchScannedDocuments(userId: string, query: string): Promise<ScannedDocument[]>;
+  
+  // Franchises
+  getFranchises(options?: { status?: string; ownerId?: string }): Promise<Franchise[]>;
+  getFranchise(id: string): Promise<Franchise | undefined>;
+  getFranchiseByFranchiseId(franchiseId: string): Promise<Franchise | undefined>;
+  createFranchise(franchise: InsertFranchise): Promise<Franchise>;
+  updateFranchise(id: string, franchise: Partial<InsertFranchise>): Promise<Franchise>;
+  
+  // Franchise Custody Transfers
+  getCustodyTransfers(franchiseId: string): Promise<FranchiseCustodyTransfer[]>;
+  getCustodyTransfer(id: string): Promise<FranchiseCustodyTransfer | undefined>;
+  createCustodyTransfer(transfer: InsertFranchiseCustodyTransfer): Promise<FranchiseCustodyTransfer>;
+  updateCustodyTransfer(id: string, transfer: Partial<InsertFranchiseCustodyTransfer>): Promise<FranchiseCustodyTransfer>;
+  
+  // Franchise Inquiries
+  getFranchiseInquiries(options?: { status?: string }): Promise<FranchiseInquiry[]>;
+  getFranchiseInquiry(id: string): Promise<FranchiseInquiry | undefined>;
+  createFranchiseInquiry(inquiry: InsertFranchiseInquiry): Promise<FranchiseInquiry>;
+  updateFranchiseInquiry(id: string, inquiry: Partial<InsertFranchiseInquiry>): Promise<FranchiseInquiry>;
   
   // Health Check
   checkDatabaseHealth(): Promise<boolean>;
@@ -381,6 +409,112 @@ export class DatabaseStorage implements IStorage {
       .limit(50);
   }
   
+  // ========================
+  // FRANCHISES
+  // ========================
+  async getFranchises(options?: { status?: string; ownerId?: string }): Promise<Franchise[]> {
+    const conditions = [];
+    
+    if (options?.status) {
+      conditions.push(eq(franchises.status, options.status));
+    }
+    if (options?.ownerId) {
+      conditions.push(eq(franchises.ownerId, options.ownerId));
+    }
+    
+    if (conditions.length > 0) {
+      return await db.select().from(franchises).where(and(...conditions)).orderBy(desc(franchises.createdAt));
+    }
+    return await db.select().from(franchises).orderBy(desc(franchises.createdAt));
+  }
+
+  async getFranchise(id: string): Promise<Franchise | undefined> {
+    const [franchise] = await db.select().from(franchises).where(eq(franchises.id, id));
+    return franchise || undefined;
+  }
+
+  async getFranchiseByFranchiseId(franchiseId: string): Promise<Franchise | undefined> {
+    const [franchise] = await db.select().from(franchises).where(eq(franchises.franchiseId, franchiseId));
+    return franchise || undefined;
+  }
+
+  async createFranchise(franchise: InsertFranchise): Promise<Franchise> {
+    const [newFranchise] = await db.insert(franchises).values(franchise).returning();
+    return newFranchise;
+  }
+
+  async updateFranchise(id: string, franchise: Partial<InsertFranchise>): Promise<Franchise> {
+    const [updated] = await db
+      .update(franchises)
+      .set({ ...franchise, updatedAt: new Date() })
+      .where(eq(franchises.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // FRANCHISE CUSTODY TRANSFERS
+  // ========================
+  async getCustodyTransfers(franchiseId: string): Promise<FranchiseCustodyTransfer[]> {
+    return await db
+      .select()
+      .from(franchiseCustodyTransfers)
+      .where(eq(franchiseCustodyTransfers.franchiseId, franchiseId))
+      .orderBy(desc(franchiseCustodyTransfers.createdAt));
+  }
+
+  async getCustodyTransfer(id: string): Promise<FranchiseCustodyTransfer | undefined> {
+    const [transfer] = await db.select().from(franchiseCustodyTransfers).where(eq(franchiseCustodyTransfers.id, id));
+    return transfer || undefined;
+  }
+
+  async createCustodyTransfer(transfer: InsertFranchiseCustodyTransfer): Promise<FranchiseCustodyTransfer> {
+    const [newTransfer] = await db.insert(franchiseCustodyTransfers).values(transfer).returning();
+    return newTransfer;
+  }
+
+  async updateCustodyTransfer(id: string, transfer: Partial<InsertFranchiseCustodyTransfer>): Promise<FranchiseCustodyTransfer> {
+    const [updated] = await db
+      .update(franchiseCustodyTransfers)
+      .set(transfer)
+      .where(eq(franchiseCustodyTransfers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // FRANCHISE INQUIRIES
+  // ========================
+  async getFranchiseInquiries(options?: { status?: string }): Promise<FranchiseInquiry[]> {
+    if (options?.status) {
+      return await db
+        .select()
+        .from(franchiseInquiries)
+        .where(eq(franchiseInquiries.status, options.status))
+        .orderBy(desc(franchiseInquiries.createdAt));
+    }
+    return await db.select().from(franchiseInquiries).orderBy(desc(franchiseInquiries.createdAt));
+  }
+
+  async getFranchiseInquiry(id: string): Promise<FranchiseInquiry | undefined> {
+    const [inquiry] = await db.select().from(franchiseInquiries).where(eq(franchiseInquiries.id, id));
+    return inquiry || undefined;
+  }
+
+  async createFranchiseInquiry(inquiry: InsertFranchiseInquiry): Promise<FranchiseInquiry> {
+    const [newInquiry] = await db.insert(franchiseInquiries).values(inquiry).returning();
+    return newInquiry;
+  }
+
+  async updateFranchiseInquiry(id: string, inquiry: Partial<InsertFranchiseInquiry>): Promise<FranchiseInquiry> {
+    const [updated] = await db
+      .update(franchiseInquiries)
+      .set({ ...inquiry, updatedAt: new Date() })
+      .where(eq(franchiseInquiries.id, id))
+      .returning();
+    return updated;
+  }
+
   // ========================
   // HEALTH CHECK
   // ========================

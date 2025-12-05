@@ -38,6 +38,7 @@ interface CartContextType {
   gratuityOption: GratuityOption;
   customGratuity: number;
   gratuityAmount: number;
+  isAutoGratuity: boolean;
   setGratuityOption: (option: GratuityOption) => void;
   setCustomGratuity: (amount: number) => void;
   total: number;
@@ -49,6 +50,8 @@ const CART_STORAGE_KEY = 'brewboard_cart';
 const SERVICE_FEE_RATE = 0.15;
 const DELIVERY_FEE = 5.00;
 const TN_SALES_TAX_RATE = 0.0925; // Tennessee state (7%) + Nashville local (2.25%)
+const AUTO_GRATUITY_THRESHOLD = 100; // $100+ orders get automatic 18% gratuity
+const AUTO_GRATUITY_RATE = 0.18; // 18% auto gratuity for large orders
 
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959;
@@ -188,9 +191,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const serviceFee = subtotal * SERVICE_FEE_RATE;
   const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
   
-  const gratuityAmount = gratuityOption === 'custom' 
-    ? customGratuity 
-    : subtotal * (gratuityOption / 100);
+  // Enforce 18% auto-gratuity for orders $100+, otherwise use selected option
+  const isAutoGratuity = subtotal >= AUTO_GRATUITY_THRESHOLD;
+  const gratuityAmount = isAutoGratuity 
+    ? subtotal * AUTO_GRATUITY_RATE 
+    : (gratuityOption === 'custom' ? customGratuity : subtotal * (gratuityOption / 100));
   
   const total = subtotal + salesTax + serviceFee + deliveryFee + gratuityAmount;
 
@@ -214,6 +219,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       gratuityOption,
       customGratuity,
       gratuityAmount,
+      isAutoGratuity,
       setGratuityOption,
       setCustomGratuity,
       total

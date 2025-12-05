@@ -26,7 +26,8 @@ import {
   Building2,
   KeyRound,
   ParkingCircle,
-  DoorOpen
+  DoorOpen,
+  Lock
 } from "lucide-react";
 import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -246,6 +247,8 @@ export default function SchedulePage() {
   };
 
   const TN_SALES_TAX_RATE = 0.0925; // Tennessee state (7%) + Nashville local (2.25%)
+  const AUTO_GRATUITY_THRESHOLD = 100; // $100+ orders get automatic 18% gratuity
+  const AUTO_GRATUITY_RATE = 0.18; // 18% auto gratuity for large orders
   
   const orderTotals = useMemo(() => {
     const subtotal = newOrder.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
@@ -268,7 +271,10 @@ export default function SchedulePage() {
     }
     
     const deliveryFee = baseFee + extendedFee;
-    const gratuityAmt = gratuityOption === 'custom' ? customGratuity : subtotal * (gratuityOption / 100);
+    // Enforce 18% auto-gratuity for orders $100+, otherwise use selected option
+    const gratuityAmt = subtotal >= AUTO_GRATUITY_THRESHOLD 
+      ? subtotal * AUTO_GRATUITY_RATE 
+      : (gratuityOption === 'custom' ? customGratuity : subtotal * (gratuityOption / 100));
     const total = subtotal + salesTax + serviceFee + deliveryFee + gratuityAmt;
     return { subtotal, salesTax, serviceFee, deliveryFee, baseFee, extendedFee, isExtendedDelivery, deliveryDistance, gratuity: gratuityAmt, total };
   }, [newOrder.items, newOrder.deliveryAddress, vendorLocation, calculateDeliveryFee, gratuityOption, customGratuity]);
@@ -423,51 +429,75 @@ export default function SchedulePage() {
               ))}
             </div>
             
-            {/* Gratuity Selector */}
+            {/* Gratuity Selector - Conditional based on $100 threshold */}
             <div className="pt-3 border-t border-stone-200 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium" style={{ color: '#2d1810' }}>Concierge Gratuity</span>
-                <span className="text-xs text-muted-foreground">Standard: 18-20%</span>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {([0, 15, 18, 20] as const).map((pct) => (
-                  <Button
-                    key={pct}
-                    size="sm"
-                    variant={gratuityOption === pct ? "default" : "outline"}
-                    className={`flex-1 min-w-[60px] ${gratuityOption === pct ? "text-white shine-effect" : ""}`}
-                    style={gratuityOption === pct ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
-                    onClick={() => setGratuityOption(pct)}
-                    data-testid={`button-tip-${pct}`}
-                  >
-                    {pct === 0 ? "None" : `${pct}%`}
-                  </Button>
-                ))}
-                <Button
-                  size="sm"
-                  variant={gratuityOption === 'custom' ? "default" : "outline"}
-                  className={`flex-1 min-w-[60px] ${gratuityOption === 'custom' ? "text-white shine-effect" : ""}`}
-                  style={gratuityOption === 'custom' ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
-                  onClick={() => setGratuityOption('custom')}
-                  data-testid="button-tip-custom"
-                >
-                  Custom
-                </Button>
-              </div>
-              {gratuityOption === 'custom' && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={customGratuity}
-                    onChange={(e) => setCustomGratuity(parseFloat(e.target.value) || 0)}
-                    className="w-24"
-                    placeholder="0.00"
-                    data-testid="input-custom-tip"
-                  />
-                </div>
+              {subtotal >= 100 ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium flex items-center gap-2" style={{ color: '#2d1810' }}>
+                      <Lock className="h-3.5 w-3.5" />
+                      Auto Gratuity (18%)
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)', color: '#fef3c7' }}>Required</span>
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5c4033' }}>
+                    Orders $100+ include automatic 18% concierge gratuity for white-glove delivery service.
+                  </p>
+                  <div className="p-3 rounded-lg text-center" style={{ background: 'linear-gradient(135deg, rgba(92,64,51,0.15) 0%, rgba(61,36,24,0.15) 100%)', border: '1px solid rgba(92,64,51,0.3)' }}>
+                    <span className="font-semibold" style={{ color: '#2d1810' }}>${(subtotal * 0.18).toFixed(2)}</span>
+                    <span className="text-sm ml-1" style={{ color: '#5c4033' }}>gratuity included</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium" style={{ color: '#2d1810' }}>Concierge Gratuity</span>
+                    <span className="text-xs text-muted-foreground">Optional</span>
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: '#5c4033' }}>
+                    Gratuity is optional for orders under $100. Orders $100+ include automatic 18% gratuity.
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {([0, 15, 18, 20] as const).map((pct) => (
+                      <Button
+                        key={pct}
+                        size="sm"
+                        variant={gratuityOption === pct ? "default" : "outline"}
+                        className={`flex-1 min-w-[60px] ${gratuityOption === pct ? "text-white shine-effect" : ""}`}
+                        style={gratuityOption === pct ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                        onClick={() => setGratuityOption(pct)}
+                        data-testid={`button-tip-${pct}`}
+                      >
+                        {pct === 0 ? "None" : `${pct}%`}
+                      </Button>
+                    ))}
+                    <Button
+                      size="sm"
+                      variant={gratuityOption === 'custom' ? "default" : "outline"}
+                      className={`flex-1 min-w-[60px] ${gratuityOption === 'custom' ? "text-white shine-effect" : ""}`}
+                      style={gratuityOption === 'custom' ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                      onClick={() => setGratuityOption('custom')}
+                      data-testid="button-tip-custom"
+                    >
+                      Custom
+                    </Button>
+                  </div>
+                  {gratuityOption === 'custom' && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={customGratuity}
+                        onChange={(e) => setCustomGratuity(parseFloat(e.target.value) || 0)}
+                        className="w-24"
+                        placeholder="0.00"
+                        data-testid="input-custom-tip"
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
             
@@ -489,7 +519,16 @@ export default function SchedulePage() {
                 <span>${deliveryFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
-                <span>Gratuity{gratuityOption !== 'custom' && gratuityOption > 0 ? ` (${gratuityOption}%)` : ''}:</span>
+                <span>
+                  {subtotal >= 100 ? (
+                    <span className="flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Auto Gratuity (18%)
+                    </span>
+                  ) : (
+                    `Gratuity${gratuityOption !== 'custom' && gratuityOption > 0 ? ` (${gratuityOption}%)` : ''}`
+                  )}:
+                </span>
                 <span>${gratuityAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-bold pt-2 border-t border-stone-200 mt-1" style={{ color: '#2d1810' }}>

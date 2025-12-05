@@ -48,9 +48,20 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.0.16** - December 2024
+**v1.1.0** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.0**: Virtual Host Feature - Multi-Location Ordering
+  - New Virtual Host feature allowing meeting hosts to order for attendees at different locations
+  - Database schema: virtual_meetings, virtual_attendees, virtual_selections, virtual_orders, virtual_events tables
+  - Host wizard (/virtual-host): Multi-step form to create meetings, set budgets, add attendees
+  - Attendee intake page (/virtual-order/:token): Attendees submit their address and menu selections
+  - Per-person budget controls with overage tracking and host notifications
+  - Two delivery scopes: Local (Nashville multi-location) and Nationwide (Coming Soon with DoorDash/Uber Eats)
+  - Prominent Virtual Host CTA on dashboard with premium styling
+  - Unique invite tokens for each attendee with expiration support
+  - Real-time status tracking for selections and orders
+
 - **v1.0.16**: Premium UI Polish & Payment Integration
   - Polished item customization modal with luxury gradient styling
   - Enhanced option selection with visual feedback (glow on select)
@@ -124,25 +135,26 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 
 ## Roadmap (Upcoming Features)
 
-### v1.1.0 - Delivery Integration
-- DoorDash Drive API for automated delivery dispatch
+### v1.2.0 - Delivery Integration & Virtual Host Nationwide
+- DoorDash Drive API for automated delivery dispatch (Virtual Host nationwide scope)
 - Real-time driver tracking and ETA updates
 - Uber Direct as backup delivery provider
 - Proof of delivery with photos
+- Virtual Host nationwide ordering enabled
 
-### v1.2.0 - Calendar & Notifications
+### v1.3.0 - Calendar & Notifications
 - Google Calendar integration for order scheduling
 - Push notifications for order status
 - Twilio SMS alerts for delivery updates
 - Recurring order support
 
-### v1.3.0 - Analytics & Insights
+### v1.4.0 - Analytics & Insights
 - Business dashboard with order analytics
 - Revenue tracking and forecasting
 - Popular items and vendor performance
 - Customer retention metrics
 
-### v1.4.0 - Advanced Features
+### v1.5.0 - Advanced Features
 - Multi-vendor orders (split orders)
 - Saved order templates ("My Regular Order")
 - Loyalty rewards program

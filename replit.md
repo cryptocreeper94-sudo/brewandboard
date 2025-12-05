@@ -48,9 +48,17 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.1** - December 2024
+**v1.1.2** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.2**: PWA Polish & Enhanced Offline Support
+  - Upgraded service worker with smart caching strategies (cache-first for assets, network-first for API)
+  - Added app shortcuts to manifest (Schedule, Portfolio, Virtual Host)
+  - Better offline fallback - app shell loads even without network
+  - Stale-while-revalidate for dynamic content
+  - Automatic old cache cleanup on version updates
+  - Launch handler for smoother app experience
+
 - **v1.1.1**: AI Mascot Chat & Virtual Host Polish
   - Restored cute coffee mug AI mascot to dashboard (floating bottom-right)
   - Added text chat input to mascot - click keyboard button to type messages

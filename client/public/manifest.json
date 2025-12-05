@@ -1,8 +1,9 @@
 {
   "name": "Brew & Board Coffee",
   "short_name": "Brew & Board",
-  "description": "Premium coffee delivery for business meetings in Nashville",
+  "description": "Premium coffee & food board delivery for business meetings in Nashville. Order for your team, schedule deliveries, and manage your business portfolio.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1a0f09",
   "theme_color": "#b45309",
@@ -34,6 +35,33 @@
     }
   ],
   "categories": ["business", "food", "productivity"],
-  "screenshots": [],
-  "prefer_related_applications": false
+  "shortcuts": [
+    {
+      "name": "Schedule Order",
+      "short_name": "Schedule",
+      "description": "Schedule a coffee delivery",
+      "url": "/schedule",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Portfolio",
+      "short_name": "Portfolio",
+      "description": "View your business portfolio",
+      "url": "/portfolio",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Virtual Host",
+      "short_name": "Host",
+      "description": "Order for your remote team",
+      "url": "/virtual-host",
+      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

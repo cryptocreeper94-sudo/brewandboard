@@ -206,6 +206,7 @@ export function registerHallmarkRoutes(app: Express) {
           },
           quantity: 1
         }],
+        automatic_tax: { enabled: true },
         success_url: successUrl || `${req.headers.origin}/hallmark-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancelUrl || `${req.headers.origin}/portfolio`,
         metadata: { userId, type: 'hallmark_mint' }

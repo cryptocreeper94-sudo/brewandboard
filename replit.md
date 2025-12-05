@@ -48,10 +48,18 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Recent Changes (December 2024)
+- **v1.0.15**: Stripe Tax Integration & Menu Customization
+  - Enabled Stripe Tax automatic collection on all checkout sessions
+  - Stripe now handles state/local tax calculation at checkout
+  - Added item customization modal with size, milk, sweeteners, add-ons
+  - Required modifier validation before adding to cart
+  - Expanded vendor menus to 15+ items each with realistic pricing
+  - Added team chat for operators (developers/partners/regional managers only)
+  - Team chat access restricted via localStorage role checks
 - **v1.0.14**: Gratuity System, Sales Tax & Capacity Management
   - Added gratuity selector to cart: 15%, 18%, 20%, and custom tip options
   - Concierge gratuity calculated on subtotal before fees
-  - Tennessee sales tax (9.25% for Nashville) applied to subtotal
+  - Tennessee sales tax (9.25% for Nashville) shown as estimate in cart
   - Capacity management: max 4 concurrent orders per 2-hour window
   - Server-side validation blocks orders when capacity is full
   - API endpoint for checking time slot availability (/api/orders/capacity/check)

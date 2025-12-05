@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Coffee, 
   MapPin, 
@@ -17,6 +18,12 @@ import {
   Cloud,
   Sun,
   CloudRain,
+  CloudDrizzle,
+  CloudLightning,
+  CloudSun,
+  Snowflake,
+  Wind,
+  Droplets,
   X,
   Radar,
   Newspaper,
@@ -286,6 +293,40 @@ function CuratedRoastersCarousel() {
   );
 }
 
+// Weather icon helper
+const getWeatherIcon = (icon: string, className: string = "h-4 w-4") => {
+  switch (icon) {
+    case 'sun': return <Sun className={`${className} text-amber-500`} />;
+    case 'cloud-sun': return <CloudSun className={`${className} text-amber-400`} />;
+    case 'cloud': return <Cloud className={`${className} text-gray-400`} />;
+    case 'cloud-rain': return <CloudRain className={`${className} text-blue-400`} />;
+    case 'cloud-drizzle': return <CloudDrizzle className={`${className} text-blue-300`} />;
+    case 'cloud-lightning': return <CloudLightning className={`${className} text-purple-500`} />;
+    case 'snowflake': return <Snowflake className={`${className} text-cyan-300`} />;
+    default: return <Cloud className={`${className} text-gray-400`} />;
+  }
+};
+
+interface WeatherData {
+  current: {
+    temperature: number;
+    feelsLike: number;
+    humidity: number;
+    windSpeed: number;
+    precipitation: number;
+    condition: string;
+    icon: string;
+  };
+  forecast: Array<{
+    date: string;
+    high: number;
+    low: number;
+    condition: string;
+    icon: string;
+  }>;
+  lastUpdated: string;
+}
+
 export default function Dashboard() {
   const userName = localStorage.getItem("user_name") || "Guest";
   const isGuest = localStorage.getItem("is_guest") === "true";
@@ -297,6 +338,18 @@ export default function Dashboard() {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
+
+  // Fetch real weather data
+  const { data: weather } = useQuery<WeatherData>({
+    queryKey: ['weather', 'nashville'],
+    queryFn: async () => {
+      const res = await fetch('/api/weather/nashville');
+      if (!res.ok) throw new Error('Failed to fetch weather');
+      return res.json();
+    },
+    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
+    staleTime: 5 * 60 * 1000, // Consider fresh for 5 minutes
+  });
 
   useEffect(() => {
     if (isGuest) {
@@ -512,8 +565,8 @@ const { itemCount } = useCart();
               className="gap-2 text-xs hover:bg-amber-50 dark:hover:bg-amber-950/30"
               data-testid="button-weather"
             >
-              <Sun className="h-4 w-4 text-amber-500" />
-              <span className="font-medium">64°</span>
+              {weather ? getWeatherIcon(weather.current.icon) : <Cloud className="h-4 w-4 text-gray-400" />}
+              <span className="font-medium">{weather?.current.temperature ?? '--'}°</span>
             </Button>
             
             {isGuest && (
@@ -691,15 +744,15 @@ const { itemCount } = useCart();
 
       {/* Weather Radar Modal */}
       <Dialog open={showWeatherRadar} onOpenChange={setShowWeatherRadar}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
           <DialogHeader className="p-4 pb-2 border-b">
             <DialogTitle className="flex items-center gap-2 font-serif">
               <Radar className="h-5 w-5 text-amber-600" />
-              Nashville Weather Radar
+              Nashville Weather
             </DialogTitle>
           </DialogHeader>
-          <div className="p-4 space-y-4">
-            {/* Current Conditions */}
+          <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+            {/* Current Conditions - Real Data */}
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -707,68 +760,97 @@ const { itemCount } = useCart();
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm font-medium">Nashville, Tennessee</span>
                   </div>
-                  <div className="text-5xl font-serif font-bold text-foreground">64°F</div>
-                  <p className="text-muted-foreground mt-1">Partly Cloudy</p>
+                  <div className="text-5xl font-serif font-bold text-foreground">
+                    {weather?.current.temperature ?? '--'}°F
+                  </div>
+                  <p className="text-muted-foreground mt-1">{weather?.current.condition ?? 'Loading...'}</p>
                 </div>
                 <div className="text-right">
-                  <Sun className="h-16 w-16 text-amber-500 mb-2" />
-                  <p className="text-sm text-muted-foreground">Feels like 62°</p>
+                  {weather ? getWeatherIcon(weather.current.icon, "h-16 w-16") : <Cloud className="h-16 w-16 text-gray-400" />}
+                  <p className="text-sm text-muted-foreground mt-2">Feels like {weather?.current.feelsLike ?? '--'}°</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-amber-200/50 dark:border-amber-800/30">
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Humidity</p>
-                  <p className="font-semibold">45%</p>
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <Droplets className="h-3 w-3" />
+                    <p className="text-xs">Humidity</p>
+                  </div>
+                  <p className="font-semibold">{weather?.current.humidity ?? '--'}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Wind</p>
-                  <p className="font-semibold">8 mph</p>
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <Wind className="h-3 w-3" />
+                    <p className="text-xs">Wind</p>
+                  </div>
+                  <p className="font-semibold">{weather?.current.windSpeed ?? '--'} mph</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">UV Index</p>
-                  <p className="font-semibold">Moderate</p>
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <CloudRain className="h-3 w-3" />
+                    <p className="text-xs">Precip</p>
+                  </div>
+                  <p className="font-semibold">{weather?.current.precipitation ?? 0}"</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Visibility</p>
-                  <p className="font-semibold">10 mi</p>
+                  <p className="text-xs text-muted-foreground mb-1">Updated</p>
+                  <p className="font-semibold text-xs">
+                    {weather?.lastUpdated ? new Date(weather.lastUpdated).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--'}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Radar Map */}
+            {/* Interactive Radar Map - Full Featured with All Layers */}
             <div className="bg-card border rounded-xl overflow-hidden">
               <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
-                <span className="text-sm font-medium">Live Radar</span>
-                <span className="text-xs text-muted-foreground">Last updated: Just now</span>
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <Radar className="h-4 w-4 text-blue-500" />
+                  Interactive Radar Map
+                </span>
+                <span className="text-xs text-muted-foreground">Use menu for layers: Rain, Wind, Storms, Temp</span>
               </div>
-              <div className="relative aspect-video bg-slate-900">
+              <div className="relative" style={{ height: '450px' }}>
                 <iframe
-                  src="https://embed.windy.com/embed2.html?lat=36.16&lon=-86.78&detailLat=36.16&detailLon=-86.78&width=650&height=450&zoom=8&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+                  src="https://embed.windy.com/embed2.html?lat=36.16&lon=-86.78&detailLat=36.16&detailLon=-86.78&width=650&height=450&zoom=7&level=surface&overlay=radar&product=radar&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=mph&metricTemp=°F&radarRange=-1"
                   className="w-full h-full border-0"
                   title="Nashville Weather Radar"
+                  allowFullScreen
                 />
+              </div>
+              <div className="p-2 bg-muted/20 border-t">
+                <p className="text-xs text-muted-foreground text-center">
+                  Click the menu icon (☰) to switch layers: Radar, Rain, Wind, Temperature, Clouds, Thunderstorms
+                </p>
               </div>
             </div>
 
-            {/* 5-Day Forecast */}
+            {/* 5-Day Forecast - Real Data */}
             <div className="bg-card border rounded-xl p-4">
               <h4 className="text-sm font-medium mb-4">5-Day Forecast</h4>
               <div className="grid grid-cols-5 gap-3">
-                {[
-                  { day: "Today", high: 64, low: 48, icon: Sun },
-                  { day: "Wed", high: 68, low: 52, icon: Sun },
-                  { day: "Thu", high: 62, low: 50, icon: Cloud },
-                  { day: "Fri", high: 58, low: 45, icon: CloudRain },
-                  { day: "Sat", high: 65, low: 48, icon: Sun },
-                ].map((forecast) => (
-                  <div key={forecast.day} className="text-center p-3 rounded-lg bg-muted/30">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">{forecast.day}</p>
-                    <forecast.icon className="h-6 w-6 mx-auto mb-2 text-amber-500" />
-                    <p className="text-sm font-semibold">{forecast.high}°</p>
-                    <p className="text-xs text-muted-foreground">{forecast.low}°</p>
-                  </div>
-                ))}
+                {weather?.forecast?.length ? weather.forecast.map((day, i) => {
+                  const dayName = i === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+                  return (
+                    <div key={day.date} className="text-center p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">{dayName}</p>
+                      {getWeatherIcon(day.icon, "h-6 w-6 mx-auto mb-2")}
+                      <p className="text-sm font-semibold">{day.high}°</p>
+                      <p className="text-xs text-muted-foreground">{day.low}°</p>
+                    </div>
+                  );
+                }) : (
+                  // Fallback skeleton
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="text-center p-3 rounded-lg bg-muted/30 animate-pulse">
+                      <div className="h-3 bg-muted rounded w-8 mx-auto mb-2" />
+                      <div className="h-6 w-6 bg-muted rounded-full mx-auto mb-2" />
+                      <div className="h-4 bg-muted rounded w-6 mx-auto mb-1" />
+                      <div className="h-3 bg-muted rounded w-5 mx-auto" />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

@@ -47,3 +47,22 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **Email Service**: Resend
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
+## Recent Changes (December 2024)
+- **v1.0.10**: Real-time weather integration
+  - Connected to Open-Meteo API for live Nashville weather data
+  - Weather button shows real temperature and condition icon
+  - Weather modal displays: temperature, feels like, humidity, wind, precipitation
+  - 5-day forecast with real data from API
+  - Windy.com radar with full layer menu (rain, wind, storms, temp, clouds, thunder)
+  - 10-minute cache for API efficiency
+- **v1.0.9**: Enhanced Building Access Instructions for secure locations
+  - Added prominent "Building Access Instructions" section to order form
+  - Orange highlighted box with detailed placeholder prompts
+  - Covers: security check-in, access codes, parking, floor/suite, meeting location
+- **v1.0.8**: "Brew & Board" brand identity update
+  - Updated headline to "Brews & Boards, Delivered with Grace"
+  - "Brew" = coffee, tea, juice, boba; "Board" = food boards (donuts, pastries, breakfast spreads)
+  - Renamed "Curated Roasters" to "Curated Vendors" on dashboard
+- **v1.0.7**: Expanded vendor catalog to 37+ locations with new categories
+  - Added donut shops, juice bars, bubble tea, and Nashville breakfast spots
+  - New vendor type badges with color-coded categories

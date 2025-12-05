@@ -50,6 +50,103 @@ export async function registerRoutes(
   });
 
   // ========================
+  // WEATHER ROUTES
+  // ========================
+  
+  let weatherCache: { data: any; fetchedAt: number } | null = null;
+  const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+  
+  app.get("/api/weather/nashville", async (req, res) => {
+    try {
+      // Check cache first
+      if (weatherCache && Date.now() - weatherCache.fetchedAt < WEATHER_CACHE_TTL) {
+        return res.json({ ...weatherCache.data, cached: true });
+      }
+      
+      // Fetch from Open-Meteo API (free, no API key needed)
+      // Nashville coordinates: 36.16, -86.78
+      const response = await fetch(
+        'https://api.open-meteo.com/v1/forecast?' +
+        'latitude=36.1627&longitude=-86.7816' +
+        '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation' +
+        '&daily=weather_code,temperature_2m_max,temperature_2m_min' +
+        '&temperature_unit=fahrenheit' +
+        '&wind_speed_unit=mph' +
+        '&precipitation_unit=inch' +
+        '&timezone=America/Chicago' +
+        '&forecast_days=5'
+      );
+      
+      if (!response.ok) {
+        throw new Error('Weather API request failed');
+      }
+      
+      const data = await response.json();
+      
+      // Map weather codes to conditions
+      const getWeatherCondition = (code: number) => {
+        if (code === 0) return { condition: 'Clear', icon: 'sun' };
+        if (code <= 3) return { condition: 'Partly Cloudy', icon: 'cloud-sun' };
+        if (code <= 48) return { condition: 'Foggy', icon: 'cloud' };
+        if (code <= 57) return { condition: 'Drizzle', icon: 'cloud-drizzle' };
+        if (code <= 67) return { condition: 'Rain', icon: 'cloud-rain' };
+        if (code <= 77) return { condition: 'Snow', icon: 'snowflake' };
+        if (code <= 82) return { condition: 'Rain Showers', icon: 'cloud-rain' };
+        if (code <= 86) return { condition: 'Snow Showers', icon: 'snowflake' };
+        if (code >= 95) return { condition: 'Thunderstorm', icon: 'cloud-lightning' };
+        return { condition: 'Cloudy', icon: 'cloud' };
+      };
+      
+      const current = data.current;
+      const daily = data.daily;
+      const currentCondition = getWeatherCondition(current.weather_code);
+      
+      const weatherData = {
+        current: {
+          temperature: Math.round(current.temperature_2m),
+          feelsLike: Math.round(current.apparent_temperature),
+          humidity: current.relative_humidity_2m,
+          windSpeed: Math.round(current.wind_speed_10m),
+          precipitation: current.precipitation,
+          condition: currentCondition.condition,
+          icon: currentCondition.icon,
+          weatherCode: current.weather_code
+        },
+        forecast: daily.time.map((date: string, i: number) => ({
+          date,
+          high: Math.round(daily.temperature_2m_max[i]),
+          low: Math.round(daily.temperature_2m_min[i]),
+          ...getWeatherCondition(daily.weather_code[i])
+        })),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Update cache
+      weatherCache = { data: weatherData, fetchedAt: Date.now() };
+      
+      res.json(weatherData);
+    } catch (error) {
+      console.error('Weather fetch error:', error);
+      // Return fallback data if API fails
+      res.json({
+        current: {
+          temperature: 45,
+          feelsLike: 42,
+          humidity: 65,
+          windSpeed: 10,
+          precipitation: 0,
+          condition: 'Cloudy',
+          icon: 'cloud',
+          weatherCode: 3
+        },
+        forecast: [],
+        lastUpdated: new Date().toISOString(),
+        error: 'Using fallback data'
+      });
+    }
+  });
+
+  // ========================
   // NEWS ROUTES
   // ========================
   

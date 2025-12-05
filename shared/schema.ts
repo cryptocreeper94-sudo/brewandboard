@@ -645,6 +645,213 @@ export type InsertAppVersion = z.infer<typeof insertAppVersionSchema>;
 export type AppVersion = typeof appVersions.$inferSelect;
 
 // ========================
+// FRANCHISES (Territory Ownership)
+// ========================
+export const franchises = pgTable(
+  "franchises",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // FRANCHISE IDENTIFICATION
+    franchiseId: varchar("franchise_id", { length: 50 }).notNull().unique(), // "BB-NASH-001", "BB-ATL-001"
+    
+    // OWNERSHIP
+    ownerId: varchar("owner_id").references(() => users.id),
+    ownerEmail: varchar("owner_email", { length: 255 }).notNull(),
+    ownerName: varchar("owner_name", { length: 255 }).notNull(),
+    ownerCompany: varchar("owner_company", { length: 255 }),
+    ownerPhone: varchar("owner_phone", { length: 20 }),
+    
+    // OWNERSHIP MODE
+    ownershipMode: varchar("ownership_mode", { length: 30 }).default("subscriber_managed").notNull(),
+    // "subscriber_managed" = Brew & Board controls, customer uses platform
+    // "franchise_owned" = Customer owns territory completely
+    
+    // TERRITORY
+    territoryName: varchar("territory_name", { length: 100 }).notNull(), // "Nashville", "Atlanta Metro"
+    territoryRegion: varchar("territory_region", { length: 255 }), // "Davidson County, TN"
+    territoryExclusive: boolean("territory_exclusive").default(false).notNull(),
+    territoryNotes: text("territory_notes"),
+    
+    // FRANCHISE TIER
+    franchiseTier: varchar("franchise_tier", { length: 30 }).default("starter").notNull(),
+    // "starter" | "professional" | "enterprise"
+    
+    // FINANCIAL TERMS
+    franchiseFee: varchar("franchise_fee", { length: 20 }), // "$7,500"
+    royaltyType: varchar("royalty_type", { length: 30 }).default("percentage"), // "percentage" | "per_order" | "flat"
+    royaltyPercent: varchar("royalty_percent", { length: 10 }), // "5%"
+    royaltyAmount: varchar("royalty_amount", { length: 20 }), // For per-order: "$2.00"
+    platformFeeMonthly: varchar("platform_fee_monthly", { length: 20 }), // "$400"
+    hallmarkRevenueShare: varchar("hallmark_revenue_share", { length: 10 }), // "70/30" (franchise keeps 70%)
+    
+    // SUPPORT TERMS
+    supportTier: varchar("support_tier", { length: 30 }).default("standard"), // "standard" | "priority" | "enterprise"
+    supportResponseHours: integer("support_response_hours").default(48),
+    
+    // STATUS
+    status: varchar("status", { length: 30 }).default("pending").notNull(),
+    // "pending" | "approved" | "active" | "suspended" | "terminated"
+    
+    // HALLMARK INTEGRATION
+    hallmarkPrefix: varchar("hallmark_prefix", { length: 30 }), // "BB-NASH" for Nashville franchise
+    canMintHallmarks: boolean("can_mint_hallmarks").default(false),
+    hallmarksMintedTotal: integer("hallmarks_minted_total").default(0),
+    
+    // CUSTODY
+    custodyOwner: varchar("custody_owner", { length: 100 }).default("brewandboard"), // "brewandboard" or owner email
+    custodyTransferDate: timestamp("custody_transfer_date"),
+    previousCustodyOwner: varchar("previous_custody_owner", { length: 100 }),
+    
+    // PERFORMANCE METRICS
+    totalOrders: integer("total_orders").default(0),
+    totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).default("0"),
+    activeVendors: integer("active_vendors").default(0),
+    
+    // DATES
+    franchiseStartDate: timestamp("franchise_start_date"),
+    franchiseRenewalDate: timestamp("franchise_renewal_date"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    franchiseIdIdx: index("idx_franchises_franchise_id").on(table.franchiseId),
+    ownerIdx: index("idx_franchises_owner").on(table.ownerId),
+    territoryIdx: index("idx_franchises_territory").on(table.territoryName),
+    statusIdx: index("idx_franchises_status").on(table.status),
+  })
+);
+
+export const insertFranchiseSchema = createInsertSchema(franchises).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalOrders: true,
+  totalRevenue: true,
+  hallmarksMintedTotal: true,
+});
+export type InsertFranchise = z.infer<typeof insertFranchiseSchema>;
+export type Franchise = typeof franchises.$inferSelect;
+
+// ========================
+// FRANCHISE CUSTODY TRANSFERS
+// ========================
+export const franchiseCustodyTransfers = pgTable(
+  "franchise_custody_transfers",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // WHAT IS BEING TRANSFERRED
+    franchiseId: varchar("franchise_id").notNull().references(() => franchises.id),
+    
+    // TRANSFER TYPE
+    transferType: varchar("transfer_type", { length: 50 }).notNull(),
+    // "subscriber_to_franchise" | "franchise_upgrade" | "franchise_transfer"
+    
+    // FROM/TO
+    fromMode: varchar("from_mode", { length: 30 }).notNull(), // "subscriber_managed"
+    toMode: varchar("to_mode", { length: 30 }).notNull(), // "franchise_owned"
+    fromOwner: varchar("from_owner", { length: 100 }).notNull(), // "brewandboard"
+    toOwner: varchar("to_owner", { length: 100 }).notNull(), // New owner email
+    
+    // FINANCIAL TERMS
+    transferFee: varchar("transfer_fee", { length: 20 }), // One-time fee
+    franchiseFeeAgreed: varchar("franchise_fee_agreed", { length: 20 }),
+    royaltyTerms: jsonb("royalty_terms").$type<{
+      type: string;
+      percent?: string;
+      amount?: string;
+    }>(),
+    
+    // ASSETS TRANSFERRED
+    vendorRelationshipsTransferred: integer("vendor_relationships_transferred").default(0),
+    ordersHistoryIncluded: boolean("orders_history_included").default(true),
+    hallmarkSystemIncluded: boolean("hallmark_system_included").default(true),
+    
+    // APPROVAL CHAIN
+    approvedBy: varchar("approved_by", { length: 100 }),
+    approvedAt: timestamp("approved_at"),
+    customerAccepted: boolean("customer_accepted").default(false),
+    customerAcceptedAt: timestamp("customer_accepted_at"),
+    legalAgreementSigned: boolean("legal_agreement_signed").default(false),
+    legalAgreementUrl: text("legal_agreement_url"),
+    
+    // STATUS
+    status: varchar("status", { length: 30 }).default("pending").notNull(),
+    // "pending" | "approved" | "accepted" | "completed" | "cancelled"
+    statusNotes: text("status_notes"),
+    
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    franchiseIdx: index("idx_custody_transfers_franchise").on(table.franchiseId),
+    statusIdx: index("idx_custody_transfers_status").on(table.status),
+  })
+);
+
+export const insertFranchiseCustodyTransferSchema = createInsertSchema(franchiseCustodyTransfers).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+export type InsertFranchiseCustodyTransfer = z.infer<typeof insertFranchiseCustodyTransferSchema>;
+export type FranchiseCustodyTransfer = typeof franchiseCustodyTransfers.$inferSelect;
+
+// ========================
+// FRANCHISE INQUIRIES (Leads)
+// ========================
+export const franchiseInquiries = pgTable(
+  "franchise_inquiries",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // CONTACT INFO
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 20 }),
+    company: varchar("company", { length: 255 }),
+    
+    // INQUIRY DETAILS
+    interestedTier: varchar("interested_tier", { length: 30 }), // "starter" | "professional" | "enterprise"
+    preferredTerritory: varchar("preferred_territory", { length: 255 }),
+    investmentBudget: varchar("investment_budget", { length: 100 }),
+    timelineToStart: varchar("timeline_to_start", { length: 100 }),
+    
+    // BACKGROUND
+    hasBusinessExperience: boolean("has_business_experience").default(false),
+    hasFoodServiceExperience: boolean("has_food_service_experience").default(false),
+    currentOccupation: varchar("current_occupation", { length: 255 }),
+    additionalNotes: text("additional_notes"),
+    
+    // STATUS
+    status: varchar("status", { length: 30 }).default("new").notNull(),
+    // "new" | "contacted" | "qualified" | "negotiating" | "converted" | "declined"
+    assignedTo: varchar("assigned_to", { length: 100 }),
+    followUpDate: timestamp("follow_up_date"),
+    
+    // CONVERSION
+    convertedToFranchiseId: varchar("converted_to_franchise_id").references(() => franchises.id),
+    
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    emailIdx: index("idx_franchise_inquiries_email").on(table.email),
+    statusIdx: index("idx_franchise_inquiries_status").on(table.status),
+    territoryIdx: index("idx_franchise_inquiries_territory").on(table.preferredTerritory),
+  })
+);
+
+export const insertFranchiseInquirySchema = createInsertSchema(franchiseInquiries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFranchiseInquiry = z.infer<typeof insertFranchiseInquirySchema>;
+export type FranchiseInquiry = typeof franchiseInquiries.$inferSelect;
+
+// ========================
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;
@@ -678,3 +885,83 @@ export const HALLMARK_LIMITS = {
 
 // Minting fee for subscriber hallmarks
 export const HALLMARK_MINTING_FEE = 199; // $1.99 in cents
+
+// ========================
+// FRANCHISE CONSTANTS
+// ========================
+export const FRANCHISE_TIERS = {
+  starter: {
+    name: "Starter",
+    fee: "$7,500",
+    feeNumber: 7500,
+    royaltyPercent: "5%",
+    platformFee: "$400/month",
+    platformFeeNumber: 400,
+    territories: "Single city",
+    exclusive: false,
+    supportHours: 48,
+    hallmarkShare: "70/30", // Franchise keeps 70%
+    features: [
+      "Single city territory",
+      "5% royalty per order",
+      "$400/month platform fee",
+      "Non-exclusive territory",
+      "48hr support response",
+      "70/30 hallmark revenue share",
+      "Full vendor network access",
+      "Basic analytics dashboard"
+    ]
+  },
+  professional: {
+    name: "Professional",
+    fee: "$15,000",
+    feeNumber: 15000,
+    royaltyPercent: "4%",
+    platformFee: "$650/month",
+    platformFeeNumber: 650,
+    territories: "Up to 3 cities",
+    exclusive: true,
+    supportHours: 24,
+    hallmarkShare: "80/20",
+    popular: true,
+    features: [
+      "Regional territory (up to 3 cities)",
+      "4% royalty per order",
+      "$650/month platform fee",
+      "Exclusive territory protection",
+      "24hr priority support",
+      "80/20 hallmark revenue share",
+      "Dedicated account manager",
+      "Advanced analytics + reporting",
+      "Custom branding options"
+    ]
+  },
+  enterprise: {
+    name: "Enterprise",
+    fee: "$35,000",
+    feeNumber: 35000,
+    royaltyPercent: "3%",
+    platformFee: "$1,200/month",
+    platformFeeNumber: 1200,
+    territories: "State/Multi-state",
+    exclusive: true,
+    supportHours: 4,
+    hallmarkShare: "90/10",
+    features: [
+      "State or multi-state exclusive territory",
+      "3% royalty per order",
+      "$1,200/month platform fee",
+      "Exclusive territory with sub-franchise rights",
+      "4hr enterprise support (24/7)",
+      "90/10 hallmark revenue share",
+      "Executive quarterly reviews",
+      "Full white-label options",
+      "API access for custom integrations",
+      "Priority vendor onboarding"
+    ]
+  }
+} as const;
+
+export const FRANCHISE_STATUSES = ['pending', 'approved', 'active', 'suspended', 'terminated'] as const;
+export const FRANCHISE_OWNERSHIP_MODES = ['subscriber_managed', 'franchise_owned'] as const;
+export const FRANCHISE_INQUIRY_STATUSES = ['new', 'contacted', 'qualified', 'negotiating', 'converted', 'declined'] as const;

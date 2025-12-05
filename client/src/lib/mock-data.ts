@@ -268,7 +268,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'crumbl-brentwood',
     name: 'Crumbl Cookies',
-    image: '/attached_assets/generated_images/crema_coffee_roasters_interior.png',
+    image: '/attached_assets/generated_images/gourmet_cookie_bakery_display.png',
     location: 'Brentwood',
     address: '330 Franklin Rd Suite 910, Brentwood, TN 37027',
     lat: 36.0318,
@@ -299,7 +299,7 @@ export const COFFEE_SHOPS: Shop[] = [
   {
     id: 'crumbl-green-hills',
     name: 'Crumbl Cookies',
-    image: '/attached_assets/generated_images/crema_coffee_roasters_interior.png',
+    image: '/attached_assets/generated_images/gourmet_cookie_bakery_display.png',
     location: 'Green Hills',
     address: '2126 Abbott Martin Rd #110, Nashville, TN 37215',
     lat: 36.1055,

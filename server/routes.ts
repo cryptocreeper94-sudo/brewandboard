@@ -590,8 +590,8 @@ export async function registerRoutes(
           ).join('');
           
           await resend.emails.send({
-            from: "Brew & Board <onboarding@resend.dev>",
-            to: "cryptocreeper94@gmail.com",
+            from: "Brew & Board <orders@brewandboard.coffee>",
+            to: "sipandmeet@brewandboard.coffee",
             subject: `🚨 NEW ORDER: ${validatedData.vendorName} - ${validatedData.scheduledDate} at ${validatedData.scheduledTime}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a0f09; color: #fef3c7; padding: 20px; border-radius: 10px;">
@@ -891,8 +891,8 @@ export async function registerRoutes(
           FRANCHISE_TIERS[result.data.interestedTier as keyof typeof FRANCHISE_TIERS] : null;
         
         await resend.emails.send({
-          from: "Brew & Board <onboarding@resend.dev>",
-          to: "cryptocreeper94@gmail.com",
+          from: "Brew & Board <franchise@brewandboard.coffee>",
+          to: "sipandmeet@brewandboard.coffee",
           replyTo: result.data.email,
           subject: `[Franchise Inquiry] ${result.data.name} - ${result.data.preferredTerritory || 'Territory TBD'}`,
           html: `
@@ -1030,8 +1030,8 @@ export async function registerRoutes(
         const resend = new Resend(process.env.RESEND_API_KEY);
         
         await resend.emails.send({
-          from: "Brew & Board <onboarding@resend.dev>",
-          to: "cryptocreeper94@gmail.com",
+          from: "Brew & Board <hello@brewandboard.coffee>",
+          to: "sipandmeet@brewandboard.coffee",
           replyTo: email,
           subject: `[Contact Form] ${subject}`,
           html: `

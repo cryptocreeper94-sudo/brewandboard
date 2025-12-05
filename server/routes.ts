@@ -1031,27 +1031,51 @@ export async function registerRoutes(
   };
   
   // Helper: Verify regional manager session from header
-  const verifyRegionalSession = async (req: any): Promise<{ managerId: string; regionId: string | null } | null> => {
+  const verifyRegionalSession = async (req: any, allowPinChange: boolean = false): Promise<{ 
+    managerId: string; 
+    regionId: string | null;
+    role: string;
+    mustChangePin: boolean;
+  } | null> => {
     const token = req.headers['x-regional-token'];
     if (!token) return null;
     
-    const session = regionalSessions.get(token);
+    const session = regionalSessions.get(token as string);
     if (!session) return null;
     
     // Check expiration
     if (Date.now() > session.expiresAt) {
-      regionalSessions.delete(token);
+      regionalSessions.delete(token as string);
       return null;
     }
     
     // Verify manager still exists and is active
     const manager = await storage.getRegionalManager(session.managerId);
     if (!manager || !manager.isActive) {
-      regionalSessions.delete(token);
+      regionalSessions.delete(token as string);
       return null;
     }
     
-    return { managerId: session.managerId, regionId: session.regionId };
+    return { 
+      managerId: session.managerId, 
+      regionId: session.regionId,
+      role: manager.role || "regional_manager",
+      mustChangePin: manager.mustChangePin === true
+    };
+  };
+  
+  // Helper: Check if PIN change is required (blocks most routes)
+  const requirePinChanged = async (req: any, res: any): Promise<boolean> => {
+    const session = await verifyRegionalSession(req);
+    if (!session) {
+      res.status(401).json({ error: "Authentication required" });
+      return false;
+    }
+    if (session.mustChangePin) {
+      res.status(403).json({ error: "PIN change required before accessing this resource" });
+      return false;
+    }
+    return true;
   };
 
   // Master PINs for initial access

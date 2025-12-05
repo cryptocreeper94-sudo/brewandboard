@@ -48,9 +48,17 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.3** - December 2024
+**v1.1.4** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.4**: Vendor Sign-Up Portal
+  - New vendor application page (/vendors) for Nashville businesses to join
+  - Database schema: vendor_applications table with full business info
+  - Application form captures business details, location, menu highlights, catering capacity
+  - Email notifications for new vendor applications (vendors@brewandboard.coffee)
+  - Business type categories: coffee shop, bakery, donut shop, juice bar, bubble tea, breakfast spot
+  - Admin endpoints for reviewing and updating application status
+
 - **v1.1.3**: Custom Email Domain & Professional Branding
   - Configured brewandboard.coffee domain in Resend with full DNS verification
   - Order notifications now sent from orders@brewandboard.coffee

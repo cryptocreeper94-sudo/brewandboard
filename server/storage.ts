@@ -21,6 +21,8 @@ import {
   type InsertFranchiseCustodyTransfer,
   type FranchiseInquiry,
   type InsertFranchiseInquiry,
+  type VendorApplication,
+  type InsertVendorApplication,
   type Region,
   type InsertRegion,
   type RegionalManager,
@@ -50,6 +52,7 @@ import {
   franchises,
   franchiseCustodyTransfers,
   franchiseInquiries,
+  vendorApplications,
   regions,
   regionalManagers,
   territoryAssignments,
@@ -133,6 +136,12 @@ export interface IStorage {
   getFranchiseInquiry(id: string): Promise<FranchiseInquiry | undefined>;
   createFranchiseInquiry(inquiry: InsertFranchiseInquiry): Promise<FranchiseInquiry>;
   updateFranchiseInquiry(id: string, inquiry: Partial<InsertFranchiseInquiry>): Promise<FranchiseInquiry>;
+  
+  // Vendor Applications
+  getVendorApplications(options?: { status?: string }): Promise<VendorApplication[]>;
+  getVendorApplication(id: string): Promise<VendorApplication | undefined>;
+  createVendorApplication(application: InsertVendorApplication): Promise<VendorApplication>;
+  updateVendorApplication(id: string, application: Partial<InsertVendorApplication>): Promise<VendorApplication>;
   
   // Regions
   getRegions(): Promise<Region[]>;
@@ -631,6 +640,39 @@ export class DatabaseStorage implements IStorage {
       .update(franchiseInquiries)
       .set({ ...inquiry, updatedAt: new Date() })
       .where(eq(franchiseInquiries.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // VENDOR APPLICATIONS
+  // ========================
+  async getVendorApplications(options?: { status?: string }): Promise<VendorApplication[]> {
+    if (options?.status) {
+      return await db
+        .select()
+        .from(vendorApplications)
+        .where(eq(vendorApplications.status, options.status))
+        .orderBy(desc(vendorApplications.createdAt));
+    }
+    return await db.select().from(vendorApplications).orderBy(desc(vendorApplications.createdAt));
+  }
+
+  async getVendorApplication(id: string): Promise<VendorApplication | undefined> {
+    const [application] = await db.select().from(vendorApplications).where(eq(vendorApplications.id, id));
+    return application || undefined;
+  }
+
+  async createVendorApplication(application: InsertVendorApplication): Promise<VendorApplication> {
+    const [newApplication] = await db.insert(vendorApplications).values(application).returning();
+    return newApplication;
+  }
+
+  async updateVendorApplication(id: string, application: Partial<InsertVendorApplication>): Promise<VendorApplication> {
+    const [updated] = await db
+      .update(vendorApplications)
+      .set({ ...application, updatedAt: new Date() })
+      .where(eq(vendorApplications.id, id))
       .returning();
     return updated;
   }

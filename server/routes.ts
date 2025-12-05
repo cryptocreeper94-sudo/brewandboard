@@ -10,6 +10,7 @@ import {
   insertScheduledOrderSchema,
   insertOrderEventSchema,
   insertFranchiseInquirySchema,
+  insertVendorApplicationSchema,
   insertRegionSchema,
   insertRegionalManagerSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
@@ -1003,6 +1004,120 @@ export async function registerRoutes(
       res.json(franchise);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // VENDOR APPLICATION ROUTES
+  // ========================
+  
+  // Submit vendor application (public)
+  app.post("/api/vendors/apply", async (req, res) => {
+    try {
+      const result = insertVendorApplicationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.errors[0]?.message || "Invalid application data" });
+      }
+      
+      const application = await storage.createVendorApplication(result.data);
+      
+      // Send email notification via Resend
+      if (process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: "Brew & Board <vendors@brewandboard.coffee>",
+          to: "sipandmeet@brewandboard.coffee",
+          replyTo: result.data.email,
+          subject: `[New Vendor] ${result.data.businessName} - ${result.data.city}`,
+          html: `
+            <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0f09 0%, #3d2216 100%); color: #fef3c7; padding: 30px; border-radius: 12px;">
+              <div style="text-align: center; border-bottom: 2px solid #b45309; padding-bottom: 20px; margin-bottom: 20px;">
+                <h1 style="color: #fbbf24; margin: 0; font-size: 28px;">Brew & Board Coffee</h1>
+                <p style="color: #fcd34d; margin: 5px 0 0;">New Vendor Application</p>
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Business Information</h2>
+                <p><strong>Business Name:</strong> ${result.data.businessName}</p>
+                <p><strong>Type:</strong> ${result.data.businessType}</p>
+                <p><strong>Address:</strong> ${result.data.address}, ${result.data.city} ${result.data.zipCode}</p>
+                ${result.data.neighborhood ? `<p><strong>Neighborhood:</strong> ${result.data.neighborhood}</p>` : ''}
+                ${result.data.website ? `<p><strong>Website:</strong> <a href="${result.data.website}" style="color: #fbbf24;">${result.data.website}</a></p>` : ''}
+                ${result.data.instagram ? `<p><strong>Instagram:</strong> @${result.data.instagram}</p>` : ''}
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Contact Information</h2>
+                <p><strong>Owner:</strong> ${result.data.ownerName}</p>
+                <p><strong>Email:</strong> <a href="mailto:${result.data.email}" style="color: #fbbf24;">${result.data.email}</a></p>
+                <p><strong>Phone:</strong> ${result.data.phone}</p>
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Business Details</h2>
+                ${result.data.yearsInBusiness ? `<p><strong>Years in Business:</strong> ${result.data.yearsInBusiness}</p>` : ''}
+                ${result.data.averageOrderValue ? `<p><strong>Average Order:</strong> ${result.data.averageOrderValue}</p>` : ''}
+                ${result.data.maxOrderSize ? `<p><strong>Max Order Size:</strong> ${result.data.maxOrderSize}</p>` : ''}
+                ${result.data.leadTimeNeeded ? `<p><strong>Lead Time Needed:</strong> ${result.data.leadTimeNeeded}</p>` : ''}
+                <p><strong>Can Handle Catering:</strong> ${result.data.canHandleCatering ? 'Yes' : 'No'}</p>
+              </div>
+              
+              ${result.data.menuHighlights ? `
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Menu Highlights</h2>
+                <p style="white-space: pre-wrap;">${result.data.menuHighlights}</p>
+              </div>
+              ` : ''}
+              
+              ${result.data.whyJoin ? `
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Why They Want to Join</h2>
+                <p style="white-space: pre-wrap;">${result.data.whyJoin}</p>
+              </div>
+              ` : ''}
+              
+              <p style="color: #a3a3a3; font-size: 12px; text-align: center; margin-top: 20px;">
+                Submitted via Brew & Board Vendor Portal | ${new Date().toLocaleString()}
+              </p>
+            </div>
+          `
+        });
+        
+        console.log("Vendor application email sent successfully");
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        application,
+        message: "Thank you for applying! We'll review your application and contact you within 48 hours."
+      });
+    } catch (error: any) {
+      console.error("Vendor application error:", error);
+      res.status(500).json({ error: "Failed to submit application. Please try again." });
+    }
+  });
+  
+  // Get all vendor applications (admin)
+  app.get("/api/vendors/applications", async (req, res) => {
+    try {
+      const { status } = req.query;
+      const applications = await storage.getVendorApplications({ 
+        status: status as string | undefined 
+      });
+      res.json(applications);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Update vendor application status (admin)
+  app.patch("/api/vendors/applications/:id", async (req, res) => {
+    try {
+      const application = await storage.updateVendorApplication(req.params.id, req.body);
+      res.json(application);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   });
 

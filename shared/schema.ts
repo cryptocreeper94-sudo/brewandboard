@@ -854,6 +854,72 @@ export type InsertFranchiseInquiry = z.infer<typeof insertFranchiseInquirySchema
 export type FranchiseInquiry = typeof franchiseInquiries.$inferSelect;
 
 // ========================
+// VENDOR APPLICATIONS
+// ========================
+export const vendorApplications = pgTable(
+  "vendor_applications",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // BUSINESS INFO
+    businessName: varchar("business_name", { length: 255 }).notNull(),
+    businessType: varchar("business_type", { length: 100 }).notNull(),
+    // "coffee_shop" | "bakery" | "juice_bar" | "breakfast" | "donut_shop" | "bubble_tea" | "other"
+    
+    // CONTACT INFO
+    ownerName: varchar("owner_name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    website: varchar("website", { length: 255 }),
+    instagram: varchar("instagram", { length: 100 }),
+    
+    // LOCATION
+    address: varchar("address", { length: 255 }).notNull(),
+    city: varchar("city", { length: 100 }).notNull(),
+    zipCode: varchar("zip_code", { length: 10 }).notNull(),
+    neighborhood: varchar("neighborhood", { length: 100 }),
+    
+    // BUSINESS DETAILS
+    yearsInBusiness: varchar("years_in_business", { length: 20 }),
+    seatingCapacity: varchar("seating_capacity", { length: 50 }),
+    averageOrderValue: varchar("average_order_value", { length: 50 }),
+    peakHours: varchar("peak_hours", { length: 100 }),
+    
+    // MENU & CAPABILITIES
+    menuHighlights: text("menu_highlights"),
+    canHandleCatering: boolean("can_handle_catering").default(true),
+    maxOrderSize: varchar("max_order_size", { length: 50 }),
+    leadTimeNeeded: varchar("lead_time_needed", { length: 50 }),
+    
+    // WHY JOIN
+    whyJoin: text("why_join"),
+    additionalNotes: text("additional_notes"),
+    
+    // STATUS
+    status: varchar("status", { length: 30 }).default("pending").notNull(),
+    // "pending" | "reviewing" | "approved" | "onboarded" | "declined"
+    reviewedBy: varchar("reviewed_by", { length: 100 }),
+    reviewNotes: text("review_notes"),
+    
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    emailIdx: index("idx_vendor_applications_email").on(table.email),
+    statusIdx: index("idx_vendor_applications_status").on(table.status),
+    cityIdx: index("idx_vendor_applications_city").on(table.city),
+  })
+);
+
+export const insertVendorApplicationSchema = createInsertSchema(vendorApplications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertVendorApplication = z.infer<typeof insertVendorApplicationSchema>;
+export type VendorApplication = typeof vendorApplications.$inferSelect;
+
+// ========================
 // CONSTANTS
 // ========================
 export const MINIMUM_ORDER_LEAD_TIME_HOURS = 2;

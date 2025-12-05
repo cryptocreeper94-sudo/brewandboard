@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, X, Sparkles, MessageCircle } from "lucide-react";
+import { Mic, MicOff, X, Sparkles, MessageCircle, Send, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import mascotImage from "@assets/generated_images/cute_female_coffee_cup_mascot_nobg.png";
 
 interface MascotButtonProps {
   onSpeechStart?: () => void;
   onSpeechEnd?: (text: string) => void;
+  onTextSubmit?: (text: string) => void;
   onChatOpen?: () => void;
   showChat?: boolean;
   className?: string;
@@ -24,6 +26,7 @@ const MASCOT_PHRASES = [
 export function MascotButton({
   onSpeechStart,
   onSpeechEnd,
+  onTextSubmit,
   onChatOpen,
   showChat = true,
   className = "",
@@ -33,9 +36,13 @@ export function MascotButton({
   const [currentPhrase, setCurrentPhrase] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [displayTranscript, setDisplayTranscript] = useState("");
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
   
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -122,6 +129,33 @@ export function MascotButton({
     }
   };
 
+  const handleTextSubmit = () => {
+    if (textInput.trim()) {
+      if (onTextSubmit) {
+        onTextSubmit(textInput.trim());
+      }
+      // Simple AI-like responses for demo
+      const responses = [
+        "I'd love to help you with that! Let me look into it. ☕",
+        "Great question! Here's what I think...",
+        "Absolutely! I'm on it. ✨",
+        "That's a wonderful idea! Let me assist you.",
+        "Sure thing! Coffee makes everything possible!",
+        "I'm here to help! What else can I do for you?",
+      ];
+      setAiResponse(responses[Math.floor(Math.random() * responses.length)]);
+      setTextInput("");
+      setTimeout(() => setAiResponse(""), 5000);
+    }
+  };
+
+  const toggleTextInput = () => {
+    setShowTextInput(!showTextInput);
+    if (!showTextInput) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  };
+
   return (
     <div className={`fixed bottom-14 right-4 z-[9999] ${className}`}>
       <AnimatePresence>
@@ -169,6 +203,21 @@ export function MascotButton({
               </Button>
             </motion.div>
 
+            {/* Text Input Button */}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={toggleTextInput}
+                className={`rounded-full w-14 h-14 shadow-lg ${
+                  showTextInput
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
+                }`}
+                data-testid="button-text-input"
+              >
+                <Keyboard className="h-6 w-6 text-white" />
+              </Button>
+            </motion.div>
+
             {showChat && (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
@@ -183,7 +232,10 @@ export function MascotButton({
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => setIsExpanded(false)}
+                onClick={() => {
+                  setIsExpanded(false);
+                  setShowTextInput(false);
+                }}
                 variant="outline"
                 className="rounded-full w-14 h-14 shadow-lg bg-white"
                 data-testid="button-close-mascot"
@@ -191,6 +243,62 @@ export function MascotButton({
                 <X className="h-6 w-6" />
               </Button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Text Input Panel */}
+      <AnimatePresence>
+        {showTextInput && isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.9 }}
+            className="absolute bottom-0 right-20 w-72 bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden"
+            data-testid="text-input-panel"
+          >
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2">
+              <p className="text-white text-sm font-medium flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Chat with Coffee Cup ☕
+              </p>
+            </div>
+            
+            {aiResponse && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-4 py-3 bg-amber-50 border-b border-amber-100"
+              >
+                <p className="text-sm text-amber-900">{aiResponse}</p>
+              </motion.div>
+            )}
+            
+            <div className="p-3">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleTextSubmit();
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  className="flex-1 text-sm border-amber-200 focus:border-amber-400 focus:ring-amber-400"
+                  data-testid="input-ai-chat"
+                />
+                <Button
+                  onClick={handleTextSubmit}
+                  size="sm"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  data-testid="button-send-message"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

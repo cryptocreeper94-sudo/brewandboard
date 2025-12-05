@@ -664,8 +664,8 @@ const { itemCount } = useCart();
       subtitle: "Coffee, donuts & more",
       href: "/find-baristas",
       icon: Navigation,
-      gradient: "from-emerald-800 via-emerald-700 to-emerald-600",
-      shadowColor: "shadow-emerald-800/40"
+      gradient: "from-[#6b4423] via-[#4a2c1c] to-[#3d2418]",
+      shadowColor: "shadow-[#3d2418]/40"
     },
     {
       id: "portfolio",
@@ -673,8 +673,8 @@ const { itemCount } = useCart();
       subtitle: "Client notes & templates",
       href: "/portfolio",
       icon: Users,
-      gradient: "from-stone-800 via-stone-700 to-stone-600",
-      shadowColor: "shadow-stone-800/40"
+      gradient: "from-[#78552b] via-[#5c4033] to-[#4a2c1c]",
+      shadowColor: "shadow-[#4a2c1c]/40"
     },
     {
       id: "scan",
@@ -876,7 +876,7 @@ const { itemCount } = useCart();
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-4 gap-2 sm:gap-4">
             {quickActions.map((action, index) => (
               <Link key={action.id} href={action.href}>
                 <motion.div

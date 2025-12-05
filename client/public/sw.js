@@ -1,6 +1,6 @@
-const CACHE_NAME = 'brew-board-v1.1.2';
-const STATIC_CACHE = 'brew-board-static-v1.1.2';
-const DYNAMIC_CACHE = 'brew-board-dynamic-v1.1.2';
+const CACHE_NAME = 'brew-board-v1.1.3';
+const STATIC_CACHE = 'brew-board-static-v1.1.3';
+const DYNAMIC_CACHE = 'brew-board-dynamic-v1.1.3';
 
 const STATIC_ASSETS = [
   '/',

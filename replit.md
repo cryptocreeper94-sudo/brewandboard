@@ -48,9 +48,17 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.2** - December 2024
+**v1.1.3** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.3**: Custom Email Domain & Professional Branding
+  - Configured brewandboard.coffee domain in Resend with full DNS verification
+  - Order notifications now sent from orders@brewandboard.coffee
+  - Franchise inquiries from franchise@brewandboard.coffee
+  - Contact form from hello@brewandboard.coffee
+  - All emails delivered to sipandmeet@brewandboard.coffee inbox
+  - Professional email branding matching Nashville Luxury aesthetic
+
 - **v1.1.2**: PWA Polish & Enhanced Offline Support
   - Upgraded service worker with smart caching strategies (cache-first for assets, network-first for API)
   - Added app shortcuts to manifest (Schedule, Portfolio, Virtual Host)

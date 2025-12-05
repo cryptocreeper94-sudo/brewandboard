@@ -32,6 +32,7 @@ interface CartContextType {
   calculateDeliveryFee: (deliveryLat: number, deliveryLng: number) => { baseFee: number; extendedFee: number; distance: number; isExtended: boolean };
   subtotal: number;
   itemCount: number;
+  salesTax: number;
   serviceFee: number;
   deliveryFee: number;
   gratuityOption: GratuityOption;
@@ -47,6 +48,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const CART_STORAGE_KEY = 'brewboard_cart';
 const SERVICE_FEE_RATE = 0.15;
 const DELIVERY_FEE = 5.00;
+const TN_SALES_TAX_RATE = 0.0925; // Tennessee state (7%) + Nashville local (2.25%)
 
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959;
@@ -182,6 +184,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const salesTax = subtotal * TN_SALES_TAX_RATE; // TN sales tax on subtotal only
   const serviceFee = subtotal * SERVICE_FEE_RATE;
   const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
   
@@ -189,7 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     ? customGratuity 
     : subtotal * (gratuityOption / 100);
   
-  const total = subtotal + serviceFee + deliveryFee + gratuityAmount;
+  const total = subtotal + salesTax + serviceFee + deliveryFee + gratuityAmount;
 
   return (
     <CartContext.Provider value={{
@@ -205,6 +208,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       calculateDeliveryFee,
       subtotal,
       itemCount,
+      salesTax,
       serviceFee,
       deliveryFee,
       gratuityOption,

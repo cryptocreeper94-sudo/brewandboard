@@ -48,9 +48,10 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Recent Changes (December 2024)
-- **v1.0.14**: Gratuity System & Capacity Management
+- **v1.0.14**: Gratuity System, Sales Tax & Capacity Management
   - Added gratuity selector to cart: 15%, 18%, 20%, and custom tip options
   - Concierge gratuity calculated on subtotal before fees
+  - Tennessee sales tax (9.25% for Nashville) applied to subtotal
   - Capacity management: max 4 concurrent orders per 2-hour window
   - Server-side validation blocks orders when capacity is full
   - API endpoint for checking time slot availability (/api/orders/capacity/check)

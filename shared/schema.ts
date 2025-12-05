@@ -261,8 +261,10 @@ export const scheduledOrders = pgTable(
     
     // Totals
     subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+    salesTax: decimal("sales_tax", { precision: 10, scale: 2 }).default("0.00"),
     serviceFee: decimal("service_fee", { precision: 10, scale: 2 }).default("0.00"),
     deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("0.00"),
+    gratuity: decimal("gratuity", { precision: 10, scale: 2 }).default("0.00"),
     total: decimal("total", { precision: 10, scale: 2 }).notNull(),
     
     // Order status

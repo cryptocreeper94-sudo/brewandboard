@@ -104,7 +104,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function SchedulePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { items: cartItems, vendorName: cartVendorName, vendorLocation, clearCart, updateQuantity, removeItem, subtotal, serviceFee, deliveryFee, gratuityOption, customGratuity, gratuityAmount, setGratuityOption, setCustomGratuity, total, itemCount, calculateDeliveryFee } = useCart();
+  const { items: cartItems, vendorName: cartVendorName, vendorLocation, clearCart, updateQuantity, removeItem, subtotal, salesTax, serviceFee, deliveryFee, gratuityOption, customGratuity, gratuityAmount, setGratuityOption, setCustomGratuity, total, itemCount, calculateDeliveryFee } = useCart();
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
@@ -245,8 +245,11 @@ export default function SchedulePage() {
     return zipMatch ? zipMatch[1] : null;
   };
 
+  const TN_SALES_TAX_RATE = 0.0925; // Tennessee state (7%) + Nashville local (2.25%)
+  
   const orderTotals = useMemo(() => {
     const subtotal = newOrder.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+    const salesTax = subtotal * TN_SALES_TAX_RATE;
     const serviceFee = subtotal * SERVICE_FEE_PERCENT;
     
     let baseFee = DELIVERY_COORDINATION_FEE;
@@ -265,12 +268,13 @@ export default function SchedulePage() {
     }
     
     const deliveryFee = baseFee + extendedFee;
-    const total = subtotal + serviceFee + deliveryFee;
-    return { subtotal, serviceFee, deliveryFee, baseFee, extendedFee, isExtendedDelivery, deliveryDistance, total };
-  }, [newOrder.items, newOrder.deliveryAddress, vendorLocation, calculateDeliveryFee]);
+    const gratuityAmt = gratuityOption === 'custom' ? customGratuity : subtotal * (gratuityOption / 100);
+    const total = subtotal + salesTax + serviceFee + deliveryFee + gratuityAmt;
+    return { subtotal, salesTax, serviceFee, deliveryFee, baseFee, extendedFee, isExtendedDelivery, deliveryDistance, gratuity: gratuityAmt, total };
+  }, [newOrder.items, newOrder.deliveryAddress, vendorLocation, calculateDeliveryFee, gratuityOption, customGratuity]);
 
   const handleCreateOrder = () => {
-    const { subtotal, serviceFee, deliveryFee, total } = orderTotals;
+    const { subtotal, salesTax, serviceFee, deliveryFee, gratuity, total } = orderTotals;
 
     createOrderMutation.mutate({
       userId,
@@ -283,8 +287,10 @@ export default function SchedulePage() {
       scheduledTime: newOrder.scheduledTime,
       items: newOrder.items.filter(i => i.name.trim()),
       subtotal: subtotal.toFixed(2),
+      salesTax: salesTax.toFixed(2),
       serviceFee: serviceFee.toFixed(2),
       deliveryFee: deliveryFee.toFixed(2),
+      gratuity: gratuity.toFixed(2),
       total: total.toFixed(2),
       specialInstructions: newOrder.specialInstructions || null,
     });
@@ -469,6 +475,10 @@ export default function SchedulePage() {
               <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
                 <span>Subtotal:</span>
                 <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
+                <span>TN Sales Tax (9.25%):</span>
+                <span>${salesTax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm" style={{ color: '#5c4033' }}>
                 <span>Service Fee (15%):</span>

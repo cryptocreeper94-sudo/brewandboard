@@ -629,7 +629,8 @@ export async function registerRoutes(
                 
                 <div style="background: #f59e0b; color: #1a0f09; padding: 15px; border-radius: 8px; text-align: center;">
                   <h2 style="margin: 0 0 5px 0;">💰 Total: $${validatedData.total}</h2>
-                  <p style="margin: 0; font-size: 14px;">Service Fee: $${validatedData.serviceFee} | Delivery: $${validatedData.deliveryFee}</p>
+                  <p style="margin: 0; font-size: 14px;">Subtotal: $${validatedData.subtotal} | TN Tax: $${validatedData.salesTax || '0.00'}</p>
+                  <p style="margin: 0; font-size: 14px;">Service: $${validatedData.serviceFee} | Delivery: $${validatedData.deliveryFee} | Gratuity: $${validatedData.gratuity || '0.00'}</p>
                 </div>
                 
                 ${validatedData.specialInstructions ? `

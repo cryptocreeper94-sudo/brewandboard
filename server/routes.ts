@@ -9,8 +9,10 @@ import {
   insertCrmMeetingSchema,
   insertScheduledOrderSchema,
   insertOrderEventSchema,
+  insertFranchiseInquirySchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
-  HALLMARK_MINTING_FEE
+  HALLMARK_MINTING_FEE,
+  FRANCHISE_TIERS
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
@@ -803,6 +805,148 @@ export async function registerRoutes(
       
       const documents = await storage.searchScannedDocuments(req.params.userId, q as string);
       res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // FRANCHISE ROUTES
+  // ========================
+  
+  // Get franchise tiers (public)
+  app.get("/api/franchise/tiers", async (req, res) => {
+    res.json(FRANCHISE_TIERS);
+  });
+  
+  // Submit franchise inquiry (public)
+  app.post("/api/franchise/inquiries", async (req, res) => {
+    try {
+      const result = insertFranchiseInquirySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.errors[0]?.message || "Invalid inquiry data" });
+      }
+      
+      const inquiry = await storage.createFranchiseInquiry(result.data);
+      
+      // Send email notification via Resend
+      if (process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        const tierInfo = result.data.interestedTier ? 
+          FRANCHISE_TIERS[result.data.interestedTier as keyof typeof FRANCHISE_TIERS] : null;
+        
+        await resend.emails.send({
+          from: "Brew & Board <onboarding@resend.dev>",
+          to: "cryptocreeper94@gmail.com",
+          replyTo: result.data.email,
+          subject: `[Franchise Inquiry] ${result.data.name} - ${result.data.preferredTerritory || 'Territory TBD'}`,
+          html: `
+            <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0f09 0%, #3d2216 100%); color: #fef3c7; padding: 30px; border-radius: 12px;">
+              <div style="text-align: center; border-bottom: 2px solid #b45309; padding-bottom: 20px; margin-bottom: 20px;">
+                <h1 style="color: #fbbf24; margin: 0; font-size: 28px;">Brew & Board Coffee</h1>
+                <p style="color: #fcd34d; margin: 5px 0 0;">New Franchise Inquiry</p>
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Contact Information</h2>
+                <p><strong>Name:</strong> ${result.data.name}</p>
+                <p><strong>Email:</strong> <a href="mailto:${result.data.email}" style="color: #fbbf24;">${result.data.email}</a></p>
+                ${result.data.phone ? `<p><strong>Phone:</strong> ${result.data.phone}</p>` : ''}
+                ${result.data.company ? `<p><strong>Company:</strong> ${result.data.company}</p>` : ''}
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Franchise Interest</h2>
+                ${tierInfo ? `
+                  <p><strong>Interested Tier:</strong> ${tierInfo.name} (${tierInfo.fee})</p>
+                  <p><strong>Royalty:</strong> ${tierInfo.royaltyPercent} per order</p>
+                  <p><strong>Platform Fee:</strong> ${tierInfo.platformFee}</p>
+                ` : '<p><strong>Interested Tier:</strong> Not specified</p>'}
+                <p><strong>Preferred Territory:</strong> ${result.data.preferredTerritory || 'Not specified'}</p>
+                ${result.data.investmentBudget ? `<p><strong>Investment Budget:</strong> ${result.data.investmentBudget}</p>` : ''}
+                ${result.data.timelineToStart ? `<p><strong>Timeline to Start:</strong> ${result.data.timelineToStart}</p>` : ''}
+              </div>
+              
+              <div style="background: rgba(180, 83, 9, 0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #fbbf24; margin-top: 0;">Background</h2>
+                <p><strong>Business Experience:</strong> ${result.data.hasBusinessExperience ? 'Yes' : 'No'}</p>
+                <p><strong>Food Service Experience:</strong> ${result.data.hasFoodServiceExperience ? 'Yes' : 'No'}</p>
+                ${result.data.currentOccupation ? `<p><strong>Current Occupation:</strong> ${result.data.currentOccupation}</p>` : ''}
+                ${result.data.additionalNotes ? `
+                  <div style="margin-top: 15px;">
+                    <p><strong>Additional Notes:</strong></p>
+                    <p style="white-space: pre-wrap; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px;">${result.data.additionalNotes}</p>
+                  </div>
+                ` : ''}
+              </div>
+              
+              <p style="color: #a3a3a3; font-size: 12px; text-align: center; margin-top: 20px;">
+                Submitted via Brew & Board Franchise Portal | ${new Date().toLocaleString()}
+              </p>
+            </div>
+          `
+        });
+        
+        console.log("Franchise inquiry email sent successfully");
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        inquiry,
+        message: "Thank you for your interest! We'll contact you within 48 hours."
+      });
+    } catch (error: any) {
+      console.error("Franchise inquiry error:", error);
+      res.status(500).json({ error: "Failed to submit inquiry. Please try again." });
+    }
+  });
+  
+  // Get all franchise inquiries (admin)
+  app.get("/api/franchise/inquiries", async (req, res) => {
+    try {
+      const { status } = req.query;
+      const inquiries = await storage.getFranchiseInquiries({ 
+        status: status as string | undefined 
+      });
+      res.json(inquiries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Update franchise inquiry status (admin)
+  app.patch("/api/franchise/inquiries/:id", async (req, res) => {
+    try {
+      const inquiry = await storage.updateFranchiseInquiry(req.params.id, req.body);
+      res.json(inquiry);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+  
+  // Get all franchises (admin)
+  app.get("/api/franchises", async (req, res) => {
+    try {
+      const { status, ownerId } = req.query;
+      const franchiseList = await storage.getFranchises({ 
+        status: status as string | undefined,
+        ownerId: ownerId as string | undefined
+      });
+      res.json(franchiseList);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get franchise by ID
+  app.get("/api/franchises/:id", async (req, res) => {
+    try {
+      const franchise = await storage.getFranchise(req.params.id);
+      if (!franchise) {
+        return res.status(404).json({ error: "Franchise not found" });
+      }
+      res.json(franchise);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

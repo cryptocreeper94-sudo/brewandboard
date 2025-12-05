@@ -469,14 +469,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustodyTransfer(transfer: InsertFranchiseCustodyTransfer): Promise<FranchiseCustodyTransfer> {
-    const [newTransfer] = await db.insert(franchiseCustodyTransfers).values(transfer).returning();
+    const [newTransfer] = await db.insert(franchiseCustodyTransfers).values([transfer]).returning();
     return newTransfer;
   }
 
-  async updateCustodyTransfer(id: string, transfer: Partial<InsertFranchiseCustodyTransfer>): Promise<FranchiseCustodyTransfer> {
+  async updateCustodyTransfer(id: string, transfer: Partial<Omit<InsertFranchiseCustodyTransfer, 'royaltyTerms'>> & { royaltyTerms?: { type: string; percent?: string; amount?: string } | null }): Promise<FranchiseCustodyTransfer> {
     const [updated] = await db
       .update(franchiseCustodyTransfers)
-      .set(transfer)
+      .set(transfer as any)
       .where(eq(franchiseCustodyTransfers.id, id))
       .returning();
     return updated;

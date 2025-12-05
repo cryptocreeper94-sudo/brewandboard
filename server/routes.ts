@@ -10,6 +10,8 @@ import {
   insertScheduledOrderSchema,
   insertOrderEventSchema,
   insertFranchiseInquirySchema,
+  insertRegionSchema,
+  insertRegionalManagerSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
   HALLMARK_MINTING_FEE,
   FRANCHISE_TIERS
@@ -1012,6 +1014,180 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Contact form error:", error);
       res.status(500).json({ error: "Failed to send message. Please try again." });
+    }
+  });
+
+  // ========================
+  // REGIONAL MANAGER ROUTES
+  // ========================
+  
+  // Server-side session storage for regional managers (in production, use Redis)
+  const regionalSessions = new Map<string, { managerId: string; regionId: string | null; expiresAt: number }>();
+  
+  // Generate cryptographically secure random token
+  const generateSessionToken = (): string => {
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex'); // 64 character hex token
+  };
+  
+  // Helper: Verify regional manager session from header
+  const verifyRegionalSession = async (req: any): Promise<{ managerId: string; regionId: string | null } | null> => {
+    const token = req.headers['x-regional-token'];
+    if (!token) return null;
+    
+    const session = regionalSessions.get(token);
+    if (!session) return null;
+    
+    // Check expiration
+    if (Date.now() > session.expiresAt) {
+      regionalSessions.delete(token);
+      return null;
+    }
+    
+    // Verify manager still exists and is active
+    const manager = await storage.getRegionalManager(session.managerId);
+    if (!manager || !manager.isActive) {
+      regionalSessions.delete(token);
+      return null;
+    }
+    
+    return { managerId: session.managerId, regionId: session.regionId };
+  };
+
+  // Regional manager login by PIN (rate-limited in production)
+  app.post("/api/regional-managers/login", async (req, res) => {
+    try {
+      const { pin } = req.body;
+      if (!pin || pin.length !== 4) {
+        return res.status(400).json({ error: "Valid 4-digit PIN is required" });
+      }
+      
+      const manager = await storage.getRegionalManagerByPin(pin);
+      if (!manager) {
+        // Constant-time-ish delay to prevent timing attacks
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return res.status(401).json({ error: "Invalid PIN" });
+      }
+      
+      if (!manager.isActive) {
+        return res.status(403).json({ error: "Account is inactive" });
+      }
+      
+      // Get their region info
+      let region = null;
+      if (manager.regionId) {
+        region = await storage.getRegion(manager.regionId);
+      }
+      
+      // Generate server-side session token
+      const token = generateSessionToken();
+      const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+      
+      regionalSessions.set(token, {
+        managerId: manager.id,
+        regionId: manager.regionId,
+        expiresAt
+      });
+      
+      // Return manager WITHOUT PIN for security, WITH token
+      const { pin: _, ...safeManager } = manager;
+      res.json({ manager: safeManager, region, token });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Logout endpoint
+  app.post("/api/regional-managers/logout", async (req, res) => {
+    const token = req.headers['x-regional-token'];
+    if (token) {
+      regionalSessions.delete(token as string);
+    }
+    res.json({ success: true });
+  });
+
+  // Get my region (authenticated - requires session)
+  app.get("/api/regional/my-region", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (!session.regionId) {
+        return res.status(404).json({ error: "No region assigned" });
+      }
+      
+      const region = await storage.getRegion(session.regionId);
+      res.json(region);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get my region stats (authenticated - tenant-scoped)
+  app.get("/api/regional/my-stats", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (!session.regionId) {
+        return res.status(404).json({ error: "No region assigned" });
+      }
+      
+      const stats = await storage.getRegionStats(session.regionId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Seed demo region and manager (development only)
+  app.post("/api/regional-managers/seed-demo", async (req, res) => {
+    // Only allow in development environment
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: "This endpoint is disabled in production" });
+    }
+    
+    try {
+      // Check if Nashville region exists
+      let nashvilleRegion = await storage.getRegionByCode("TN-NASH");
+      
+      if (!nashvilleRegion) {
+        nashvilleRegion = await storage.createRegion({
+          name: "Nashville Metro",
+          code: "TN-NASH",
+          state: "TN",
+          cities: ["Nashville", "Franklin", "Brentwood", "Murfreesboro"],
+          status: "active",
+          targetRevenue: "50000.00"
+        });
+      }
+      
+      // Check if demo manager exists
+      let demoManager = await storage.getRegionalManagerByEmail("demo.manager@brewandboard.coffee");
+      
+      if (!demoManager) {
+        demoManager = await storage.createRegionalManager({
+          name: "Alex Thompson",
+          email: "demo.manager@brewandboard.coffee",
+          phone: "615-555-0100",
+          pin: "1234", // In production, this should be hashed
+          role: "regional_manager",
+          regionId: nashvilleRegion.id,
+          title: "Regional Manager - Nashville",
+          isActive: true,
+          salesTarget: "25000.00"
+        });
+      }
+      
+      // Return without PIN
+      const { pin: _, ...safeManager } = demoManager;
+      res.json({ region: nashvilleRegion, manager: safeManager, message: "Use PIN 1234 to login" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

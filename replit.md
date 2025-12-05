@@ -48,6 +48,21 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Recent Changes (December 2024)
+- **v1.0.12**: Regional Manager Security Enhancements
+  - Server-side session tokens using crypto.randomBytes (CSPRNG)
+  - Session expiration (24 hours) with server-side validation
+  - Protected seed endpoint (disabled in production via NODE_ENV check)
+  - Proper logout endpoint to invalidate server-side sessions
+  - All regional routes require x-regional-token header validated server-side
+  - Post-MVP: PIN hashing with bcrypt, rate limiting/lockout for production
+- **v1.0.11**: Regional Manager Admin System
+  - Added tenant-separated regional manager portal (/regional)
+  - Database tables: regions, regional_managers, territory_assignments
+  - PIN-based authentication with server-generated tokens
+  - Territory management with Nashville Metro as demo region
+  - Business card generation with QR codes
+  - Demo manager: PIN 1234 (Alex Thompson, Nashville Metro)
+  - Access via Settings Menu → Regional Manager
 - **v1.0.10**: Real-time weather integration
   - Connected to Open-Meteo API for live Nashville weather data
   - Weather button shows real temperature and condition icon

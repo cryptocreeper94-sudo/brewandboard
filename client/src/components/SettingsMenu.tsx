@@ -13,7 +13,8 @@ import {
   Lock,
   Coffee,
   CheckCircle,
-  Building2
+  Building2,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -201,6 +202,18 @@ export function SettingsMenu() {
             ))}
             
             <div className="my-3 border-t border-amber-800/30" />
+            
+            {/* Regional Manager Access */}
+            <Link href="/regional">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-amber-200/80 hover:text-amber-100 hover:bg-amber-800/30 transition-colors text-left"
+                data-testid="menu-regional"
+              >
+                <MapPin className="h-4 w-4 text-amber-400" />
+                <span className="text-sm">Regional Manager</span>
+              </button>
+            </Link>
             
             {/* Admin & Developer Access */}
             <button

@@ -43,6 +43,7 @@ import {
   Eye,
   QrCode,
   Download,
+  Percent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1220,6 +1221,52 @@ export default function DevelopersPage() {
                       <a href="https://stripe.com/docs/api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
                         View Documentation <ExternalLink className="h-3 w-3" />
                       </a>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="stripe-tax" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+                  <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-stripe-tax">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <Percent className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Stripe Tax</span>
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">Code Ready</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Automatic sales tax calculation - Requires dashboard setup</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="ml-16 space-y-3">
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 mb-4">
+                        <strong>Code is ready!</strong> The app has <code className="bg-amber-100 px-1 rounded">automatic_tax: {'{'}enabled: true{'}'}</code> on all checkout sessions. Complete the steps below in your Stripe Dashboard to activate.
+                      </div>
+                      <TaskCheckbox id="stripe-tax-enable" label="Go to Stripe Dashboard → Settings → Tax → Enable Stripe Tax" />
+                      <TaskCheckbox id="stripe-tax-origin" label="Add your business origin address (Nashville, TN)" />
+                      <TaskCheckbox id="stripe-tax-register" label="Register with Tennessee Dept of Revenue for sales tax collection" />
+                      <TaskCheckbox id="stripe-tax-add-reg" label="Add TN tax registration to Stripe (Dashboard → Tax → Registrations)" />
+                      <TaskCheckbox id="stripe-tax-test" label="Test checkout in sandbox to verify tax is calculated" />
+                      <TaskCheckbox id="stripe-tax-live" label="Switch to production and verify live transactions" />
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <a href="https://dashboard.stripe.com/settings/tax" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm">
+                          Stripe Tax Settings <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <span className="text-gray-300">|</span>
+                        <a href="https://docs.stripe.com/tax/set-up" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm">
+                          Setup Guide <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <span className="text-gray-300">|</span>
+                        <a href="https://docs.stripe.com/tax/registering" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm">
+                          Tax Registration Guide <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Pricing: ~0.5% per transaction after adding first registration. Stripe handles rate updates automatically.
+                      </p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>

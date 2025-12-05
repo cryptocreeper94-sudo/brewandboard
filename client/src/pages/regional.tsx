@@ -6,7 +6,7 @@ import {
   Building2, Phone, Mail, Briefcase, Calendar, Activity,
   CreditCard, FileText, UserCircle, LogOut, RefreshCw,
   Globe, Target, Clock, CheckCircle, AlertCircle, Download,
-  ChevronDown, ChevronUp, Star, Sparkles, Shield, Lock
+  ChevronDown, ChevronUp, Star, Sparkles, Shield, Lock, AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -73,6 +74,9 @@ export default function RegionalDashboard() {
   const [confirmPin, setConfirmPin] = useState("");
   const [pinChangeLoading, setPinChangeLoading] = useState(false);
   
+  // 30-day persistence option
+  const [rememberMe, setRememberMe] = useState(false);
+  
   // Partner-only: All managers list
   const [allManagers, setAllManagers] = useState<RegionalManager[]>([]);
   const [allRegions, setAllRegions] = useState<Region[]>([]);
@@ -81,6 +85,13 @@ export default function RegionalDashboard() {
     const storedSession = localStorage.getItem("regional_session");
     if (storedSession) {
       const data = JSON.parse(storedSession);
+      
+      // Check if session has expired
+      if (data.expiresAt && Date.now() > data.expiresAt) {
+        localStorage.removeItem("regional_session");
+        return;
+      }
+      
       if (data.token && data.manager) {
         setManager(data.manager);
         setRegion(data.region);
@@ -282,11 +293,19 @@ export default function RegionalDashboard() {
       }
 
       const data = await response.json();
+      
+      // Set session expiry based on remember me choice
+      const sessionExpiry = rememberMe 
+        ? Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
+        : Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+      
       // Store session with server-generated token
       localStorage.setItem("regional_session", JSON.stringify({
         token: data.token,
         manager: data.manager,
-        region: data.region
+        region: data.region,
+        expiresAt: sessionExpiry,
+        rememberMe: rememberMe
       }));
       setManager(data.manager);
       setRegion(data.region);
@@ -402,6 +421,37 @@ export default function RegionalDashboard() {
                       placeholder="••••"
                       data-testid="input-regional-pin"
                     />
+                  </div>
+                  
+                  <div className="space-y-3 bg-muted/50 p-3 rounded-lg border border-border/30">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="persist-regional-login" 
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                        data-testid="checkbox-regional-remember"
+                      />
+                      <label
+                        htmlFor="persist-regional-login"
+                        className="text-sm font-medium leading-none cursor-pointer"
+                      >
+                        Keep me logged in for 30 days
+                      </label>
+                    </div>
+                    
+                    <AnimatePresence>
+                      {rememberMe && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="flex items-start gap-2 text-amber-600 text-xs bg-amber-50 dark:bg-amber-950/30 p-2 rounded"
+                        >
+                          <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <span>Warning: Your account will be accessible to anyone who uses this device.</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   
                   <Button 

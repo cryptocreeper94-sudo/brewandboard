@@ -123,7 +123,7 @@ export function MascotButton({
   };
 
   return (
-    <div className={`fixed bottom-24 right-4 z-50 ${className}`}>
+    <div className={`fixed bottom-32 right-4 z-[9999] ${className}`}>
       <AnimatePresence>
         {showSpeechBubble && (
           <motion.div

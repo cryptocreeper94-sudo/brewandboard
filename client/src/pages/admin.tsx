@@ -377,29 +377,29 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="p-4 md:p-8 max-w-7xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-x-hidden">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white" data-testid="button-back">
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white flex-shrink-0" data-testid="button-back">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div>
-              <h1 className="font-serif text-3xl font-bold flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
-                  <Code2 className="h-6 w-6 text-white" />
+            <div className="min-w-0">
+              <h1 className="font-serif text-xl md:text-3xl font-bold flex items-center gap-2 md:gap-3 flex-wrap">
+                <div className="p-1.5 md:p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex-shrink-0">
+                  <Code2 className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 </div>
-                Developer Portal
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                <span>Developer Portal</span>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
                   Full Access
                 </Badge>
               </h1>
-              <p className="text-slate-400 mt-1">System monitoring, hallmark registry & blockchain tools</p>
+              <p className="text-slate-400 mt-1 text-sm md:text-base">System monitoring, hallmark registry & blockchain tools</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -407,8 +407,8 @@ export default function AdminPage() {
               disabled={isRefreshing}
               className="text-slate-400 hover:text-white"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              <RefreshCw className={`h-4 w-4 mr-1 md:mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
             <Button
               variant="ghost"
@@ -417,8 +417,8 @@ export default function AdminPage() {
               className="text-slate-400 hover:text-red-400"
               data-testid="button-admin-logout"
             >
-              <Lock className="h-4 w-4 mr-2" />
-              Logout
+              <Lock className="h-4 w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </header>

@@ -50,8 +50,9 @@ export default function TermsPage() {
                     service, you agree to be bound by these Terms.
                   </p>
                   <p>
-                    Brew & Board Coffee is a B2B coffee delivery concierge service connecting businesses 
-                    with local Nashville coffee shops for pre-meeting coffee service.
+                    Brew & Board Coffee is a B2B catering concierge service connecting Nashville businesses 
+                    with local vendors for pre-meeting brews (coffee, tea, juice, boba) and boards 
+                    (donuts, pastries, breakfast spreads). Our 37+ vendor network serves the greater Nashville area.
                   </p>
                 </CardContent>
               </Card>

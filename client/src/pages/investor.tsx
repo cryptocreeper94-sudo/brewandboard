@@ -65,11 +65,11 @@ export default function InvestorPage() {
               Growth Opportunity
             </Badge>
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-amber-100 mb-4">
-              Be Part of Nashville's Coffee Revolution
+              Be Part of Nashville's Catering Revolution
             </h2>
             <p className="text-amber-200/70 max-w-2xl mx-auto text-lg">
-              Brew & Board Coffee is redefining how businesses experience premium coffee. 
-              Join us as an investor or franchise partner and help us expand across the nation.
+              Brew & Board is redefining how businesses experience premium brews and boards — 
+              from artisan coffee to curated food boards. Join us as an investor or franchise partner.
             </p>
           </motion.div>
 

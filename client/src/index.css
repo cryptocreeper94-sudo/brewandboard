@@ -728,3 +728,13 @@
   0%, 100% { box-shadow: 0 0 10px currentColor; }
   50% { box-shadow: 0 0 20px currentColor; }
 }
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

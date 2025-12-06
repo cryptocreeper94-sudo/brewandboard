@@ -1177,8 +1177,8 @@ export default function DevelopersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay relative overflow-x-hidden">
-      <div className="p-4 md:p-8 max-w-7xl mx-auto relative z-10 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 luxury-pattern grain-overlay relative mobile-safe-scroll">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto relative z-10 mobile-contain mobile-p-safe">
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 gap-4">
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
             <Link href="/dashboard">
@@ -1645,7 +1645,7 @@ export default function DevelopersPage() {
           </Card>
         </motion.div>
 
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
+        <div className="bento-grid mb-12">
           {[
             { icon: Shield, title: "Secure", desc: "PIN-based auth", color: "from-emerald-500 to-teal-600" },
             { icon: Clock, title: "2hr Lead Time", desc: "Order validation", color: "from-blue-500 to-indigo-600" },
@@ -1657,11 +1657,12 @@ export default function DevelopersPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + i * 0.1 }}
+              className="bento-span-3"
             >
-              <Card className="premium-card hover-3d cursor-pointer group border-0">
+              <Card className="premium-card hover-3d cursor-pointer group border-0 h-full gold-shimmer">
                 <CardContent className="p-6 text-center">
                   <motion.div
-                    whileHover={{ rotate: 360 }}
+                    whileHover={{ rotate: 360, scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                     className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}
                   >
@@ -1730,50 +1731,62 @@ export default function DevelopersPage() {
             </CardHeader>
             <CardContent className="relative">
               {/* Blockchain Stats Grid */}
-              <div className="grid md:grid-cols-4 gap-4 mb-6">
-                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+              <div className="bento-grid mb-6">
+                <motion.div 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-amber-200 hover:shadow-lg transition-all"
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
                       <Coffee className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs text-muted-foreground">Company</span>
                   </div>
                   <p className="text-2xl font-bold">{hallmarkStats?.totalCompanyHallmarks || 0}</p>
                   <p className="text-xs text-muted-foreground">Official hallmarks</p>
-                </div>
+                </motion.div>
                 
-                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                <motion.div 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-purple-200 hover:shadow-lg transition-all"
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
                       <Hash className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs text-muted-foreground">Subscriber</span>
                   </div>
                   <p className="text-2xl font-bold">{hallmarkStats?.totalUserHallmarks || 0}</p>
                   <p className="text-xs text-muted-foreground">User hallmarks</p>
-                </div>
+                </motion.div>
                 
-                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                <motion.div 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all"
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                       <Eye className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs text-muted-foreground">Verifications</span>
                   </div>
                   <p className="text-2xl font-bold">{hallmarkStats?.totalVerifications || 0}</p>
                   <p className="text-xs text-muted-foreground">Total lookups</p>
-                </div>
+                </motion.div>
                 
-                <div className="p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100">
+                <motion.div 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-emerald-200 hover:shadow-lg transition-all"
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
                       <FileCheck className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs text-muted-foreground">Profiles</span>
                   </div>
                   <p className="text-2xl font-bold">{hallmarkStats?.activeProfiles || 0}</p>
                   <p className="text-xs text-muted-foreground">Minted prefixes</p>
-                </div>
+                </motion.div>
               </div>
 
               {/* Solana Network Info */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -8,6 +8,7 @@ import {
   Play,
   FlaskConical,
   ChevronRight,
+  ChevronLeft,
   Coffee,
   MapPin,
   FileText,
@@ -22,7 +23,14 @@ import {
   AlertTriangle,
   Eye,
   Lock,
-  X
+  X,
+  Calendar,
+  Users,
+  Presentation,
+  Scan,
+  ArrowRight,
+  Star,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +68,98 @@ interface PartnerInfo {
   hasCompletedOnboarding: boolean;
   welcomeModalDismissed: boolean;
   isPreviewMode: boolean;
+}
+
+// Carousel Component - Accessible with keyboard navigation
+function Carousel({ children, className = "", label = "content" }: { children: React.ReactNode; className?: string; label?: string }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  
+  const scroll = (direction: 'left' | 'right') => {
+    if (trackRef.current) {
+      const scrollAmount = 180;
+      trackRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      scroll('left');
+    } else if (e.key === 'ArrowRight') {
+      scroll('right');
+    }
+  };
+
+  return (
+    <div 
+      className={`relative ${className}`}
+      role="region"
+      aria-label={`${label} carousel`}
+      onKeyDown={handleKeyDown}
+    >
+      <button 
+        onClick={() => scroll('left')} 
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-amber-900/80 border border-amber-600/50 text-amber-300 flex items-center justify-center hover:bg-amber-800 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
+        aria-label={`Scroll ${label} left`}
+        data-testid="carousel-left"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <div 
+        ref={trackRef} 
+        className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-hide py-2 px-10"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        tabIndex={0}
+        role="list"
+      >
+        {children}
+      </div>
+      <button 
+        onClick={() => scroll('right')} 
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-amber-900/80 border border-amber-600/50 text-amber-300 flex items-center justify-center hover:bg-amber-800 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
+        aria-label={`Scroll ${label} right`}
+        data-testid="carousel-right"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+// Bento Card Component
+function BentoCard({ 
+  children, 
+  className = "", 
+  span = 4,
+  variant = "default",
+  onClick
+}: { 
+  children: React.ReactNode; 
+  className?: string;
+  span?: 1 | 2 | 3 | 4 | 6 | 8 | 12;
+  variant?: "default" | "3d" | "glow" | "glass";
+  onClick?: () => void;
+}) {
+  const spanClass = `bento-span-${span}`;
+  const variantClass = variant === "3d" ? "bento-card-3d" : 
+                       variant === "glow" ? "stat-card-glow" :
+                       variant === "glass" ? "glass-card-dark p-5" :
+                       "bento-card-dark";
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`${spanClass} ${variantClass} ${className}`}
+      onClick={onClick}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export default function PartnerHub() {
@@ -223,10 +323,29 @@ export default function PartnerHub() {
   };
 
   const quickStats = [
-    { label: "Active Orders", value: "12", icon: Package, trend: "+3 today" },
-    { label: "Vendors Online", value: "37", icon: Store, trend: "All active" },
-    { label: "This Week Revenue", value: "$2,847", icon: TrendingUp, trend: "+18%" },
-    { label: "Avg Delivery Time", value: "1.8h", icon: Clock, trend: "On target" },
+    { label: "Active Orders", value: "12", icon: Package, trend: "+3 today", color: "text-amber-400" },
+    { label: "Vendors Online", value: "37", icon: Store, trend: "All active", color: "text-emerald-400" },
+    { label: "This Week", value: "$2,847", icon: TrendingUp, trend: "+18%", color: "text-green-400" },
+    { label: "Delivery Time", value: "1.8h", icon: Clock, trend: "On target", color: "text-sky-400" },
+  ];
+
+  const quickActions = [
+    { label: "New Order", icon: ShoppingCart, href: "/order", color: "from-amber-500 to-orange-600" },
+    { label: "View Vendors", icon: Store, href: "/vendors", color: "from-emerald-500 to-green-600" },
+    { label: "Portfolio", icon: FileText, href: "/portfolio", color: "from-blue-500 to-indigo-600" },
+    { label: "Scanner", icon: Scan, href: "/scanner", color: "from-purple-500 to-violet-600" },
+    { label: "Calendar", icon: Calendar, href: "/order", color: "from-pink-500 to-rose-600" },
+    { label: "Presentations", icon: Presentation, href: "/presentations", color: "from-cyan-500 to-teal-600" },
+    { label: "Dev Hub", icon: Shield, href: "/developers", color: "from-slate-500 to-zinc-600" },
+  ];
+
+  const platformFeatures = [
+    { title: "Order Scheduling", desc: "Calendar-based ordering with 2hr lead time", icon: Calendar },
+    { title: "Portfolio/CRM", desc: "Full digital briefcase for your business", icon: FileText },
+    { title: "Document Scanner", desc: "OCR scanning with PDF export", icon: Scan },
+    { title: "Presentations", desc: "Meeting presentation builder", icon: Presentation },
+    { title: "Virtual Host", desc: "Multi-location ordering", icon: Users },
+    { title: "Blockchain", desc: "Solana hallmark verification", icon: Shield },
   ];
 
   const partnerName = partnerInfo?.name || "Partner";
@@ -272,71 +391,111 @@ export default function PartnerHub() {
   const welcomeContent = getWelcomeContent();
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 50%, #3d2418 100%)' }}>
+    <div className="min-h-screen mobile-safe-scroll" style={{ background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 50%, #3d2418 100%)' }}>
       {/* Preview Mode Banner */}
       {isPreviewMode && (
-        <div className="bg-amber-500 text-amber-950 px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2">
+        <motion.div 
+          initial={{ y: -50 }}
+          animate={{ y: 0 }}
+          className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-amber-950 px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2"
+        >
           <Eye className="h-4 w-4" />
-          Preview Mode - Data will not be saved
-        </div>
+          <span>Preview Mode</span>
+          <span className="hidden sm:inline">- Data will not be saved</span>
+        </motion.div>
       )}
 
-      {/* Welcome Modal */}
+      {/* Welcome Modal - Premium Styled */}
       <Dialog open={showWelcomeModal && !showPinChangeModal} onOpenChange={setShowWelcomeModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-amber-900 flex items-center gap-2">
-              <Coffee className="h-6 w-6" />
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute text-amber-300"
+                style={{
+                  left: `${10 + Math.random() * 80}%`,
+                  top: `${10 + Math.random() * 80}%`,
+                }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0.5, 1, 0.5],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  delay: Math.random() * 2,
+                  repeat: Infinity,
+                }}
+              >
+                <Sparkles className="h-4 w-4" />
+              </motion.div>
+            ))}
+          </div>
+          
+          <DialogHeader className="relative">
+            <DialogTitle className="text-2xl font-serif text-amber-900 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+                <Coffee className="h-5 w-5 text-white" />
+              </div>
               {welcomeContent.greeting}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 text-sm">
+          <div className="space-y-4 text-sm relative">
             <p className="text-gray-700">{welcomeContent.intro}</p>
             
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4 shadow-sm">
               <h4 className="font-semibold text-emerald-800 mb-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
                 Recent Improvements
               </h4>
-              <ul className="space-y-1 text-emerald-700">
+              <ul className="space-y-2 text-emerald-700">
                 {welcomeContent.improvements.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-1">•</span>
+                  <motion.li 
+                    key={i} 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * i }}
+                    className="flex items-start gap-2"
+                  >
+                    <Star className="h-3 w-3 text-emerald-500 mt-1 flex-shrink-0" />
                     {item}
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             </div>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 shadow-sm">
               <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
+                <Zap className="h-4 w-4" />
                 What This Platform Does
               </h4>
               <p className="text-amber-700">{welcomeContent.overview}</p>
             </div>
             
-            <p className="text-gray-600 italic">{welcomeContent.closing}</p>
+            <p className="text-gray-600 italic text-center">{welcomeContent.closing}</p>
             
             <Button 
               onClick={handleDismissWelcome}
-              className="w-full bg-amber-800 hover:bg-amber-900"
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-lg"
               data-testid="button-enter-dashboard"
             >
-              Enter My Dashboard
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <span>Enter My Dashboard</span>
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* PIN Change Modal */}
+      {/* PIN Change Modal - Premium Styled */}
       <Dialog open={showPinChangeModal} onOpenChange={() => {}}>
-        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 to-gray-100 border-amber-200" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-serif text-amber-900 flex items-center gap-2">
-              <Lock className="h-5 w-5" />
+            <DialogTitle className="text-xl font-serif text-amber-900 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+                <Lock className="h-5 w-5 text-white" />
+              </div>
               Set Your Personal PIN
             </DialogTitle>
             <DialogDescription>
@@ -353,7 +512,7 @@ export default function PartnerHub() {
                 value={newPin}
                 onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="••••"
-                className="text-center text-2xl tracking-widest"
+                className="text-center text-2xl tracking-widest mt-1 border-amber-200 focus:ring-amber-500"
                 data-testid="input-new-pin"
               />
             </div>
@@ -366,21 +525,25 @@ export default function PartnerHub() {
                 value={confirmPin}
                 onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="••••"
-                className="text-center text-2xl tracking-widest"
+                className="text-center text-2xl tracking-widest mt-1 border-amber-200 focus:ring-amber-500"
                 data-testid="input-confirm-pin"
               />
             </div>
             
             {pinError && (
-              <p className="text-red-600 text-sm flex items-center gap-2">
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-600 text-sm flex items-center gap-2 bg-red-50 p-2 rounded-lg"
+              >
                 <AlertTriangle className="h-4 w-4" />
                 {pinError}
-              </p>
+              </motion.p>
             )}
             
             <Button 
               onClick={handlePinChange}
-              className="w-full bg-amber-800 hover:bg-amber-900"
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
               disabled={newPin.length !== 4 || confirmPin.length !== 4}
               data-testid="button-set-pin"
             >
@@ -394,11 +557,12 @@ export default function PartnerHub() {
         </DialogContent>
       </Dialog>
 
-      <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
+      {/* Floating Particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-amber-300/30 rounded-full"
+            className="absolute w-1 h-1 bg-amber-400/40 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -406,43 +570,48 @@ export default function PartnerHub() {
             animate={{
               opacity: [0, 1, 0],
               scale: [0, 1.5, 0],
+              y: [0, -50, -100],
             }}
             transition={{
-              duration: 2 + Math.random() * 2,
-              delay: Math.random() * 3,
+              duration: 3 + Math.random() * 3,
+              delay: Math.random() * 5,
               repeat: Infinity,
             }}
           />
         ))}
       </div>
 
-      <div className="relative z-10 container max-w-6xl mx-auto px-4 py-8">
+      <div className="relative z-10 container max-w-7xl mx-auto px-4 py-6 mobile-p-safe">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
         >
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
+            <div className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg gold-shimmer" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
               <Coffee className="h-7 w-7 text-amber-200" />
             </div>
             <div>
-              <h1 className="font-serif text-3xl text-white font-bold">Partner Hub</h1>
-              <p className="text-amber-200/70 text-sm">Hey {partnerName} 👋</p>
+              <h1 className="font-serif text-2xl sm:text-3xl text-white font-bold">Partner Hub</h1>
+              <p className="text-amber-200/70 text-sm flex items-center gap-2">
+                Hey {partnerName} 
+                <Sparkles className="h-3 w-3 text-amber-400" />
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {isPreviewMode && (
-              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 badge-glow">
                 <Eye className="h-3 w-3 mr-1" />
-                Preview Mode
+                Preview
               </Badge>
             )}
             {sandboxMode && (
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                 <FlaskConical className="h-3 w-3 mr-1" />
-                Sandbox Active
+                Sandbox
               </Badge>
             )}
             <Button
@@ -452,184 +621,210 @@ export default function PartnerHub() {
               className="border-amber-700/50 text-amber-200 hover:bg-amber-900/30"
               data-testid="button-logout"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-        >
-          {quickStats.map((stat, index) => (
-            <div
-              key={stat.label}
-              className="rounded-xl p-4 border border-amber-700/30"
-              style={{ background: 'linear-gradient(135deg, rgba(92, 64, 51, 0.3) 0%, rgba(61, 36, 24, 0.3) 100%)' }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <stat.icon className="h-5 w-5 text-amber-400" />
-                <span className="text-xs text-emerald-400">{stat.trend}</span>
+        {/* Bento Grid Layout */}
+        <div className="bento-grid">
+          {/* Hero Welcome Card - Full Width */}
+          <BentoCard span={12} variant="3d" className="gold-shimmer">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-serif text-white mb-2">
+                  Welcome to Your Dashboard
+                </h2>
+                <p className="text-amber-200/70 text-sm max-w-xl">
+                  Manage orders, track vendors, and grow your Nashville coffee business all from one place.
+                </p>
               </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-amber-200/70">{stat.label}</p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={toggleSandbox}
+                  className="btn-glass-dark"
+                  data-testid="button-toggle-sandbox"
+                >
+                  <FlaskConical className="h-4 w-4 mr-2" />
+                  {sandboxMode ? "Exit Sandbox" : "Sandbox Mode"}
+                </Button>
+              </div>
             </div>
+          </BentoCard>
+
+          {/* Stats Cards - 4 columns on desktop */}
+          {quickStats.map((stat, index) => (
+            <BentoCard key={stat.label} span={3} variant="glow">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 * index }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br from-amber-900/50 to-amber-800/30`}>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
+                  <span className="text-xs text-emerald-400 font-medium">{stat.trend}</span>
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs text-amber-200/60 mt-1">{stat.label}</p>
+              </motion.div>
+            </BentoCard>
           ))}
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="quick-actions" className="border border-amber-700/30 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(92, 64, 51, 0.2) 0%, rgba(61, 36, 24, 0.2) 100%)' }}>
-              <AccordionTrigger className="px-6 py-4 text-white hover:no-underline hover:bg-amber-900/20">
-                <div className="flex items-center gap-3">
-                  <Play className="h-5 w-5 text-amber-400" />
-                  <span className="font-semibold">Quick Actions</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <Link href="/order">
-                    <Button variant="outline" className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30" data-testid="button-new-order">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      New Order
-                    </Button>
-                  </Link>
-                  <Link href="/vendors">
-                    <Button variant="outline" className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30" data-testid="button-view-vendors">
-                      <Store className="h-4 w-4 mr-2" />
-                      View Vendors
-                    </Button>
-                  </Link>
-                  <Link href="/portfolio">
-                    <Button variant="outline" className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30" data-testid="button-portfolio">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Portfolio
-                    </Button>
-                  </Link>
-                  <Link href="/scanner">
-                    <Button variant="outline" className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30" data-testid="button-scanner">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Scanner
-                    </Button>
-                  </Link>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30"
-                    onClick={toggleSandbox}
-                    data-testid="button-toggle-sandbox"
+          {/* Quick Actions Carousel - 8 columns */}
+          <BentoCard span={8} variant="default" className="overflow-visible">
+            <div className="flex items-center gap-2 mb-4">
+              <Play className="h-5 w-5 text-amber-400" />
+              <h3 className="font-semibold text-white">Quick Actions</h3>
+            </div>
+            <Carousel label="quick actions">
+              {quickActions.map((action) => (
+                <Link key={action.label} href={action.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-shrink-0"
+                    role="listitem"
+                    data-testid={`action-${action.label.toLowerCase().replace(' ', '-')}`}
                   >
-                    <FlaskConical className="h-4 w-4 mr-2" />
-                    {sandboxMode ? "Exit Sandbox" : "Enter Sandbox"}
-                  </Button>
-                  <Link href="/developers">
-                    <Button variant="outline" className="w-full justify-start border-amber-700/50 text-amber-200 hover:bg-amber-900/30" data-testid="button-dev-hub">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Dev Hub
-                    </Button>
-                  </Link>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="system-overview" className="border border-amber-700/30 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(92, 64, 51, 0.2) 0%, rgba(61, 36, 24, 0.2) 100%)' }}>
-              <AccordionTrigger className="px-6 py-4 text-white hover:no-underline hover:bg-amber-900/20">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-5 w-5 text-amber-400" />
-                  <span className="font-semibold">System Overview</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                <div className="space-y-4 text-amber-200/80">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700/30">
-                      <h4 className="font-semibold text-amber-200 mb-2">Platform Features</h4>
-                      <ul className="text-sm space-y-1">
-                        <li>• Order Scheduling with Calendar</li>
-                        <li>• Portfolio/CRM Management</li>
-                        <li>• Document Scanner & PDF Creation</li>
-                        <li>• Meeting Presentation Builder</li>
-                        <li>• Virtual Host Multi-Location Orders</li>
-                        <li>• Blockchain Hallmark Verification</li>
-                      </ul>
+                    <div className={`bg-gradient-to-br ${action.color} p-3 sm:p-4 rounded-xl shadow-lg cursor-pointer w-[110px] sm:w-[130px] h-[85px] sm:h-[95px] flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-white`}>
+                      <action.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-xs sm:text-sm font-medium text-center leading-tight">{action.label}</span>
                     </div>
-                    <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700/30">
-                      <h4 className="font-semibold text-amber-200 mb-2">Business Tools</h4>
-                      <ul className="text-sm space-y-1">
-                        <li>• 1099 Compliance Portal</li>
-                        <li>• Regional Manager System</li>
-                        <li>• Franchise Management</li>
-                        <li>• Partner Hub (You're here!)</li>
-                        <li>• Developer Documentation</li>
-                        <li>• Bug Reporting System</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+                  </motion.div>
+                </Link>
+              ))}
+            </Carousel>
+          </BentoCard>
 
-            <AccordionItem value="error-reports" className="border border-amber-700/30 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(92, 64, 51, 0.2) 0%, rgba(61, 36, 24, 0.2) 100%)' }}>
-              <AccordionTrigger className="px-6 py-4 text-white hover:no-underline hover:bg-amber-900/20">
-                <div className="flex items-center gap-3">
-                  <Bug className="h-5 w-5 text-amber-400" />
-                  <span className="font-semibold">Bug Reports</span>
-                  {errorReports.length > 0 && (
-                    <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 ml-2">
-                      {errorReports.length}
-                    </Badge>
-                  )}
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                {loadingReports ? (
-                  <div className="text-center py-4 text-amber-200/60">Loading reports...</div>
-                ) : errorReports.length === 0 ? (
-                  <div className="text-center py-4 text-amber-200/60">
-                    <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />
-                    <p>No bug reports - everything is running smoothly!</p>
+          {/* System Status - 4 columns */}
+          <BentoCard span={4} variant="glass">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-amber-400" />
+              <h3 className="font-semibold text-white">System Status</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-amber-200/70 text-sm">API</span>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+                  Online
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-200/70 text-sm">Database</span>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+                  Connected
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-200/70 text-sm">Blockchain</span>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+                  Solana
+                </Badge>
+              </div>
+            </div>
+          </BentoCard>
+
+          {/* Platform Features - 6 columns */}
+          <BentoCard span={6} variant="default">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="features" className="border-none">
+                <AccordionTrigger className="py-0 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-amber-400" />
+                    <span className="font-semibold text-white">Platform Features</span>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {errorReports.slice(0, 5).map((report) => (
-                      <div 
-                        key={report.id}
-                        className="p-3 rounded-lg bg-amber-900/20 border border-amber-700/30"
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {platformFeatures.map((feature, i) => (
+                      <motion.div
+                        key={feature.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * i }}
+                        className="p-3 rounded-lg bg-amber-900/30 border border-amber-700/20"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-amber-200">{report.title}</span>
-                          <Badge 
-                            className={
-                              report.status === 'resolved' 
-                                ? 'bg-emerald-500/20 text-emerald-300' 
-                                : report.severity === 'critical'
-                                ? 'bg-rose-500/20 text-rose-300'
-                                : 'bg-amber-500/20 text-amber-300'
-                            }
-                          >
-                            {report.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-amber-200/60 mt-1">{report.category} • {new Date(report.createdAt).toLocaleDateString()}</p>
-                      </div>
+                        <feature.icon className="h-4 w-4 text-amber-400 mb-2" />
+                        <p className="text-sm text-white font-medium">{feature.title}</p>
+                        <p className="text-xs text-amber-200/60">{feature.desc}</p>
+                      </motion.div>
                     ))}
                   </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </motion.div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </BentoCard>
 
+          {/* Bug Reports - 6 columns */}
+          <BentoCard span={6} variant="default">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="bugs" className="border-none">
+                <AccordionTrigger className="py-0 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Bug className="h-5 w-5 text-amber-400" />
+                    <span className="font-semibold text-white">Bug Reports</span>
+                    {errorReports.length > 0 && (
+                      <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 ml-2">
+                        {errorReports.length}
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                  {loadingReports ? (
+                    <div className="text-center py-4 text-amber-200/60">Loading reports...</div>
+                  ) : errorReports.length === 0 ? (
+                    <div className="text-center py-4">
+                      <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />
+                      <p className="text-amber-200/60 text-sm">No bug reports - everything is running smoothly!</p>
+                    </div>
+                  ) : (
+                    <Carousel label="bug reports">
+                      {errorReports.slice(0, 8).map((report) => (
+                        <div 
+                          key={report.id}
+                          className="flex-shrink-0 w-[180px] sm:w-[200px]"
+                          role="listitem"
+                        >
+                          <div className="p-3 rounded-lg bg-amber-900/30 border border-amber-700/20 h-full">
+                            <div className="flex items-center justify-between mb-2 gap-2">
+                              <span className="font-medium text-amber-200 text-xs sm:text-sm truncate flex-1">{report.title}</span>
+                              <Badge 
+                                className={`text-xs flex-shrink-0 ${
+                                  report.status === 'resolved' 
+                                    ? 'bg-emerald-500/20 text-emerald-300' 
+                                    : report.severity === 'critical'
+                                    ? 'bg-rose-500/20 text-rose-300'
+                                    : 'bg-amber-500/20 text-amber-300'
+                                }`}
+                              >
+                                {report.status}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-amber-200/50">{report.category}</p>
+                            <p className="text-xs text-amber-200/40 mt-1">{new Date(report.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </Carousel>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </BentoCard>
+        </div>
+
+        {/* Back Button */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="mt-8 text-center"
         >
           <Link href="/">

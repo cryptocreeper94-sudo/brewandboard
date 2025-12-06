@@ -45,6 +45,8 @@ import {
   type InsertVirtualOrder,
   type VirtualMeetingEvent,
   type InsertVirtualMeetingEvent,
+  type ErrorReport,
+  type InsertErrorReport,
   users,
   crmNotes,
   clients,
@@ -67,7 +69,8 @@ import {
   virtualAttendees,
   virtualSelections,
   virtualOrders,
-  virtualMeetingEvents
+  virtualMeetingEvents,
+  errorReports
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -231,6 +234,12 @@ export interface IStorage {
   updateMeetingPresentation(id: string, presentation: Partial<InsertMeetingPresentation>): Promise<MeetingPresentation>;
   deleteMeetingPresentation(id: string): Promise<void>;
   incrementPresentationViews(id: string): Promise<void>;
+  
+  // Error Reports
+  getErrorReports(status?: string): Promise<ErrorReport[]>;
+  getErrorReport(id: string): Promise<ErrorReport | undefined>;
+  createErrorReport(report: InsertErrorReport): Promise<ErrorReport>;
+  updateErrorReport(id: string, report: Partial<InsertErrorReport>): Promise<ErrorReport>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1117,6 +1126,46 @@ export class DatabaseStorage implements IStorage {
       .update(meetingPresentations)
       .set({ viewCount: sql`${meetingPresentations.viewCount} + 1` })
       .where(eq(meetingPresentations.id, id));
+  }
+
+  // ========================
+  // ERROR REPORTS
+  // ========================
+  async getErrorReports(status?: string): Promise<ErrorReport[]> {
+    if (status) {
+      return await db
+        .select()
+        .from(errorReports)
+        .where(eq(errorReports.status, status))
+        .orderBy(desc(errorReports.createdAt));
+    }
+    return await db
+      .select()
+      .from(errorReports)
+      .orderBy(desc(errorReports.createdAt));
+  }
+
+  async getErrorReport(id: string): Promise<ErrorReport | undefined> {
+    const [report] = await db.select().from(errorReports).where(eq(errorReports.id, id));
+    return report || undefined;
+  }
+
+  async createErrorReport(report: InsertErrorReport): Promise<ErrorReport> {
+    const [newReport] = await db.insert(errorReports).values(report).returning();
+    return newReport;
+  }
+
+  async updateErrorReport(id: string, report: Partial<InsertErrorReport>): Promise<ErrorReport> {
+    const updateData: any = { ...report };
+    if (report.status === 'resolved' || report.status === 'closed') {
+      updateData.resolvedAt = new Date();
+    }
+    const [updated] = await db
+      .update(errorReports)
+      .set(updateData)
+      .where(eq(errorReports.id, id))
+      .returning();
+    return updated;
   }
 }
 

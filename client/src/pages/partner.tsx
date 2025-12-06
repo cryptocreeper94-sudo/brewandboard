@@ -22,11 +22,26 @@ import {
   Bell,
   TrendingUp,
   Package,
-  Clock
+  Clock,
+  Bug,
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+
+interface ErrorReport {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  severity: string;
+  status: string;
+  reporterName: string | null;
+  reporterEmail: string | null;
+  createdAt: string;
+}
 
 export default function PartnerHub() {
   const [, setLocation] = useLocation();
@@ -34,12 +49,30 @@ export default function PartnerHub() {
   const [sandboxMode, setSandboxMode] = useState(() => {
     return localStorage.getItem("sandbox_mode") === "true";
   });
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   useEffect(() => {
     const saved = localStorage.getItem("sandbox_mode");
     if (saved === "true") {
       setSandboxMode(true);
     }
+    
+    // Fetch error reports
+    async function fetchReports() {
+      try {
+        const res = await fetch("/api/error-reports");
+        if (res.ok) {
+          const data = await res.json();
+          setErrorReports(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch error reports:", error);
+      } finally {
+        setLoadingReports(false);
+      }
+    }
+    fetchReports();
   }, []);
 
   const handleLogout = () => {
@@ -350,6 +383,83 @@ export default function PartnerHub() {
               <span className="text-emerald-400 ml-auto">Solana Mainnet</span>
             </div>
           </div>
+        </motion.div>
+
+        {/* Bug Reports Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="mt-8 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-red-900/30"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Bug className="h-5 w-5 text-red-400" />
+              <h3 className="text-white font-semibold">Reported Issues</h3>
+              {errorReports.filter(r => r.status === 'open').length > 0 && (
+                <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                  {errorReports.filter(r => r.status === 'open').length} Open
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          {loadingReports ? (
+            <div className="text-center py-6 text-amber-200/50">Loading reports...</div>
+          ) : errorReports.length === 0 ? (
+            <div className="text-center py-6">
+              <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+              <p className="text-amber-200/70">No issues reported</p>
+              <p className="text-amber-200/50 text-xs mt-1">Users can report issues via the menu</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {errorReports.slice(0, 5).map((report) => (
+                <div
+                  key={report.id}
+                  className="p-3 bg-white/5 rounded-lg border border-amber-900/20"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className={`h-4 w-4 ${
+                        report.severity === 'critical' ? 'text-red-500' :
+                        report.severity === 'high' ? 'text-orange-500' :
+                        report.severity === 'medium' ? 'text-yellow-500' :
+                        'text-gray-400'
+                      }`} />
+                      <span className="text-white font-medium text-sm">{report.title}</span>
+                    </div>
+                    <Badge className={`text-[10px] ${
+                      report.status === 'open' ? 'bg-red-500/20 text-red-300' :
+                      report.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-300' :
+                      'bg-emerald-500/20 text-emerald-300'
+                    }`}>
+                      {report.status}
+                    </Badge>
+                  </div>
+                  <p className="text-amber-200/60 text-xs line-clamp-2 mb-2">{report.description}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-amber-200/40">
+                      {report.category} • {report.severity}
+                    </span>
+                    <span className="text-amber-200/40">
+                      {new Date(report.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {report.reporterName && (
+                    <div className="text-xs text-amber-200/40 mt-1">
+                      From: {report.reporterName} {report.reporterEmail && `(${report.reporterEmail})`}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {errorReports.length > 5 && (
+                <p className="text-center text-amber-200/40 text-xs">
+                  + {errorReports.length - 5} more reports
+                </p>
+              )}
+            </div>
+          )}
         </motion.div>
 
         <motion.div

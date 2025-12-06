@@ -2209,5 +2209,52 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // ERROR REPORTS (Bug/Issue Tracking)
+  // ========================
+  
+  app.get("/api/error-reports", async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const reports = await storage.getErrorReports(status);
+      res.json(reports);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/error-reports/:id", async (req, res) => {
+    try {
+      const report = await storage.getErrorReport(req.params.id);
+      if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+      }
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/error-reports", async (req, res) => {
+    try {
+      const report = await storage.createErrorReport({
+        ...req.body,
+        userAgent: req.headers['user-agent'] || null,
+      });
+      res.json(report);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/error-reports/:id", async (req, res) => {
+    try {
+      const report = await storage.updateErrorReport(req.params.id, req.body);
+      res.json(report);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

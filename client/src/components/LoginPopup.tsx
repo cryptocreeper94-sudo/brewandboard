@@ -59,8 +59,8 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     
-    // Partner PIN - Sarah's full access to Partner Hub
-    if (loginPin === "0777") {
+    // Partner PIN - Sarah's full access to Partner Hub (3-digit partner PINs)
+    if (loginPin === "777") {
       const partnerUser = {
         id: "partner-sarah",
         email: "sarah@brewandboard.coffee",
@@ -156,7 +156,7 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
         <form onSubmit={handleLogin} className="p-6 space-y-4">
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold text-center block">
-              Enter Your 4-Digit PIN
+              Enter Your PIN
             </Label>
             <Input 
               type="password" 
@@ -164,7 +164,7 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
               value={loginPin}
               onChange={(e) => setLoginPin(e.target.value.replace(/\D/g, ''))}
               className="text-center text-3xl tracking-[0.5em] h-16 font-serif"
-              placeholder="••••"
+              placeholder="•••"
               autoFocus
               data-testid="input-login-pin"
             />
@@ -204,7 +204,7 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
           <Button 
             type="submit" 
             className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-            disabled={isLoading || loginPin.length !== 4}
+            disabled={isLoading || loginPin.length < 3 || loginPin.length > 4}
             data-testid="button-submit-login"
           >
             {isLoading ? "Logging in..." : (

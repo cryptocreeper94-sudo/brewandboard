@@ -14,7 +14,9 @@ import {
   Coffee,
   CheckCircle,
   Building2,
-  MapPin
+  MapPin,
+  Bug,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +33,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
@@ -59,6 +63,18 @@ export function SettingsMenu() {
   const [pin, setPin] = useState("");
   const [adminPin, setAdminPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Report Issue state
+  const [showReportIssue, setShowReportIssue] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    title: "",
+    description: "",
+    reporterName: "",
+    reporterEmail: "",
+    category: "general",
+    severity: "medium",
+  });
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
     async function fetchVersions() {
@@ -154,6 +170,55 @@ export function SettingsMenu() {
   const handleAdminKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && adminPin.length === 4) {
       handleAdminLogin();
+    }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportForm.title.trim() || !reportForm.description.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a title and description.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    try {
+      const response = await fetch("/api/error-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...reportForm,
+          pageUrl: window.location.href,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Report Submitted",
+          description: "Thank you! Our team will review your report.",
+        });
+        setShowReportIssue(false);
+        setReportForm({
+          title: "",
+          description: "",
+          reporterName: "",
+          reporterEmail: "",
+          category: "general",
+          severity: "medium",
+        });
+      } else {
+        throw new Error("Failed to submit report");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit report. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -255,6 +320,24 @@ export function SettingsMenu() {
               <div className="flex flex-col">
                 <span className="text-sm">Version & Changelog</span>
                 <span className="text-xs text-amber-400/60">v{currentVersion?.version || CURRENT_VERSION}</span>
+              </div>
+            </button>
+            
+            <div className="my-3 border-t border-amber-800/30" />
+            
+            {/* Report Issue */}
+            <button
+              onClick={() => {
+                setShowReportIssue(true);
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-300/80 hover:text-red-200 hover:bg-red-900/20 transition-colors text-left"
+              data-testid="menu-report-issue"
+            >
+              <Bug className="h-4 w-4 text-red-400" />
+              <div className="flex flex-col">
+                <span className="text-sm">Report an Issue</span>
+                <span className="text-xs text-red-400/60">Found a bug? Let us know</span>
               </div>
             </button>
           </div>
@@ -420,6 +503,131 @@ export function SettingsMenu() {
               </Link>
               <Button variant="outline" size="sm" onClick={() => setShowChangelog(false)}>
                 Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Issue Dialog */}
+      <Dialog open={showReportIssue} onOpenChange={setShowReportIssue}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5 text-red-500" />
+              Report an Issue
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Found a bug or something not working right? Let us know and our team will look into it.
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Issue Title *</label>
+                <Input
+                  placeholder="Brief description of the problem"
+                  value={reportForm.title}
+                  onChange={(e) => setReportForm({ ...reportForm, title: e.target.value })}
+                  data-testid="input-report-title"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Description *</label>
+                <Textarea
+                  placeholder="What happened? What were you trying to do?"
+                  value={reportForm.description}
+                  onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })}
+                  rows={4}
+                  data-testid="input-report-description"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Category</label>
+                  <Select
+                    value={reportForm.category}
+                    onValueChange={(value) => setReportForm({ ...reportForm, category: value })}
+                  >
+                    <SelectTrigger data-testid="select-report-category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="payment">Payment Issue</SelectItem>
+                      <SelectItem value="order">Order Problem</SelectItem>
+                      <SelectItem value="login">Login/Access</SelectItem>
+                      <SelectItem value="display">Display/UI</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Severity</label>
+                  <Select
+                    value={reportForm.severity}
+                    onValueChange={(value) => setReportForm({ ...reportForm, severity: value })}
+                  >
+                    <SelectTrigger data-testid="select-report-severity">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low - Minor issue</SelectItem>
+                      <SelectItem value="medium">Medium - Needs attention</SelectItem>
+                      <SelectItem value="high">High - Blocking work</SelectItem>
+                      <SelectItem value="critical">Critical - System down</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Your Name (optional)</label>
+                  <Input
+                    placeholder="Name"
+                    value={reportForm.reporterName}
+                    onChange={(e) => setReportForm({ ...reportForm, reporterName: e.target.value })}
+                    data-testid="input-report-name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email (optional)</label>
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    value={reportForm.reporterEmail}
+                    onChange={(e) => setReportForm({ ...reportForm, reporterEmail: e.target.value })}
+                    data-testid="input-report-email"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 justify-end pt-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReportIssue(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitReport}
+                disabled={isSubmittingReport || !reportForm.title.trim() || !reportForm.description.trim()}
+                className="bg-red-600 hover:bg-red-700"
+                data-testid="button-submit-report"
+              >
+                {isSubmittingReport ? (
+                  "Submitting..."
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Report
+                  </>
+                )}
               </Button>
             </div>
           </div>

@@ -1618,3 +1618,52 @@ export const QUICK_MENU_ITEMS = [
   { id: 'bagel', name: 'Bagel with Cream Cheese', priceCents: 450, category: 'pastry' },
   { id: 'breakfast-sandwich', name: 'Breakfast Sandwich', priceCents: 695, category: 'food' },
 ] as const;
+
+// ========================
+// ERROR REPORTS (Bug/Issue Tracking for Partners)
+// ========================
+export const errorReports = pgTable(
+  "error_reports",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Reporter info
+    reporterName: varchar("reporter_name", { length: 255 }),
+    reporterEmail: varchar("reporter_email", { length: 255 }),
+    reporterPhone: varchar("reporter_phone", { length: 50 }),
+    
+    // Issue details
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description").notNull(),
+    errorMessage: text("error_message"),
+    pageUrl: varchar("page_url", { length: 500 }),
+    
+    // Categorization
+    severity: varchar("severity", { length: 20 }).default("medium"), // low, medium, high, critical
+    category: varchar("category", { length: 50 }).default("general"), // general, payment, order, login, display
+    
+    // Status tracking
+    status: varchar("status", { length: 20 }).default("open"), // open, in_progress, resolved, closed
+    assignedTo: varchar("assigned_to", { length: 255 }),
+    resolution: text("resolution"),
+    
+    // Metadata
+    userAgent: text("user_agent"),
+    screenshotUrl: text("screenshot_url"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    resolvedAt: timestamp("resolved_at"),
+  },
+  (table) => ({
+    statusIdx: index("idx_error_reports_status").on(table.status),
+    severityIdx: index("idx_error_reports_severity").on(table.severity),
+  })
+);
+
+export const insertErrorReportSchema = createInsertSchema(errorReports).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+export type InsertErrorReport = z.infer<typeof insertErrorReportSchema>;
+export type ErrorReport = typeof errorReports.$inferSelect;

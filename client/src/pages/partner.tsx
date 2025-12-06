@@ -2,34 +2,33 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { 
-  LayoutDashboard, 
   ShoppingCart, 
   Store, 
-  Users, 
   BarChart3, 
-  Settings, 
   Play,
   FlaskConical,
   ChevronRight,
   Coffee,
   MapPin,
-  Calendar,
   FileText,
   Shield,
   Sparkles,
   LogOut,
-  Eye,
-  Bell,
   TrendingUp,
   Package,
   Clock,
   Bug,
-  AlertCircle,
   CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ErrorReport {
   id: string;
@@ -97,83 +96,6 @@ export default function PartnerHub() {
         : "Safe testing mode - no real orders or payments will be processed.",
     });
   };
-
-  const navigationCards = [
-    {
-      id: "live-app",
-      title: "Live Customer App",
-      description: "See the platform as customers experience it",
-      icon: Play,
-      href: "/dashboard",
-      gradient: "from-emerald-600 to-emerald-800",
-      badge: "Live",
-      badgeColor: "bg-emerald-500"
-    },
-    {
-      id: "sandbox",
-      title: "Sandbox Mode",
-      description: "Test features safely with demo data",
-      icon: FlaskConical,
-      onClick: toggleSandbox,
-      gradient: "from-purple-600 to-purple-800",
-      badge: sandboxMode ? "Active" : "Off",
-      badgeColor: sandboxMode ? "bg-purple-500" : "bg-gray-500"
-    },
-    {
-      id: "orders",
-      title: "Orders Dashboard",
-      description: "View and manage all customer orders",
-      icon: ShoppingCart,
-      href: "/admin",
-      gradient: "from-blue-600 to-blue-800",
-      stats: "View Orders"
-    },
-    {
-      id: "vendors",
-      title: "Vendor Management",
-      description: "Coffee shops, bakeries & more",
-      icon: Store,
-      href: "/vendors",
-      gradient: "from-amber-600 to-amber-800",
-      stats: "37+ Vendors"
-    },
-    {
-      id: "regional",
-      title: "Regional Managers",
-      description: "Territory assignments & performance",
-      icon: MapPin,
-      href: "/regional",
-      gradient: "from-rose-600 to-rose-800",
-      stats: "Nashville Metro"
-    },
-    {
-      id: "analytics",
-      title: "Business Analytics",
-      description: "Revenue, trends & insights",
-      icon: BarChart3,
-      href: "/developers",
-      gradient: "from-indigo-600 to-indigo-800",
-      stats: "View Reports"
-    },
-    {
-      id: "portfolio",
-      title: "CRM & Portfolio",
-      description: "Contacts, notes & documents",
-      icon: FileText,
-      href: "/portfolio",
-      gradient: "from-teal-600 to-teal-800",
-      stats: "Digital Briefcase"
-    },
-    {
-      id: "blockchain",
-      title: "Blockchain Hallmarks",
-      description: "Document verification system",
-      icon: Shield,
-      href: "/blockchain-tutorial",
-      gradient: "from-cyan-600 to-cyan-800",
-      stats: "Solana Verified"
-    }
-  ];
 
   const quickStats = [
     { label: "Active Orders", value: "12", icon: Package, trend: "+3 today" },
@@ -263,203 +185,207 @@ export default function PartnerHub() {
           ))}
         </motion.div>
 
+        {/* Quick Actions - Top 2 cards in a compact row */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-6"
+          className="grid grid-cols-2 gap-3 mb-6"
         >
-          <h2 className="text-amber-200/70 text-sm font-medium uppercase tracking-wider mb-4 flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            Navigation
-          </h2>
+          <Link href="/dashboard">
+            <div className="group relative overflow-hidden rounded-xl p-4 cursor-pointer transition-all bg-gradient-to-br from-emerald-600 to-emerald-800 border border-emerald-500/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Play className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">Live App</h3>
+                  <Badge className="bg-emerald-500 text-white text-[10px] mt-1">Live</Badge>
+                </div>
+              </div>
+            </div>
+          </Link>
+          
+          <div
+            onClick={toggleSandbox}
+            className="group relative overflow-hidden rounded-xl p-4 cursor-pointer transition-all bg-gradient-to-br from-purple-600 to-purple-800 border border-purple-500/30"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <FlaskConical className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-sm">Sandbox</h3>
+                <Badge className={`${sandboxMode ? 'bg-purple-500' : 'bg-gray-500'} text-white text-[10px] mt-1`}>
+                  {sandboxMode ? 'Active' : 'Off'}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {navigationCards.map((card, index) => {
-            const CardWrapper = card.href ? Link : 'div';
-            const cardProps = card.href ? { href: card.href } : { onClick: card.onClick };
-            
-            return (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-              >
-                {card.href ? (
-                  <Link href={card.href}>
-                    <div
-                      className={`group relative overflow-hidden rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${card.gradient}`}
-                      data-testid={`card-${card.id}`}
-                    >
-                      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
-                      
-                      <div className="relative z-10">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="p-2 bg-white/20 rounded-lg">
-                            <card.icon className="h-5 w-5 text-white" />
-                          </div>
-                          {card.badge && (
-                            <Badge className={`${card.badgeColor} text-white text-[10px]`}>
-                              {card.badge}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <h3 className="text-white font-semibold mb-1">{card.title}</h3>
-                        <p className="text-white/70 text-xs mb-3">{card.description}</p>
-                        
-                        <div className="flex items-center justify-between">
-                          {card.stats && (
-                            <span className="text-white/60 text-xs">{card.stats}</span>
-                          )}
-                          <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </div>
+        {/* Accordion Navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <Accordion type="multiple" defaultValue={["operations"]} className="space-y-3">
+            <AccordionItem value="operations" className="bg-white/5 backdrop-blur-sm rounded-xl border border-amber-900/30 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                    <ShoppingCart className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <span className="text-amber-100 font-medium">Operations</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-2">
+                  <Link href="/admin">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <ShoppingCart className="h-4 w-4 text-blue-400" />
+                        <span className="text-amber-200 text-sm">Orders Dashboard</span>
                       </div>
+                      <ChevronRight className="h-4 w-4 text-amber-400/50" />
                     </div>
                   </Link>
-                ) : (
-                  <div
-                    onClick={card.onClick}
-                    className={`group relative overflow-hidden rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${card.gradient}`}
-                    data-testid={`card-${card.id}`}
-                  >
-                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
-                    
-                    <div className="relative z-10">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                          <card.icon className="h-5 w-5 text-white" />
-                        </div>
-                        {card.badge && (
-                          <Badge className={`${card.badgeColor} text-white text-[10px]`}>
-                            {card.badge}
-                          </Badge>
-                        )}
+                  <Link href="/vendors">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <Store className="h-4 w-4 text-amber-400" />
+                        <span className="text-amber-200 text-sm">Vendor Management</span>
                       </div>
-                      
-                      <h3 className="text-white font-semibold mb-1">{card.title}</h3>
-                      <p className="text-white/70 text-xs mb-3">{card.description}</p>
-                      
-                      <div className="flex items-center justify-between">
-                        {card.stats && (
-                          <span className="text-white/60 text-xs">{card.stats}</span>
-                        )}
-                        <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                      </div>
+                      <span className="text-amber-400/60 text-xs">37+</span>
                     </div>
+                  </Link>
+                  <Link href="/regional">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-4 w-4 text-rose-400" />
+                        <span className="text-amber-200 text-sm">Regional Managers</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-amber-400/50" />
+                    </div>
+                  </Link>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="tools" className="bg-white/5 backdrop-blur-sm rounded-xl border border-amber-900/30 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-teal-500/20 rounded-lg">
+                    <FileText className="h-4 w-4 text-teal-400" />
                   </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-amber-900/30"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="h-5 w-5 text-amber-400" />
-            <h3 className="text-white font-semibold">System Overview</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-amber-200/70">Customer App</span>
-              <span className="text-emerald-400 ml-auto">Online</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-amber-200/70">Payment System</span>
-              <span className="text-emerald-400 ml-auto">Stripe Active</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-amber-200/70">Blockchain</span>
-              <span className="text-emerald-400 ml-auto">Solana Mainnet</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Bug Reports Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="mt-8 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-red-900/30"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Bug className="h-5 w-5 text-red-400" />
-              <h3 className="text-white font-semibold">Reported Issues</h3>
-              {errorReports.filter(r => r.status === 'open').length > 0 && (
-                <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
-                  {errorReports.filter(r => r.status === 'open').length} Open
-                </Badge>
-              )}
-            </div>
-          </div>
-          
-          {loadingReports ? (
-            <div className="text-center py-6 text-amber-200/50">Loading reports...</div>
-          ) : errorReports.length === 0 ? (
-            <div className="text-center py-6">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-              <p className="text-amber-200/70">No issues reported</p>
-              <p className="text-amber-200/50 text-xs mt-1">Users can report issues via the menu</p>
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {errorReports.slice(0, 5).map((report) => (
-                <div
-                  key={report.id}
-                  className="p-3 bg-white/5 rounded-lg border border-amber-900/20"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className={`h-4 w-4 ${
-                        report.severity === 'critical' ? 'text-red-500' :
-                        report.severity === 'high' ? 'text-orange-500' :
-                        report.severity === 'medium' ? 'text-yellow-500' :
-                        'text-gray-400'
-                      }`} />
-                      <span className="text-white font-medium text-sm">{report.title}</span>
+                  <span className="text-amber-100 font-medium">Tools & Analytics</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-2">
+                  <Link href="/developers">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <BarChart3 className="h-4 w-4 text-indigo-400" />
+                        <span className="text-amber-200 text-sm">Business Analytics</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-amber-400/50" />
                     </div>
-                    <Badge className={`text-[10px] ${
-                      report.status === 'open' ? 'bg-red-500/20 text-red-300' :
-                      report.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-300' :
-                      'bg-emerald-500/20 text-emerald-300'
-                    }`}>
-                      {report.status}
+                  </Link>
+                  <Link href="/portfolio">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4 text-teal-400" />
+                        <span className="text-amber-200 text-sm">CRM & Portfolio</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-amber-400/50" />
+                    </div>
+                  </Link>
+                  <Link href="/blockchain-tutorial">
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <Shield className="h-4 w-4 text-cyan-400" />
+                        <span className="text-amber-200 text-sm">Blockchain Hallmarks</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-amber-400/50" />
+                    </div>
+                  </Link>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="system" className="bg-white/5 backdrop-blur-sm rounded-xl border border-amber-900/30 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                    <Sparkles className="h-4 w-4 text-emerald-400" />
+                  </div>
+                  <span className="text-amber-100 font-medium">System Status</span>
+                  <div className="flex items-center gap-1 ml-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-emerald-400 text-xs">All Online</span>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <span className="text-amber-200/70 text-sm">Customer App</span>
+                    <span className="text-emerald-400 text-xs">Online</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <span className="text-amber-200/70 text-sm">Payment System</span>
+                    <span className="text-emerald-400 text-xs">Stripe Active</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <span className="text-amber-200/70 text-sm">Blockchain</span>
+                    <span className="text-emerald-400 text-xs">Solana Mainnet</span>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="reports" className="bg-white/5 backdrop-blur-sm rounded-xl border border-red-900/30 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-red-500/20 rounded-lg">
+                    <Bug className="h-4 w-4 text-red-400" />
+                  </div>
+                  <span className="text-amber-100 font-medium">Bug Reports</span>
+                  {errorReports.filter(r => r.status === 'open').length > 0 && (
+                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-[10px]">
+                      {errorReports.filter(r => r.status === 'open').length} Open
                     </Badge>
-                  </div>
-                  <p className="text-amber-200/60 text-xs line-clamp-2 mb-2">{report.description}</p>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-amber-200/40">
-                      {report.category} • {report.severity}
-                    </span>
-                    <span className="text-amber-200/40">
-                      {new Date(report.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {report.reporterName && (
-                    <div className="text-xs text-amber-200/40 mt-1">
-                      From: {report.reporterName} {report.reporterEmail && `(${report.reporterEmail})`}
-                    </div>
                   )}
                 </div>
-              ))}
-              {errorReports.length > 5 && (
-                <p className="text-center text-amber-200/40 text-xs">
-                  + {errorReports.length - 5} more reports
-                </p>
-              )}
-            </div>
-          )}
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                {loadingReports ? (
+                  <div className="text-center py-4 text-amber-200/50 text-sm">Loading...</div>
+                ) : errorReports.length === 0 ? (
+                  <div className="text-center py-4">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
+                    <p className="text-amber-200/70 text-sm">No issues reported</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {errorReports.slice(0, 5).map((report) => (
+                      <div key={report.id} className="p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-white text-sm font-medium">{report.title}</span>
+                          <Badge className={`text-[10px] ${
+                            report.status === 'open' ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'
+                          }`}>{report.status}</Badge>
+                        </div>
+                        <p className="text-amber-200/50 text-xs">{report.category} • {report.severity}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </motion.div>
 
         <motion.div

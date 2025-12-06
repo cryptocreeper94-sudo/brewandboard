@@ -1315,6 +1315,47 @@ export default function ScanPage() {
                   </CardContent>
                 </Card>
 
+                {pages.length > 0 && !pages.some(p => p.isProcessing) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="lg:hidden"
+                  >
+                    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                            <Check className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-green-800">Scan Complete!</p>
+                            <p className="text-sm text-green-600">{pages.length} page(s) ready</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => setShowSaveDialog(true)}
+                            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                            data-testid="button-mobile-save"
+                          >
+                            <Save className="h-4 w-4" />
+                            Save
+                          </Button>
+                          <Button
+                            onClick={generatePdf}
+                            disabled={isGeneratingPdf}
+                            className="gap-2"
+                            data-testid="button-mobile-pdf"
+                          >
+                            <Download className="h-4 w-4" />
+                            PDF
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
                 {pages.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}

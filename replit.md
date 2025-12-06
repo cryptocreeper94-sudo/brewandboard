@@ -52,14 +52,17 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 **v1.2.1** - December 2024 | Partner Hub Enhancements
 
 ## Recent Changes (December 2024)
-- **v1.2.1**: Partner Hub Enhancements
+- **v1.2.1**: Partner Hub Enhancements & Premium UI
+  - Premium Bento grid UI for Partner Hub with keyboard-accessible carousels
   - Partner Control Panel in Developer Hub with Emergency Kill Switch and System Live Toggle
-  - Personalized Welcome Modals for Sarah and Sid with system overview and recent improvements
+  - Personalized Welcome Modals for Sarah (PIN 777) and Sid (PIN 444) with system overview
   - Forced PIN Change on first login (3-digit initial → 4-digit personal PIN)
   - Preview Mode for partners (data not saved until system goes live)
+  - Footer: Dev/Partner/RM login links with dark coffee gradient, version stamp v1.2.1
+  - CSS: Bento grid system, glass morphism, 3D hover effects, sparkle animations
   - Database: system_settings, partner_accounts tables with onboarding tracking
   - API: /api/partners/login, /api/partners/:id/complete-onboarding, /api/system/settings
-  - Stamped on Solana mainnet (BB-0000000022)
+  - Stamped on Solana mainnet (BB-0000000022, tx: dDq9T63pRBWKDxmsPv7ZgF...)
 
 - **v1.2.0**: 1099 Compliance Portal
   - Full 1099-NEC tracking system in Developer Hub

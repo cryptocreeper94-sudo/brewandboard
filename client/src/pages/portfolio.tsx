@@ -37,7 +37,12 @@ import {
   X,
   Check,
   Save,
-  Eye
+  Eye,
+  Calculator,
+  Percent,
+  Delete,
+  Equal,
+  Bookmark
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,6 +181,124 @@ export default function PortfolioPage() {
     notes: "",
     tags: [],
   });
+  
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [calcDisplay, setCalcDisplay] = useState("0");
+  const [calcPrevValue, setCalcPrevValue] = useState<number | null>(null);
+  const [calcOperator, setCalcOperator] = useState<string | null>(null);
+  const [calcWaitingForOperand, setCalcWaitingForOperand] = useState(false);
+  const [savedCalculations, setSavedCalculations] = useState<{ label: string; value: string; date: string }[]>([]);
+  const [saveLabel, setSaveLabel] = useState("");
+  const [showSaveInput, setShowSaveInput] = useState(false);
+  
+  useEffect(() => {
+    const saved = localStorage.getItem("coffee_saved_calculations");
+    if (saved) {
+      setSavedCalculations(JSON.parse(saved));
+    }
+  }, []);
+  
+  const saveCalculation = () => {
+    if (!saveLabel.trim()) {
+      toast({ title: "Required", description: "Please enter a label for this calculation.", variant: "destructive" });
+      return;
+    }
+    const newCalc = {
+      label: saveLabel.trim(),
+      value: calcDisplay,
+      date: new Date().toISOString()
+    };
+    const updated = [newCalc, ...savedCalculations].slice(0, 20);
+    setSavedCalculations(updated);
+    localStorage.setItem("coffee_saved_calculations", JSON.stringify(updated));
+    setSaveLabel("");
+    setShowSaveInput(false);
+    toast({ title: "Saved!", description: `"${saveLabel}" saved to your calculations.` });
+  };
+  
+  const deleteSavedCalc = (index: number) => {
+    const updated = savedCalculations.filter((_, i) => i !== index);
+    setSavedCalculations(updated);
+    localStorage.setItem("coffee_saved_calculations", JSON.stringify(updated));
+  };
+  
+  const calcInputDigit = (digit: string) => {
+    if (calcWaitingForOperand) {
+      setCalcDisplay(digit);
+      setCalcWaitingForOperand(false);
+    } else {
+      setCalcDisplay(calcDisplay === "0" ? digit : calcDisplay + digit);
+    }
+  };
+  
+  const calcInputDecimal = () => {
+    if (calcWaitingForOperand) {
+      setCalcDisplay("0.");
+      setCalcWaitingForOperand(false);
+    } else if (!calcDisplay.includes(".")) {
+      setCalcDisplay(calcDisplay + ".");
+    }
+  };
+  
+  const calcClear = () => {
+    setCalcDisplay("0");
+    setCalcPrevValue(null);
+    setCalcOperator(null);
+    setCalcWaitingForOperand(false);
+  };
+  
+  const calcPerformOperation = (nextOperator: string) => {
+    const inputValue = parseFloat(calcDisplay);
+    
+    if (calcPrevValue === null) {
+      setCalcPrevValue(inputValue);
+    } else if (calcOperator && !calcWaitingForOperand) {
+      const currentValue = calcPrevValue;
+      let newValue = currentValue;
+      
+      switch (calcOperator) {
+        case "+": newValue = currentValue + inputValue; break;
+        case "-": newValue = currentValue - inputValue; break;
+        case "×": newValue = currentValue * inputValue; break;
+        case "÷": newValue = inputValue !== 0 ? currentValue / inputValue : 0; break;
+      }
+      
+      setCalcDisplay(String(newValue));
+      setCalcPrevValue(newValue);
+    }
+    
+    setCalcWaitingForOperand(true);
+    setCalcOperator(nextOperator);
+  };
+  
+  const calcEquals = () => {
+    if (!calcOperator || calcPrevValue === null) return;
+    
+    const inputValue = parseFloat(calcDisplay);
+    let newValue = calcPrevValue;
+    
+    switch (calcOperator) {
+      case "+": newValue = calcPrevValue + inputValue; break;
+      case "-": newValue = calcPrevValue - inputValue; break;
+      case "×": newValue = calcPrevValue * inputValue; break;
+      case "÷": newValue = inputValue !== 0 ? calcPrevValue / inputValue : 0; break;
+    }
+    
+    setCalcDisplay(String(newValue));
+    setCalcPrevValue(null);
+    setCalcOperator(null);
+    setCalcWaitingForOperand(true);
+  };
+  
+  const calcPercent = () => {
+    const value = parseFloat(calcDisplay);
+    setCalcDisplay(String(value / 100));
+  };
+  
+  const calcToggleSign = () => {
+    const value = parseFloat(calcDisplay);
+    setCalcDisplay(String(value * -1));
+  };
 
   const userStr = localStorage.getItem("coffee_user");
   const user = userStr ? JSON.parse(userStr) : null;
@@ -874,6 +997,58 @@ export default function PortfolioPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
+            className="lg:col-span-1"
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <Calculator className="h-5 w-5 text-amber-500" />
+                  Calculator
+                </h2>
+                {savedCalculations.length > 0 && (
+                  <Badge variant="secondary" className="bg-amber-900/50 text-amber-200">{savedCalculations.length}</Badge>
+                )}
+              </div>
+              
+              <div 
+                onClick={() => setIsCalculatorOpen(true)}
+                className="bg-[#0d0705]/60 rounded-xl p-4 cursor-pointer hover:bg-[#0d0705]/80 transition-colors"
+                data-testid="button-open-calculator"
+              >
+                <div className="text-right mb-3">
+                  <div className="text-amber-100 text-2xl font-mono font-bold truncate">
+                    {calcDisplay}
+                  </div>
+                  {calcOperator && (
+                    <div className="text-amber-600/60 text-xs">
+                      {calcPrevValue} {calcOperator}
+                    </div>
+                  )}
+                </div>
+                
+                <p className="text-amber-200/50 text-xs text-center">Tap to use full calculator</p>
+              </div>
+              
+              {savedCalculations.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-amber-600/60 text-xs mb-2">Saved ({savedCalculations.length})</p>
+                  <div className="space-y-1 max-h-[80px] overflow-y-auto">
+                    {savedCalculations.slice(0, 3).map((calc, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs p-1.5 rounded bg-[#0d0705]/40">
+                        <span className="text-amber-200/80 truncate flex-1">{calc.label}</span>
+                        <span className="text-amber-500 font-mono ml-2">{calc.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
             className="md:col-span-2 lg:col-span-2"
           >
             <div className="bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -882,7 +1057,7 @@ export default function PortfolioPage() {
                 Quick Actions
               </h2>
               
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <Button 
                   variant="outline" 
                   className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
@@ -912,6 +1087,16 @@ export default function PortfolioPage() {
                 >
                   <Share2 className="h-5 w-5 text-amber-500" />
                   <span className="text-amber-200 text-xs">Share Card</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                  onClick={() => setIsCalculatorOpen(true)}
+                  data-testid="action-calculator"
+                >
+                  <Calculator className="h-5 w-5 text-amber-500" />
+                  <span className="text-amber-200 text-xs">Calculator</span>
                 </Button>
                 
                 <Link href="/schedule" className="contents">
@@ -1228,6 +1413,209 @@ export default function PortfolioPage() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-[#1a0f09] border-amber-900/50 text-amber-100 p-0 overflow-hidden">
+          <div className="p-4 border-b border-amber-900/30">
+            <DialogTitle className="font-serif text-xl flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-amber-500" />
+              Calculator
+            </DialogTitle>
+          </div>
+          
+          <div className="p-4">
+            <div className="bg-[#0d0705] rounded-xl p-4 mb-4">
+              <div className="text-right">
+                {calcOperator && (
+                  <div className="text-amber-600/60 text-sm mb-1">
+                    {calcPrevValue} {calcOperator}
+                  </div>
+                )}
+                <div className="text-amber-100 text-3xl font-mono font-bold truncate" data-testid="calc-display">
+                  {calcDisplay}
+                </div>
+              </div>
+            </div>
+            
+            {showSaveInput ? (
+              <div className="mb-4 flex gap-2">
+                <Input
+                  value={saveLabel}
+                  onChange={(e) => setSaveLabel(e.target.value)}
+                  placeholder="Label (e.g., Project Bid)"
+                  className="bg-[#0d0705] border-amber-900/50 flex-1"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && saveCalculation()}
+                  data-testid="input-calc-label"
+                />
+                <Button size="icon" onClick={saveCalculation} className="bg-amber-600 hover:bg-amber-700">
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => { setShowSaveInput(false); setSaveLabel(""); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="w-full mb-4 border-amber-900/30 text-amber-200 hover:bg-amber-900/20"
+                onClick={() => setShowSaveInput(true)}
+                data-testid="button-save-calc"
+              >
+                <Bookmark className="h-4 w-4 mr-2" /> Save This Result
+              </Button>
+            )}
+            
+            <div className="grid grid-cols-4 gap-2">
+              <Button 
+                variant="outline" 
+                className="h-14 text-lg font-medium bg-amber-900/30 border-amber-900/50 text-amber-200 hover:bg-amber-900/50"
+                onClick={calcClear}
+                data-testid="calc-clear"
+              >
+                AC
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-14 text-lg font-medium bg-amber-900/30 border-amber-900/50 text-amber-200 hover:bg-amber-900/50"
+                onClick={calcToggleSign}
+                data-testid="calc-toggle-sign"
+              >
+                +/-
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-14 text-lg font-medium bg-amber-900/30 border-amber-900/50 text-amber-200 hover:bg-amber-900/50"
+                onClick={calcPercent}
+                data-testid="calc-percent"
+              >
+                %
+              </Button>
+              <Button 
+                variant="outline" 
+                className={`h-14 text-lg font-medium border-amber-600/50 hover:bg-amber-600/30 ${calcOperator === "÷" ? "bg-amber-600 text-white" : "bg-amber-600/20 text-amber-400"}`}
+                onClick={() => calcPerformOperation("÷")}
+                data-testid="calc-divide"
+              >
+                ÷
+              </Button>
+              
+              {["7", "8", "9"].map((d) => (
+                <Button 
+                  key={d}
+                  variant="outline" 
+                  className="h-14 text-xl font-medium bg-[#0d0705] border-amber-900/50 text-amber-100 hover:bg-amber-900/30"
+                  onClick={() => calcInputDigit(d)}
+                  data-testid={`calc-${d}`}
+                >
+                  {d}
+                </Button>
+              ))}
+              <Button 
+                variant="outline" 
+                className={`h-14 text-lg font-medium border-amber-600/50 hover:bg-amber-600/30 ${calcOperator === "×" ? "bg-amber-600 text-white" : "bg-amber-600/20 text-amber-400"}`}
+                onClick={() => calcPerformOperation("×")}
+                data-testid="calc-multiply"
+              >
+                ×
+              </Button>
+              
+              {["4", "5", "6"].map((d) => (
+                <Button 
+                  key={d}
+                  variant="outline" 
+                  className="h-14 text-xl font-medium bg-[#0d0705] border-amber-900/50 text-amber-100 hover:bg-amber-900/30"
+                  onClick={() => calcInputDigit(d)}
+                  data-testid={`calc-${d}`}
+                >
+                  {d}
+                </Button>
+              ))}
+              <Button 
+                variant="outline" 
+                className={`h-14 text-lg font-medium border-amber-600/50 hover:bg-amber-600/30 ${calcOperator === "-" ? "bg-amber-600 text-white" : "bg-amber-600/20 text-amber-400"}`}
+                onClick={() => calcPerformOperation("-")}
+                data-testid="calc-subtract"
+              >
+                −
+              </Button>
+              
+              {["1", "2", "3"].map((d) => (
+                <Button 
+                  key={d}
+                  variant="outline" 
+                  className="h-14 text-xl font-medium bg-[#0d0705] border-amber-900/50 text-amber-100 hover:bg-amber-900/30"
+                  onClick={() => calcInputDigit(d)}
+                  data-testid={`calc-${d}`}
+                >
+                  {d}
+                </Button>
+              ))}
+              <Button 
+                variant="outline" 
+                className={`h-14 text-lg font-medium border-amber-600/50 hover:bg-amber-600/30 ${calcOperator === "+" ? "bg-amber-600 text-white" : "bg-amber-600/20 text-amber-400"}`}
+                onClick={() => calcPerformOperation("+")}
+                data-testid="calc-add"
+              >
+                +
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="h-14 text-xl font-medium bg-[#0d0705] border-amber-900/50 text-amber-100 hover:bg-amber-900/30 col-span-2"
+                onClick={() => calcInputDigit("0")}
+                data-testid="calc-0"
+              >
+                0
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-14 text-xl font-medium bg-[#0d0705] border-amber-900/50 text-amber-100 hover:bg-amber-900/30"
+                onClick={calcInputDecimal}
+                data-testid="calc-decimal"
+              >
+                .
+              </Button>
+              <Button 
+                className="h-14 text-lg font-medium bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={calcEquals}
+                data-testid="calc-equals"
+              >
+                =
+              </Button>
+            </div>
+            
+            {savedCalculations.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-amber-900/30">
+                <p className="text-amber-600/80 text-xs font-medium mb-2">Saved Calculations</p>
+                <ScrollArea className="h-[120px]">
+                  <div className="space-y-2">
+                    {savedCalculations.map((calc, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[#0d0705]/60 group">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-amber-200 text-sm truncate">{calc.label}</p>
+                          <p className="text-amber-600/60 text-xs">{new Date(calc.date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-500 font-mono font-medium">{calc.value}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:text-red-400"
+                            onClick={() => deleteSavedCalc(i)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

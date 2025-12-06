@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -656,20 +656,42 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 md:py-8 text-center border-t border-stone-200 bg-white/50">
-        <p className="text-xs md:text-sm text-stone-500">
-          Powered by{' '}
-          <a 
-            href="https://darkwavestudios.io" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="font-serif font-semibold text-stone-700 hover:text-stone-900 transition-colors"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Darkwave Studios, LLC
-          </a>
-          {' '}• © 2025
-        </p>
+      <footer 
+        className="py-4 md:py-6 text-center border-t border-amber-900/30"
+        style={{ background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 50%, #3d2216 100%)' }}
+      >
+        <div className="flex flex-col items-center gap-2 text-[10px] md:text-xs">
+          {/* Portal Login Links */}
+          <div className="flex items-center gap-3 text-amber-400/60">
+            <Link href="/developers">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-dev-login">Dev</span>
+            </Link>
+            <span className="text-amber-600/40">•</span>
+            <Link href="/partner">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-partner-login">Partner</span>
+            </Link>
+            <span className="text-amber-600/40">•</span>
+            <Link href="/regional">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-rm-login">RM</span>
+            </Link>
+          </div>
+          
+          {/* Attribution and Version */}
+          <p className="text-amber-300/50">
+            Powered by{' '}
+            <a 
+              href="https://darkwavestudios.io" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-serif font-semibold text-amber-200/70 hover:text-amber-400 transition-colors"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+              data-testid="link-darkwave"
+            >
+              Darkwave Studios, LLC
+            </a>
+            {' '}• <span className="text-amber-400/60 font-medium">v1.2.1</span>
+          </p>
+        </div>
       </footer>
 
       {/* Feature Details Dialog */}

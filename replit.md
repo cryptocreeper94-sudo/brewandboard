@@ -49,9 +49,17 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.1** - December 2024 | Partner Hub Enhancements
+**v1.2.2** - December 2024 | AI Mascot & UX Improvements
 
 ## Recent Changes (December 2024)
+- **v1.2.2**: AI Mascot & UX Improvements
+  - Happy Coffee AI mascot with auto-minimize intro flow
+  - First-time greeting with "Tap me anytime!" message, then auto-minimizes
+  - Conversation persistence in localStorage across sessions
+  - Clear chat button to reset conversation history
+  - Improved modal visibility across login and business docs pages
+  - Stamped on Solana mainnet (BB-0000000023)
+
 - **v1.2.1**: Partner Hub Enhancements & Premium UI
   - Premium Bento grid UI for Partner Hub with keyboard-accessible carousels
   - Partner Control Panel in Developer Hub with Emergency Kill Switch and System Live Toggle

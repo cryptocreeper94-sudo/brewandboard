@@ -62,6 +62,20 @@ interface SyncLog {
   createdAt: string;
 }
 
+interface CodeSnippet {
+  id: string;
+  appId?: string;
+  name: string;
+  description?: string;
+  language: string;
+  code: string;
+  category: string;
+  isPublic: boolean;
+  usageCount: number;
+  createdBy?: string;
+  createdAt: string;
+}
+
 const AVAILABLE_PERMISSIONS = [
   { id: 'read:code', label: 'Read Code', desc: 'Access shared code snippets' },
   { id: 'write:code', label: 'Write Code', desc: 'Push code snippets' },
@@ -76,10 +90,13 @@ export function AppEcosystemHub() {
   const { toast } = useToast();
   const [apps, setApps] = useState<ConnectedApp[]>([]);
   const [logs, setLogs] = useState<SyncLog[]>([]);
+  const [snippets, setSnippets] = useState<CodeSnippet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCredentials, setShowCredentials] = useState<{apiKey: string; apiSecret: string} | null>(null);
+  const [showRegeneratedKey, setShowRegeneratedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'apps' | 'snippets'>('apps');
   
   const [newApp, setNewApp] = useState({
     name: '',
@@ -91,13 +108,15 @@ export function AppEcosystemHub() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [appsRes, logsRes] = await Promise.all([
+      const [appsRes, logsRes, snippetsRes] = await Promise.all([
         fetch('/api/ecosystem/apps'),
         fetch('/api/ecosystem/logs?limit=20'),
+        fetch('/api/ecosystem/snippets'),
       ]);
       
       if (appsRes.ok) setApps(await appsRes.json());
       if (logsRes.ok) setLogs(await logsRes.json());
+      if (snippetsRes.ok) setSnippets(await snippetsRes.json());
     } catch (error) {
       console.error('Failed to fetch ecosystem data:', error);
     } finally {
@@ -173,7 +192,7 @@ export function AppEcosystemHub() {
   };
 
   const handleRegenerateKey = async (appId: string) => {
-    if (!confirm("This will invalidate the existing API key. Continue?")) return;
+    if (!confirm("This will invalidate the existing API key. Your API secret stays the same - make sure you saved it when connecting the app. Continue?")) return;
 
     try {
       const res = await fetch(`/api/ecosystem/apps/${appId}/regenerate-key`, {
@@ -182,8 +201,11 @@ export function AppEcosystemHub() {
 
       if (res.ok) {
         const data = await res.json();
-        toast({ title: "New API key generated" });
-        setShowCredentials({ apiKey: data.apiKey, apiSecret: '(unchanged)' });
+        toast({ 
+          title: "New API key generated",
+          description: "Use this key with your original API secret."
+        });
+        setShowRegeneratedKey(data.apiKey);
         fetchData();
       }
     } catch (error) {
@@ -438,6 +460,80 @@ export function AppEcosystemHub() {
               </ScrollArea>
             </div>
           )}
+
+          {/* Shared Code Snippets Section */}
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="font-semibold flex items-center gap-2 mb-3">
+              <Code2 className="h-4 w-4 text-purple-600" />
+              Shared Code Snippets
+              <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                {snippets.length} available
+              </Badge>
+            </h4>
+            {snippets.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Code2 className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No shared code snippets yet.</p>
+                <p className="text-xs mt-1">Connected apps can push reusable code here.</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-64">
+                <div className="space-y-3">
+                  {snippets.map(snippet => {
+                    const sourceApp = snippet.appId ? apps.find(a => a.id === snippet.appId) : null;
+                    return (
+                      <div
+                        key={snippet.id}
+                        className="p-3 rounded-lg bg-gray-50 border"
+                        data-testid={`snippet-${snippet.id}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{snippet.name}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {snippet.language}
+                            </Badge>
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                              {snippet.category}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {sourceApp && (
+                              <span className="flex items-center gap-1">
+                                <Globe className="h-3 w-3" />
+                                {sourceApp.name}
+                              </span>
+                            )}
+                            <span>{snippet.usageCount} uses</span>
+                          </div>
+                        </div>
+                        {snippet.description && (
+                          <p className="text-sm text-muted-foreground mb-2">{snippet.description}</p>
+                        )}
+                        <div className="relative">
+                          <pre className="text-xs bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto max-h-32">
+                            <code>{snippet.code}</code>
+                          </pre>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-1 right-1"
+                            onClick={() => copyToClipboard(snippet.code, `snippet-${snippet.id}`)}
+                          >
+                            {copiedKey === `snippet-${snippet.id}` ? (
+                              <Check className="h-3 w-3 text-emerald-400" />
+                            ) : (
+                              <Copy className="h-3 w-3 text-gray-400" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -560,6 +656,50 @@ export function AppEcosystemHub() {
               data-testid="button-close-credentials"
             >
               I've Saved These Credentials
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!showRegeneratedKey} onOpenChange={() => setShowRegeneratedKey(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <RefreshCw className="h-5 w-5" />
+              New API Key Generated
+            </DialogTitle>
+            <DialogDescription>
+              Your API key has been regenerated. Use this new key with your original API secret.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm font-medium mb-2">New API Key:</p>
+              <div className="flex items-center gap-2">
+                <code className="text-xs bg-white p-2 rounded flex-1 overflow-x-auto">
+                  {showRegeneratedKey}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(showRegeneratedKey || '', 'newApiKey')}
+                >
+                  {copiedKey === 'newApiKey' ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm">
+              <p className="font-medium text-blue-700 mb-1">Your API Secret remains unchanged</p>
+              <p className="text-blue-600 text-xs">
+                Use the original secret you saved when first connecting this app. If you've lost it, you'll need to remove and re-add the app to get a new secret.
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowRegeneratedKey(null)}
+              className="w-full"
+              data-testid="button-close-regen-key"
+            >
+              Got It
             </Button>
           </div>
         </DialogContent>

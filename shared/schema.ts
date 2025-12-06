@@ -1890,3 +1890,146 @@ export const insertPartnerAccountSchema = createInsertSchema(partnerAccounts).om
 });
 export type InsertPartnerAccount = z.infer<typeof insertPartnerAccountSchema>;
 export type PartnerAccount = typeof partnerAccounts.$inferSelect;
+
+// ========================
+// CONNECTED APPS (App Ecosystem Hub)
+// ========================
+export const connectedApps = pgTable(
+  "connected_apps",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    baseUrl: text("base_url").notNull(),
+    
+    apiKey: varchar("api_key", { length: 64 }).notNull().unique(),
+    apiSecret: text("api_secret").notNull(),
+    
+    isActive: boolean("is_active").default(true),
+    permissions: text("permissions").array().default(sql`ARRAY[]::text[]`),
+    
+    lastSyncAt: timestamp("last_sync_at"),
+    requestCount: integer("request_count").default(0),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    apiKeyIdx: index("idx_connected_apps_api_key").on(table.apiKey),
+    nameIdx: index("idx_connected_apps_name").on(table.name),
+  })
+);
+
+export const insertConnectedAppSchema = createInsertSchema(connectedApps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  requestCount: true,
+  lastSyncAt: true,
+});
+export type InsertConnectedApp = z.infer<typeof insertConnectedAppSchema>;
+export type ConnectedApp = typeof connectedApps.$inferSelect;
+
+// ========================
+// APP SYNC LOGS (Track inter-app communication)
+// ========================
+export const appSyncLogs = pgTable(
+  "app_sync_logs",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    appId: varchar("app_id").notNull().references(() => connectedApps.id),
+    
+    action: varchar("action", { length: 50 }).notNull(),
+    direction: varchar("direction", { length: 10 }).notNull(),
+    endpoint: text("endpoint"),
+    
+    requestPayload: jsonb("request_payload"),
+    responsePayload: jsonb("response_payload"),
+    
+    status: varchar("status", { length: 20 }).default("success"),
+    errorMessage: text("error_message"),
+    
+    durationMs: integer("duration_ms"),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    appIdIdx: index("idx_app_sync_logs_app").on(table.appId),
+    actionIdx: index("idx_app_sync_logs_action").on(table.action),
+    createdAtIdx: index("idx_app_sync_logs_created").on(table.createdAt),
+  })
+);
+
+export const insertAppSyncLogSchema = createInsertSchema(appSyncLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAppSyncLog = z.infer<typeof insertAppSyncLogSchema>;
+export type AppSyncLog = typeof appSyncLogs.$inferSelect;
+
+// ========================
+// SHARED CODE SNIPPETS (Code sharing between apps)
+// ========================
+export const sharedCodeSnippets = pgTable(
+  "shared_code_snippets",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 50 }).notNull(),
+    
+    language: varchar("language", { length: 30 }).default("typescript"),
+    code: text("code").notNull(),
+    
+    isPublic: boolean("is_public").default(false),
+    sharedWithApps: text("shared_with_apps").array().default(sql`ARRAY[]::text[]`),
+    
+    version: varchar("version", { length: 20 }).default("1.0.0"),
+    usageCount: integer("usage_count").default(0),
+    
+    createdBy: varchar("created_by", { length: 100 }),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    categoryIdx: index("idx_shared_code_category").on(table.category),
+    nameIdx: index("idx_shared_code_name").on(table.name),
+  })
+);
+
+export const insertSharedCodeSnippetSchema = createInsertSchema(sharedCodeSnippets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
+export type InsertSharedCodeSnippet = z.infer<typeof insertSharedCodeSnippetSchema>;
+export type SharedCodeSnippet = typeof sharedCodeSnippets.$inferSelect;
+
+// App permission constants
+export const APP_PERMISSIONS = [
+  'read:code',
+  'write:code',
+  'read:data',
+  'write:data',
+  'read:hallmarks',
+  'write:hallmarks',
+  'read:orders',
+  'write:orders',
+  'read:clients',
+  'write:clients',
+  'sync:all',
+] as const;
+
+export const CODE_CATEGORIES = [
+  'component',
+  'utility',
+  'hook',
+  'api',
+  'schema',
+  'style',
+  'config',
+  'integration',
+] as const;

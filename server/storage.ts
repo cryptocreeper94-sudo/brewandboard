@@ -57,6 +57,12 @@ import {
   type InsertSystemSetting,
   type PartnerAccount,
   type InsertPartnerAccount,
+  type ConnectedApp,
+  type InsertConnectedApp,
+  type AppSyncLog,
+  type InsertAppSyncLog,
+  type SharedCodeSnippet,
+  type InsertSharedCodeSnippet,
   users,
   crmNotes,
   clients,
@@ -86,6 +92,9 @@ import {
   filings1099,
   systemSettings,
   partnerAccounts,
+  connectedApps,
+  appSyncLogs,
+  sharedCodeSnippets,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -1514,6 +1523,119 @@ export class DatabaseStorage implements IStorage {
       .where(eq(partnerAccounts.id, id))
       .returning();
     return updated;
+  }
+
+  // ========================
+  // CONNECTED APPS (App Ecosystem Hub)
+  // ========================
+  async getConnectedApps(): Promise<ConnectedApp[]> {
+    return await db.select().from(connectedApps).orderBy(desc(connectedApps.createdAt));
+  }
+
+  async getConnectedApp(id: string): Promise<ConnectedApp | undefined> {
+    const [app] = await db.select().from(connectedApps).where(eq(connectedApps.id, id));
+    return app || undefined;
+  }
+
+  async getConnectedAppByApiKey(apiKey: string): Promise<ConnectedApp | undefined> {
+    const [app] = await db.select().from(connectedApps).where(eq(connectedApps.apiKey, apiKey));
+    return app || undefined;
+  }
+
+  async createConnectedApp(app: InsertConnectedApp): Promise<ConnectedApp> {
+    const [created] = await db.insert(connectedApps).values(app).returning();
+    return created;
+  }
+
+  async updateConnectedApp(id: string, app: Partial<InsertConnectedApp>): Promise<ConnectedApp> {
+    const [updated] = await db
+      .update(connectedApps)
+      .set({ ...app, updatedAt: new Date() })
+      .where(eq(connectedApps.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteConnectedApp(id: string): Promise<void> {
+    await db.delete(connectedApps).where(eq(connectedApps.id, id));
+  }
+
+  async incrementAppRequestCount(id: string): Promise<void> {
+    await db
+      .update(connectedApps)
+      .set({ 
+        requestCount: sql`${connectedApps.requestCount} + 1`,
+        lastSyncAt: new Date()
+      })
+      .where(eq(connectedApps.id, id));
+  }
+
+  // ========================
+  // APP SYNC LOGS
+  // ========================
+  async getAppSyncLogs(appId?: string, limit: number = 50): Promise<AppSyncLog[]> {
+    if (appId) {
+      return await db
+        .select()
+        .from(appSyncLogs)
+        .where(eq(appSyncLogs.appId, appId))
+        .orderBy(desc(appSyncLogs.createdAt))
+        .limit(limit);
+    }
+    return await db
+      .select()
+      .from(appSyncLogs)
+      .orderBy(desc(appSyncLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createAppSyncLog(log: InsertAppSyncLog): Promise<AppSyncLog> {
+    const [created] = await db.insert(appSyncLogs).values(log).returning();
+    return created;
+  }
+
+  // ========================
+  // SHARED CODE SNIPPETS
+  // ========================
+  async getSharedCodeSnippets(category?: string): Promise<SharedCodeSnippet[]> {
+    if (category) {
+      return await db
+        .select()
+        .from(sharedCodeSnippets)
+        .where(eq(sharedCodeSnippets.category, category))
+        .orderBy(desc(sharedCodeSnippets.updatedAt));
+    }
+    return await db.select().from(sharedCodeSnippets).orderBy(desc(sharedCodeSnippets.updatedAt));
+  }
+
+  async getSharedCodeSnippet(id: string): Promise<SharedCodeSnippet | undefined> {
+    const [snippet] = await db.select().from(sharedCodeSnippets).where(eq(sharedCodeSnippets.id, id));
+    return snippet || undefined;
+  }
+
+  async createSharedCodeSnippet(snippet: InsertSharedCodeSnippet): Promise<SharedCodeSnippet> {
+    const [created] = await db.insert(sharedCodeSnippets).values(snippet).returning();
+    return created;
+  }
+
+  async updateSharedCodeSnippet(id: string, snippet: Partial<InsertSharedCodeSnippet>): Promise<SharedCodeSnippet> {
+    const [updated] = await db
+      .update(sharedCodeSnippets)
+      .set({ ...snippet, updatedAt: new Date() })
+      .where(eq(sharedCodeSnippets.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSharedCodeSnippet(id: string): Promise<void> {
+    await db.delete(sharedCodeSnippets).where(eq(sharedCodeSnippets.id, id));
+  }
+
+  async incrementSnippetUsageCount(id: string): Promise<void> {
+    await db
+      .update(sharedCodeSnippets)
+      .set({ usageCount: sql`${sharedCodeSnippets.usageCount} + 1` })
+      .where(eq(sharedCodeSnippets.id, id));
   }
 }
 

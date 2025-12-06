@@ -328,11 +328,11 @@ export default function VendorsPage() {
                   <div>
                     <Label className="text-amber-200">Website</Label>
                     <Input
-                      type="url"
+                      type="text"
                       value={formData.website}
                       onChange={(e) => setFormData({...formData, website: e.target.value})}
                       className="bg-amber-950/50 border-amber-700/30 text-amber-100"
-                      placeholder="https://yourbusiness.com"
+                      placeholder="yourbusiness.com"
                       data-testid="input-website"
                     />
                   </div>

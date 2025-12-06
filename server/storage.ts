@@ -17,6 +17,8 @@ import {
   type InsertScannedDocument,
   type BusinessCard,
   type InsertBusinessCard,
+  type MeetingPresentation,
+  type InsertMeetingPresentation,
   type Franchise,
   type InsertFranchise,
   type FranchiseCustodyTransfer,
@@ -52,6 +54,7 @@ import {
   orderEvents,
   scannedDocuments,
   businessCards,
+  meetingPresentations,
   franchises,
   franchiseCustodyTransfers,
   franchiseInquiries,
@@ -219,6 +222,15 @@ export interface IStorage {
   updateBusinessCard(id: string, card: Partial<InsertBusinessCard>): Promise<BusinessCard>;
   deleteBusinessCard(id: string): Promise<void>;
   incrementBusinessCardViews(id: string): Promise<void>;
+  
+  // Meeting Presentations
+  getMeetingPresentations(userId: string): Promise<MeetingPresentation[]>;
+  getMeetingPresentation(id: string): Promise<MeetingPresentation | undefined>;
+  getMeetingPresentationByLink(shareableLink: string): Promise<MeetingPresentation | undefined>;
+  createMeetingPresentation(presentation: InsertMeetingPresentation): Promise<MeetingPresentation>;
+  updateMeetingPresentation(id: string, presentation: Partial<InsertMeetingPresentation>): Promise<MeetingPresentation>;
+  deleteMeetingPresentation(id: string): Promise<void>;
+  incrementPresentationViews(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1052,6 +1064,59 @@ export class DatabaseStorage implements IStorage {
       .update(businessCards)
       .set({ viewCount: sql`${businessCards.viewCount} + 1` })
       .where(eq(businessCards.id, id));
+  }
+
+  // ========================
+  // MEETING PRESENTATIONS
+  // ========================
+  async getMeetingPresentations(userId: string): Promise<MeetingPresentation[]> {
+    return await db
+      .select()
+      .from(meetingPresentations)
+      .where(eq(meetingPresentations.userId, userId))
+      .orderBy(desc(meetingPresentations.createdAt));
+  }
+
+  async getMeetingPresentation(id: string): Promise<MeetingPresentation | undefined> {
+    const [presentation] = await db.select().from(meetingPresentations).where(eq(meetingPresentations.id, id));
+    return presentation || undefined;
+  }
+
+  async getMeetingPresentationByLink(shareableLink: string): Promise<MeetingPresentation | undefined> {
+    const [presentation] = await db
+      .select()
+      .from(meetingPresentations)
+      .where(eq(meetingPresentations.shareableLink, shareableLink));
+    return presentation || undefined;
+  }
+
+  async createMeetingPresentation(presentation: InsertMeetingPresentation): Promise<MeetingPresentation> {
+    const shareableLink = `pres-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const [newPresentation] = await db
+      .insert(meetingPresentations)
+      .values({ ...presentation, shareableLink })
+      .returning();
+    return newPresentation;
+  }
+
+  async updateMeetingPresentation(id: string, presentation: Partial<InsertMeetingPresentation>): Promise<MeetingPresentation> {
+    const [updated] = await db
+      .update(meetingPresentations)
+      .set({ ...presentation, updatedAt: new Date() })
+      .where(eq(meetingPresentations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMeetingPresentation(id: string): Promise<void> {
+    await db.delete(meetingPresentations).where(eq(meetingPresentations.id, id));
+  }
+
+  async incrementPresentationViews(id: string): Promise<void> {
+    await db
+      .update(meetingPresentations)
+      .set({ viewCount: sql`${meetingPresentations.viewCount} + 1` })
+      .where(eq(meetingPresentations.id, id));
   }
 }
 

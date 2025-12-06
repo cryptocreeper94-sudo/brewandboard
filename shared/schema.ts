@@ -481,6 +481,60 @@ export const DOCUMENT_CATEGORIES = [
   'other'
 ] as const;
 
+// ========================
+// MEETING PRESENTATIONS
+// ========================
+export const meetingPresentations = pgTable(
+  "meeting_presentations",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    
+    templateType: varchar("template_type", { length: 50 }).notNull().default("executive"),
+    
+    documentIds: text("document_ids").array(),
+    
+    attendeeEmails: text("attendee_emails").array(),
+    attendeeNames: text("attendee_names").array(),
+    
+    meetingDate: date("meeting_date"),
+    meetingTime: varchar("meeting_time", { length: 10 }),
+    
+    shareableLink: varchar("shareable_link", { length: 255 }),
+    
+    status: varchar("status", { length: 30 }).default("draft").notNull(),
+    
+    sentAt: timestamp("sent_at"),
+    viewCount: integer("view_count").default(0),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_meeting_presentations_user").on(table.userId),
+    statusIdx: index("idx_meeting_presentations_status").on(table.status),
+  })
+);
+
+export const insertMeetingPresentationSchema = createInsertSchema(meetingPresentations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  sentAt: true,
+});
+export type InsertMeetingPresentation = z.infer<typeof insertMeetingPresentationSchema>;
+export type MeetingPresentation = typeof meetingPresentations.$inferSelect;
+
+export const PRESENTATION_TEMPLATES = [
+  { id: 'executive', name: 'Executive Summary', description: 'Clean, minimal layout with company branding' },
+  { id: 'board', name: 'Board Meeting', description: 'Formal structure with agenda and document sections' },
+  { id: 'huddle', name: 'Team Huddle', description: 'Casual, friendly format for quick syncs' },
+] as const;
+
 // Supported OCR languages
 export const OCR_LANGUAGES = [
   { code: 'eng', name: 'English' },

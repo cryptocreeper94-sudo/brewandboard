@@ -246,12 +246,12 @@ function CuratedRoastersCarousel() {
                         return (
                           <div 
                             key={item.id} 
-                            className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
                             data-testid={`menu-item-${item.id}`}
                           >
                             <div className="flex-1 min-w-0">
                               <h5 className="text-stone-100 font-medium text-sm">{item.name}</h5>
-                              <p className="text-stone-300/50 text-xs truncate">{item.description}</p>
+                              <p className="text-stone-300 text-xs truncate">{item.description}</p>
                             </div>
                             <span className="text-[#d4c4b0] font-semibold text-sm whitespace-nowrap">
                               ${item.price.toFixed(2)}
@@ -478,7 +478,7 @@ function FeaturedBoardsCarousel() {
                         return (
                           <div 
                             key={item.id} 
-                            className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
                             data-testid={`boards-menu-item-${item.id}`}
                           >
                             <div className="flex-1 min-w-0">
@@ -486,7 +486,7 @@ function FeaturedBoardsCarousel() {
                                 <h5 className="font-medium text-stone-100 truncate">{item.name}</h5>
                                 <span className="text-[#d4c4b0] font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
                               </div>
-                              <p className="text-xs text-stone-300/50 truncate">{item.description}</p>
+                              <p className="text-xs text-stone-300 truncate">{item.description}</p>
                             </div>
                             <Button
                               size="sm"

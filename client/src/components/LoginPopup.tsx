@@ -59,6 +59,33 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     
+    // Partner PIN - Sarah's full access to Partner Hub
+    if (loginPin === "0777") {
+      const partnerUser = {
+        id: "partner-sarah",
+        email: "sarah@brewandboard.coffee",
+        businessName: "Brew & Board Partner",
+        contactName: "Sarah",
+        name: "Sarah",
+        isPartner: true,
+        role: "partner"
+      };
+      localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
+      localStorage.setItem("coffee_partner_auth", "true");
+      localStorage.setItem("user_name", "Sarah");
+      localStorage.removeItem("is_guest");
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+      
+      toast({
+        title: "Welcome, Sarah!",
+        description: "Partner access granted. Your Partner Hub is ready.",
+      });
+      onClose();
+      setLocation("/partner");
+      return;
+    }
+    
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",

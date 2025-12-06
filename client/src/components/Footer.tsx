@@ -13,37 +13,47 @@ export function Footer() {
       }}
     >
       <div className="container max-w-5xl mx-auto px-3 md:px-4 py-2">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 text-[10px] text-amber-300/50">
-          {/* Navigation Links - First Row on Mobile */}
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center justify-center gap-1 text-[10px] text-amber-300/50">
+          {/* Navigation Links - First Row */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
             <Link href="/contact">
-              <span className="hover:text-amber-300 cursor-pointer transition-colors">Contact</span>
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-contact">Contact</span>
             </Link>
             <span className="mx-0.5">•</span>
             <Link href="/vendors">
-              <span className="hover:text-amber-300 cursor-pointer transition-colors">Vendors</span>
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-vendors">Vendors</span>
             </Link>
             <span className="mx-0.5">•</span>
             <Link href="/investor">
-              <span className="hover:text-amber-300 cursor-pointer transition-colors">Investors</span>
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-investor">Investors</span>
             </Link>
             <span className="mx-0.5">•</span>
             <Link href="/admin">
-              <span className="hover:text-amber-300 cursor-pointer transition-colors">Admin</span>
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-admin">Admin</span>
             </Link>
             <span className="mx-0.5">•</span>
             <Link href="/terms">
-              <span className="hover:text-amber-300 cursor-pointer transition-colors">Terms</span>
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-terms">Terms</span>
             </Link>
           </div>
           
-          {/* Divider - Hidden on Mobile */}
-          <span className="hidden md:inline mx-1.5">|</span>
-          
-          {/* Attribution - Second Row on Mobile */}
-          <div className="flex items-center gap-1">
-            <span className="text-amber-400/60 font-medium">v1.1.9</span>
+          {/* Portal Login Links - Second Row */}
+          <div className="flex items-center gap-2 text-amber-400/40">
+            <Link href="/developers">
+              <span className="hover:text-amber-400 cursor-pointer transition-colors font-medium" data-testid="link-dev-login">Dev</span>
+            </Link>
             <span className="mx-0.5">•</span>
+            <Link href="/partner">
+              <span className="hover:text-amber-400 cursor-pointer transition-colors font-medium" data-testid="link-partner-login">Partner</span>
+            </Link>
+            <span className="mx-0.5">•</span>
+            <Link href="/regional-manager">
+              <span className="hover:text-amber-400 cursor-pointer transition-colors font-medium" data-testid="link-rm-login">RM</span>
+            </Link>
+          </div>
+          
+          {/* Attribution and Version - Third Row */}
+          <div className="flex items-center gap-1">
             <span>Powered by</span>
             <a 
               href="https://darkwavestudios.io" 
@@ -54,6 +64,8 @@ export function Footer() {
             >
               Darkwave Studios, LLC
             </a>
+            <span className="mx-0.5">•</span>
+            <span className="text-amber-400/60 font-medium">v1.2.1</span>
           </div>
         </div>
       </div>

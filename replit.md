@@ -28,7 +28,7 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Pricing Model**: Concierge pricing with a 15% service fee on one-off orders, distance-based delivery fees, and subscription tiers.
 - **Blockchain Hallmark System**: Two-tier Solana-based verification for document authenticity (Company Hallmarks for official releases, Subscriber Hallmarks for personalized documents).
 - **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls and unique invite tokens.
-- **Partner Hub**: Provides an accordion-style interface for partners to access information and manage bug reports.
+- **Partner Hub**: Provides an accordion-style interface for partners to access information and manage bug reports. Features personalized welcome modals, forced PIN change on first login, and Preview Mode (data not saved until system goes live).
 - **Meeting Presentation Builder**: Enables creation of slideshow-style presentations from templates with document attachments and shareable links.
 
 ### System Design Choices
@@ -49,9 +49,18 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.0** - December 2024 | 1099 Compliance Portal
+**v1.2.1** - December 2024 | Partner Hub Enhancements
 
 ## Recent Changes (December 2024)
+- **v1.2.1**: Partner Hub Enhancements
+  - Partner Control Panel in Developer Hub with Emergency Kill Switch and System Live Toggle
+  - Personalized Welcome Modals for Sarah and Sid with system overview and recent improvements
+  - Forced PIN Change on first login (3-digit initial → 4-digit personal PIN)
+  - Preview Mode for partners (data not saved until system goes live)
+  - Database: system_settings, partner_accounts tables with onboarding tracking
+  - API: /api/partners/login, /api/partners/:id/complete-onboarding, /api/system/settings
+  - Stamped on Solana mainnet (BB-0000000022)
+
 - **v1.2.0**: 1099 Compliance Portal
   - Full 1099-NEC tracking system in Developer Hub
   - Payee Directory: Add contractors, referral partners, franchise owners, delivery drivers with masked tax IDs

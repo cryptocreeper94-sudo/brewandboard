@@ -53,6 +53,10 @@ import {
   type InsertPayment1099,
   type Filing1099,
   type InsertFiling1099,
+  type SystemSetting,
+  type InsertSystemSetting,
+  type PartnerAccount,
+  type InsertPartnerAccount,
   users,
   crmNotes,
   clients,
@@ -80,6 +84,8 @@ import {
   payees,
   payments1099,
   filings1099,
+  systemSettings,
+  partnerAccounts,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -277,6 +283,19 @@ export interface IStorage {
     payeesOverThreshold: number;
     payeesUnderThreshold: number;
   }>;
+  
+  // System Settings (Admin Controls)
+  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
+  setSystemSetting(key: string, value: string, updatedBy?: string): Promise<SystemSetting>;
+  getAllSystemSettings(): Promise<SystemSetting[]>;
+  
+  // Partner Accounts
+  getPartnerAccounts(): Promise<PartnerAccount[]>;
+  getPartnerAccount(id: string): Promise<PartnerAccount | undefined>;
+  getPartnerAccountByInitialPin(pin: string): Promise<PartnerAccount | undefined>;
+  getPartnerAccountByPersonalPin(pin: string): Promise<PartnerAccount | undefined>;
+  createPartnerAccount(account: InsertPartnerAccount): Promise<PartnerAccount>;
+  updatePartnerAccount(id: string, account: Partial<InsertPartnerAccount>): Promise<PartnerAccount>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1413,6 +1432,88 @@ export class DatabaseStorage implements IStorage {
       payeesOverThreshold,
       payeesUnderThreshold
     };
+  }
+
+  // ========================
+  // SYSTEM SETTINGS
+  // ========================
+  async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key));
+    return setting || undefined;
+  }
+
+  async setSystemSetting(key: string, value: string, updatedBy?: string): Promise<SystemSetting> {
+    const existing = await this.getSystemSetting(key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(systemSettings)
+        .set({ value, updatedBy, updatedAt: new Date() })
+        .where(eq(systemSettings.key, key))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db
+      .insert(systemSettings)
+      .values({ key, value, updatedBy })
+      .returning();
+    return created;
+  }
+
+  async getAllSystemSettings(): Promise<SystemSetting[]> {
+    return await db.select().from(systemSettings);
+  }
+
+  // ========================
+  // PARTNER ACCOUNTS
+  // ========================
+  async getPartnerAccounts(): Promise<PartnerAccount[]> {
+    return await db.select().from(partnerAccounts);
+  }
+
+  async getPartnerAccount(id: string): Promise<PartnerAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(partnerAccounts)
+      .where(eq(partnerAccounts.id, id));
+    return account || undefined;
+  }
+
+  async getPartnerAccountByInitialPin(pin: string): Promise<PartnerAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(partnerAccounts)
+      .where(eq(partnerAccounts.initialPin, pin));
+    return account || undefined;
+  }
+
+  async getPartnerAccountByPersonalPin(pin: string): Promise<PartnerAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(partnerAccounts)
+      .where(eq(partnerAccounts.personalPin, pin));
+    return account || undefined;
+  }
+
+  async createPartnerAccount(account: InsertPartnerAccount): Promise<PartnerAccount> {
+    const [created] = await db
+      .insert(partnerAccounts)
+      .values(account)
+      .returning();
+    return created;
+  }
+
+  async updatePartnerAccount(id: string, account: Partial<InsertPartnerAccount>): Promise<PartnerAccount> {
+    const [updated] = await db
+      .update(partnerAccounts)
+      .set({ ...account, updatedAt: new Date() })
+      .where(eq(partnerAccounts.id, id))
+      .returning();
+    return updated;
   }
 }
 

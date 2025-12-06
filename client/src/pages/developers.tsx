@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Circle,
   AlertCircle,
+  AlertTriangle,
   Bike,
   Car,
   CreditCard,
@@ -1333,6 +1334,148 @@ export default function DevelopersPage() {
                     {overallStatus.message}
                   </span>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Partner Control Panel - Admin Controls */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="mb-8"
+        >
+          <Card className="premium-card border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-purple-500/5 to-indigo-500/5" />
+            <CardHeader className="relative pb-3">
+              <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+                <Shield className="h-6 w-6 text-rose-600" />
+                Partner Control Panel
+              </CardTitle>
+              <CardDescription>
+                Manage partner access and system live status
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Emergency Kill Switch */}
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-rose-600" />
+                      <span className="font-semibold text-rose-800">Emergency Kill Switch</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-rose-600 mb-3">
+                    Instantly disable all partner access. Partners will see "Access Disabled" when trying to log in.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const currentSetting = await fetch('/api/system/settings/partner_access_enabled').then(r => r.json());
+                        const newValue = currentSetting?.value === 'false' ? 'true' : 'false';
+                        await fetch('/api/system/settings/partner_access_enabled', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ value: newValue, updatedBy: 'Developer Admin' })
+                        });
+                        toast({
+                          title: newValue === 'true' ? 'Partner Access Enabled' : 'Partner Access DISABLED',
+                          description: newValue === 'true' 
+                            ? 'Partners can now log in.' 
+                            : 'All partners are now locked out.',
+                        });
+                      } catch (e) {
+                        toast({ title: 'Error', description: 'Failed to toggle partner access', variant: 'destructive' });
+                      }
+                    }}
+                    data-testid="button-kill-switch"
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Toggle Partner Access
+                  </Button>
+                </div>
+                
+                {/* System Live Mode */}
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-emerald-600" />
+                      <span className="font-semibold text-emerald-800">System Live Status</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-emerald-600 mb-3">
+                    When OFF, partners browse in Preview Mode (data not saved). Turn ON to enable full functionality.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="w-full border-emerald-500 text-emerald-700 hover:bg-emerald-100"
+                    onClick={async () => {
+                      try {
+                        const currentSetting = await fetch('/api/system/settings/system_live').then(r => r.json());
+                        const newValue = currentSetting?.value === 'true' ? 'false' : 'true';
+                        await fetch('/api/system/settings/system_live', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ value: newValue, updatedBy: 'Developer Admin' })
+                        });
+                        toast({
+                          title: newValue === 'true' ? 'System is NOW LIVE' : 'System set to Preview Mode',
+                          description: newValue === 'true' 
+                            ? 'Partners can now save data and place real orders.' 
+                            : 'Partners are in browse-only preview mode.',
+                        });
+                      } catch (e) {
+                        toast({ title: 'Error', description: 'Failed to toggle system status', variant: 'destructive' });
+                      }
+                    }}
+                    data-testid="button-system-live"
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    Toggle Live Mode
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Partner Accounts */}
+              <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-5 w-5 text-amber-600" />
+                  <span className="font-semibold text-amber-800">Partner Accounts</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="p-3 bg-white rounded-lg border border-amber-200">
+                    <p className="font-medium">Sarah</p>
+                    <p className="text-muted-foreground text-xs">Initial PIN: 777</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-amber-200">
+                    <p className="font-medium">Sid</p>
+                    <p className="text-muted-foreground text-xs">Initial PIN: 444</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/partners/seed', { method: 'POST' });
+                      const data = await res.json();
+                      toast({
+                        title: 'Partner Accounts Ready',
+                        description: data.message,
+                      });
+                    } catch (e) {
+                      toast({ title: 'Error', description: 'Failed to seed partners', variant: 'destructive' });
+                    }
+                  }}
+                  data-testid="button-seed-partners"
+                >
+                  Initialize Partner Accounts
+                </Button>
               </div>
             </CardContent>
           </Card>

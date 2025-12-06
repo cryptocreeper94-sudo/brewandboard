@@ -2465,5 +2465,195 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // SYSTEM SETTINGS (Admin Controls)
+  // ========================
+  
+  app.get("/api/system/settings", async (req, res) => {
+    try {
+      const settings = await storage.getAllSystemSettings();
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/system/settings/:key", async (req, res) => {
+    try {
+      const setting = await storage.getSystemSetting(req.params.key);
+      res.json(setting || { key: req.params.key, value: null });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/system/settings/:key", async (req, res) => {
+    try {
+      const { value, updatedBy } = req.body;
+      if (typeof value !== 'string') {
+        return res.status(400).json({ error: "Value must be a string" });
+      }
+      const setting = await storage.setSystemSetting(req.params.key, value, updatedBy);
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // PARTNER ACCOUNTS
+  // ========================
+  
+  app.get("/api/partners", async (req, res) => {
+    try {
+      const partners = await storage.getPartnerAccounts();
+      res.json(partners);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/partners/:id", async (req, res) => {
+    try {
+      const partner = await storage.getPartnerAccount(req.params.id);
+      if (!partner) {
+        return res.status(404).json({ error: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Partner login - tries initial PIN first, then personal PIN
+  app.post("/api/partners/login", async (req, res) => {
+    try {
+      const { pin } = req.body;
+      if (!pin) {
+        return res.status(400).json({ error: "PIN required" });
+      }
+      
+      // Check system status first
+      const systemLive = await storage.getSystemSetting('system_live');
+      const partnerAccessEnabled = await storage.getSystemSetting('partner_access_enabled');
+      
+      // Try initial PIN (3-digit)
+      let partner = await storage.getPartnerAccountByInitialPin(pin);
+      let usedInitialPin = true;
+      
+      // If not found, try personal PIN (4-digit)
+      if (!partner) {
+        partner = await storage.getPartnerAccountByPersonalPin(pin);
+        usedInitialPin = false;
+      }
+      
+      if (!partner) {
+        return res.status(401).json({ error: "Invalid PIN" });
+      }
+      
+      if (!partner.isActive) {
+        return res.status(403).json({ error: "Account disabled by administrator" });
+      }
+      
+      // Check if partner access is disabled (emergency kill switch)
+      if (partnerAccessEnabled && partnerAccessEnabled.value === 'false') {
+        return res.status(403).json({ error: "Partner access is currently disabled" });
+      }
+      
+      // Update last login
+      await storage.updatePartnerAccount(partner.id, { lastLoginAt: new Date() });
+      
+      res.json({
+        partner,
+        usedInitialPin,
+        needsOnboarding: !partner.hasCompletedOnboarding,
+        showWelcomeModal: !partner.welcomeModalDismissed,
+        isPreviewMode: !systemLive || systemLive.value !== 'true'
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Complete partner onboarding (set new PIN)
+  app.post("/api/partners/:id/complete-onboarding", async (req, res) => {
+    try {
+      const { newPin } = req.body;
+      
+      if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+        return res.status(400).json({ error: "New PIN must be exactly 4 digits" });
+      }
+      
+      // Check if PIN is already in use
+      const existing = await storage.getPartnerAccountByPersonalPin(newPin);
+      if (existing && existing.id !== req.params.id) {
+        return res.status(400).json({ error: "This PIN is already in use" });
+      }
+      
+      const partner = await storage.updatePartnerAccount(req.params.id, {
+        personalPin: newPin,
+        hasCompletedOnboarding: true
+      });
+      
+      res.json(partner);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Dismiss welcome modal
+  app.post("/api/partners/:id/dismiss-welcome", async (req, res) => {
+    try {
+      const partner = await storage.updatePartnerAccount(req.params.id, {
+        welcomeModalDismissed: true
+      });
+      res.json(partner);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/partners/:id", async (req, res) => {
+    try {
+      const partner = await storage.updatePartnerAccount(req.params.id, req.body);
+      res.json(partner);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Seed default partners if none exist
+  app.post("/api/partners/seed", async (req, res) => {
+    try {
+      const existing = await storage.getPartnerAccounts();
+      if (existing.length > 0) {
+        return res.json({ message: "Partners already exist", partners: existing });
+      }
+      
+      // Create Sarah and Sid
+      const sarah = await storage.createPartnerAccount({
+        name: "Sarah",
+        initialPin: "777",
+        role: "partner",
+        isActive: true
+      });
+      
+      const sid = await storage.createPartnerAccount({
+        name: "Sid",
+        initialPin: "444",
+        role: "partner",
+        isActive: true
+      });
+      
+      // Initialize system settings
+      await storage.setSystemSetting('system_live', 'false', 'system');
+      await storage.setSystemSetting('partner_access_enabled', 'true', 'system');
+      
+      res.json({ message: "Partners seeded", partners: [sarah, sid] });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

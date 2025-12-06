@@ -76,110 +76,70 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     
-    // Partner PINs - 3-digit partner access to Partner Hub
-    // Sarah = 777, Sid = 444
-    if (loginPin === "777" || loginPin === "444") {
-      const isSarah = loginPin === "777";
-      const partnerId = isSarah ? "partner-sarah" : "partner-sid";
-      const partnerName = isSarah ? "Sarah" : "Sid";
+    // Try partner login via API (handles both initial 3-digit and personal 4-digit PINs)
+    try {
+      const partnerResponse = await fetch("/api/partners/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: loginPin })
+      });
       
-      // Check if partner has completed onboarding
-      const onboardedKey = `partner_onboarded_${partnerId}`;
-      const isOnboarded = localStorage.getItem(onboardedKey) === "true";
-      
-      if (!isOnboarded) {
-        // First time login - show onboarding modal
-        setPartnerOnboardingData({
-          partnerId,
-          partnerName,
-          initialPin: loginPin
+      if (partnerResponse.ok) {
+        const data = await partnerResponse.json();
+        const { partner, usedInitialPin, needsOnboarding, showWelcomeModal, isPreviewMode } = data;
+        
+        // Store partner data for the Partner Hub
+        localStorage.setItem("coffee_partner_data", JSON.stringify({
+          partner,
+          usedInitialPin,
+          needsOnboarding,
+          showWelcomeModal,
+          isPreviewMode
+        }));
+        
+        const partnerUser = {
+          id: partner.id,
+          email: `${partner.name.toLowerCase()}@brewandboard.coffee`,
+          businessName: "Brew & Board Partner",
+          contactName: partner.name,
+          name: partner.name,
+          isPartner: true,
+          role: partner.role || "partner"
+        };
+        
+        localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
+        localStorage.setItem("coffee_partner_auth", "true");
+        localStorage.setItem("user_name", partner.name);
+        localStorage.removeItem("is_guest");
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+        
+        toast({
+          title: `Welcome, ${partner.name}!`,
+          description: needsOnboarding 
+            ? "Please complete your account setup." 
+            : "Partner access granted. Your Partner Hub is ready.",
         });
-        setOnboardingForm({
-          fullName: partnerName,
-          email: "",
-          phone: "",
-          newPin: "",
-          confirmPin: ""
-        });
-        setShowPartnerOnboarding(true);
+        
+        onClose();
+        setLocation("/partner");
         setIsLoading(false);
         return;
-      }
-      
-      // Already onboarded - check if using their personal PIN
-      const storedPartner = localStorage.getItem(`partner_data_${partnerId}`);
-      if (storedPartner) {
-        const partnerData = JSON.parse(storedPartner);
-        // They should use their personal PIN now, not the initial one
+      } else if (partnerResponse.status === 403) {
+        const error = await partnerResponse.json();
         toast({
-          title: "Please use your personal PIN",
-          description: "You've already set up your account. Use your 4-digit personal PIN to log in.",
+          title: "Access Disabled",
+          description: error.error || "Partner access is currently disabled.",
           variant: "destructive"
         });
         setLoginPin("");
         setIsLoading(false);
         return;
       }
-      
-      // Fallback for legacy partners
-      const partnerUser = {
-        id: partnerId,
-        email: isSarah ? "sarah@brewandboard.coffee" : "sid@brewandboard.coffee",
-        businessName: "Brew & Board Partner",
-        contactName: partnerName,
-        name: partnerName,
-        isPartner: true,
-        role: "partner"
-      };
-      localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
-      localStorage.setItem("coffee_partner_auth", "true");
-      localStorage.setItem("user_name", partnerUser.name);
-      localStorage.removeItem("is_guest");
-      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-      localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
-      
-      toast({
-        title: `Welcome, ${partnerUser.name}!`,
-        description: "Partner access granted. Your Partner Hub is ready.",
-      });
-      onClose();
-      setLocation("/partner");
-      return;
-    }
-    
-    // Check if this is a partner's personal PIN
-    const partnerIds = ["partner-sarah", "partner-sid"];
-    for (const pId of partnerIds) {
-      const storedPartner = localStorage.getItem(`partner_data_${pId}`);
-      if (storedPartner) {
-        const partnerData = JSON.parse(storedPartner);
-        if (partnerData.pin === loginPin) {
-          const partnerUser = {
-            id: pId,
-            email: partnerData.email,
-            businessName: "Brew & Board Partner",
-            contactName: partnerData.fullName,
-            name: partnerData.fullName,
-            phone: partnerData.phone,
-            isPartner: true,
-            role: "partner"
-          };
-          localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
-          localStorage.setItem("coffee_partner_auth", "true");
-          localStorage.setItem("user_name", partnerData.fullName);
-          localStorage.removeItem("is_guest");
-          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-          localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
-          
-          toast({
-            title: `Welcome back, ${partnerData.fullName}!`,
-            description: "Partner access granted. Your Partner Hub is ready.",
-          });
-          onClose();
-          setLocation("/partner");
-          return;
-        }
-      }
+      // If 401 or other error, continue to regular login flow
+    } catch (e) {
+      // Partner API not available, continue to regular login
+      console.log("Partner login API not available, trying regular login");
     }
     
     try {

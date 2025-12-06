@@ -1832,3 +1832,61 @@ export type Filing1099 = typeof filings1099.$inferSelect;
 // 1099 Filing status constants
 export const FILING_1099_STATUSES = ['draft', 'ready', 'generated', 'transmitted', 'accepted', 'corrected', 'rejected'] as const;
 export const TAX_THRESHOLD_1099 = 600; // $600 threshold for 1099-NEC
+
+// ========================
+// SYSTEM SETTINGS (Admin Controls)
+// ========================
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  updatedBy: varchar("updated_by", { length: 100 }),
+});
+
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;
+
+// ========================
+// PARTNER ACCOUNTS (Sarah, Sid, etc.)
+// ========================
+export const partnerAccounts = pgTable(
+  "partner_accounts",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    name: varchar("name", { length: 100 }).notNull(), // Sarah, Sid, etc.
+    initialPin: varchar("initial_pin", { length: 3 }).notNull(), // 777, 444
+    personalPin: varchar("personal_pin", { length: 4 }), // Set after onboarding
+    
+    // Onboarding state
+    hasCompletedOnboarding: boolean("has_completed_onboarding").default(false),
+    welcomeModalDismissed: boolean("welcome_modal_dismissed").default(false),
+    
+    // Access control
+    isActive: boolean("is_active").default(true),
+    role: varchar("role", { length: 50 }).default("partner"), // partner, manager, admin
+    
+    // Timestamps
+    lastLoginAt: timestamp("last_login_at"),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    initialPinIdx: index("idx_partner_initial_pin").on(table.initialPin),
+    personalPinIdx: index("idx_partner_personal_pin").on(table.personalPin),
+  })
+);
+
+export const insertPartnerAccountSchema = createInsertSchema(partnerAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPartnerAccount = z.infer<typeof insertPartnerAccountSchema>;
+export type PartnerAccount = typeof partnerAccounts.$inferSelect;

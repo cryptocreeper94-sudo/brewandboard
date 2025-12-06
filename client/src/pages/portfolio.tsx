@@ -1,167 +1,189 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  Book, 
-  Plus, 
-  Save, 
-  Trash2, 
-  Paintbrush, 
-  Wrench, 
-  HardHat, 
-  Building2,
   Briefcase,
-  PenTool,
-  FileText,
+  CreditCard,
+  Users,
+  FolderOpen,
   Mic,
   MicOff,
   Sparkles,
-  Search,
   ChevronLeft,
-  Home
+  Plus,
+  Edit3,
+  Trash2,
+  Share2,
+  Download,
+  Phone,
+  Mail,
+  MapPin,
+  Globe,
+  Linkedin,
+  Building2,
+  Clock,
+  FileText,
+  Camera,
+  QrCode,
+  Send,
+  UserPlus,
+  Tag,
+  Calendar,
+  MessageSquare,
+  ExternalLink,
+  MoreHorizontal,
+  Search,
+  X,
+  Check,
+  Save,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { WebSearch } from "@/components/WebSearch";
+import QRCode from "react-qr-code";
+import { jsPDF } from "jspdf";
 
-type TemplateType = "general" | "painter" | "construction" | "real_estate" | "plumbing";
-
-interface TemplateField {
-  id: string;
-  label: string;
-  type: string;
-}
-
-interface Template {
-  name: string;
-  icon: React.ReactNode;
-  fields: TemplateField[];
-}
-
-interface Note {
+interface BusinessCard {
   id: string;
   userId: string;
-  title: string;
-  templateType: TemplateType;
-  structuredData: Record<string, string> | null;
-  freeformNotes: string | null;
-  isPinned: boolean;
-  color: string;
+  fullName: string;
+  jobTitle: string | null;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  address: string | null;
+  linkedIn: string | null;
+  twitter: string | null;
+  tagline: string | null;
+  logoUrl: string | null;
+  avatarUrl: string | null;
+  colorTheme: string;
+  isDefault: boolean;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
-// Templates for different industries
-const TEMPLATES: Record<TemplateType, Template> = {
-  general: {
-    name: "General Meeting",
-    icon: <Briefcase className="h-4 w-4" />,
-    fields: [
-      { id: "agenda", label: "Meeting Agenda", type: "textarea" },
-      { id: "action_items", label: "Action Items", type: "textarea" },
-      { id: "attendees", label: "Attendees", type: "text" }
-    ]
-  },
-  painter: {
-    name: "Painting Contractor",
-    icon: <Paintbrush className="h-4 w-4" />,
-    fields: [
-      { id: "job_number", label: "Job Number", type: "text" },
-      { id: "crew_leader", label: "Crew Leader Information", type: "text" },
-      { id: "paint_colors", label: "Paint Colors / Codes", type: "textarea" },
-      { id: "surface_prep", label: "Surface Prep Notes", type: "textarea" }
-    ]
-  },
-  construction: {
-    name: "Construction / GC",
-    icon: <HardHat className="h-4 w-4" />,
-    fields: [
-      { id: "project_id", label: "Project ID", type: "text" },
-      { id: "site_supervisor", label: "Site Supervisor", type: "text" },
-      { id: "safety_check", label: "Safety Compliance Check", type: "textarea" },
-      { id: "materials_needed", label: "Materials Request", type: "textarea" }
-    ]
-  },
-  real_estate: {
-    name: "Real Estate",
-    icon: <Building2 className="h-4 w-4" />,
-    fields: [
-      { id: "property_address", label: "Property Address", type: "text" },
-      { id: "client_budget", label: "Client Budget", type: "text" },
-      { id: "must_haves", label: "Must Haves", type: "textarea" },
-      { id: "viewing_notes", label: "Viewing Feedback", type: "textarea" }
-    ]
-  },
-  plumbing: {
-    name: "Plumbing Service",
-    icon: <Wrench className="h-4 w-4" />,
-    fields: [
-      { id: "ticket_number", label: "Service Ticket #", type: "text" },
-      { id: "issue_desc", label: "Issue Description", type: "textarea" },
-      { id: "parts_used", label: "Parts Used", type: "textarea" },
-      { id: "recommendations", label: "Recommendations", type: "textarea" }
-    ]
-  }
-};
+interface Client {
+  id: string;
+  userId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  company: string | null;
+  jobTitle: string | null;
+  address: string | null;
+  website: string | null;
+  linkedIn: string | null;
+  twitter: string | null;
+  tags: string[] | null;
+  preferredContactChannel: string | null;
+  notes: string | null;
+  lastInteractionAt: string | null;
+  createdAt: string;
+}
+
+interface Activity {
+  id: string;
+  userId: string;
+  type: string;
+  description: string;
+  entityType: string;
+  entityId: string | null;
+  createdAt: string;
+}
+
+interface ScannedDocument {
+  id: string;
+  userId: string;
+  title: string;
+  extractedText: string | null;
+  pdfUrl: string | null;
+  createdAt: string;
+}
+
+const colorThemes: { id: string; name: string; gradient: string; text: string }[] = [
+  { id: "coffee", name: "Coffee", gradient: "from-[#1a0f09] via-[#2d1810] to-[#3d2418]", text: "text-amber-100" },
+  { id: "midnight", name: "Midnight", gradient: "from-slate-900 via-slate-800 to-slate-700", text: "text-slate-100" },
+  { id: "forest", name: "Forest", gradient: "from-emerald-900 via-emerald-800 to-emerald-700", text: "text-emerald-100" },
+  { id: "ocean", name: "Ocean", gradient: "from-blue-900 via-blue-800 to-blue-700", text: "text-blue-100" },
+  { id: "berry", name: "Berry", gradient: "from-purple-900 via-purple-800 to-purple-700", text: "text-purple-100" },
+];
 
 export default function PortfolioPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeNote, setActiveNote] = useState<Note | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("general");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [, setLocation] = useLocation();
   
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTranscript, setRecordingTranscript] = useState("");
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
   
-  // Demo mode state
-  const [demoNotes, setDemoNotes] = useState<Note[]>([]);
+  const [isCardEditorOpen, setIsCardEditorOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Client | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedContact, setSelectedContact] = useState<Client | null>(null);
+  
+  const [cardForm, setCardForm] = useState<Partial<BusinessCard>>({
+    fullName: "",
+    jobTitle: "",
+    company: "",
+    email: "",
+    phone: "",
+    website: "",
+    address: "",
+    linkedIn: "",
+    tagline: "",
+    colorTheme: "coffee",
+  });
+  
+  const [contactForm, setContactForm] = useState<Partial<Client>>({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    jobTitle: "",
+    notes: "",
+    tags: [],
+  });
 
-  // Get current user ID from localStorage
   const userStr = localStorage.getItem("coffee_user");
   const user = userStr ? JSON.parse(userStr) : null;
   const userId = user?.id;
   const isDemoMode = localStorage.getItem("coffee_demo_mode") === "true";
   
-  // Load demo notes from localStorage on mount
-  useEffect(() => {
-    if (isDemoMode) {
-      const savedDemoNotes = localStorage.getItem("coffee_demo_notes");
-      if (savedDemoNotes) {
-        setDemoNotes(JSON.parse(savedDemoNotes));
-      }
-    }
-  }, [isDemoMode]);
-  
-  // Save demo notes to localStorage whenever they change
-  useEffect(() => {
-    if (isDemoMode) {
-      if (demoNotes.length > 0) {
-        localStorage.setItem("coffee_demo_notes", JSON.stringify(demoNotes));
-      } else {
-        localStorage.removeItem("coffee_demo_notes");
-      }
-    }
-  }, [demoNotes, isDemoMode]);
-  
-  // Exit demo mode
   const exitDemoMode = () => {
     localStorage.removeItem("coffee_demo_mode");
-    localStorage.removeItem("coffee_demo_notes");
     localStorage.removeItem("coffee_user");
     window.location.href = "/";
   };
@@ -173,6 +195,133 @@ export default function PortfolioPage() {
       }
     };
   }, []);
+  
+  const { data: businessCard } = useQuery<BusinessCard | null>({
+    queryKey: ["businessCard", userId],
+    queryFn: async () => {
+      if (!userId || isDemoMode) return null;
+      const res = await fetch(`/api/business-cards/default?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch business card");
+      return res.json();
+    },
+    enabled: !!userId && !isDemoMode
+  });
+  
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["clients", userId],
+    queryFn: async () => {
+      if (!userId || isDemoMode) return [];
+      const res = await fetch(`/api/clients?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch clients");
+      return res.json();
+    },
+    enabled: !!userId && !isDemoMode
+  });
+  
+  const { data: activities = [] } = useQuery<Activity[]>({
+    queryKey: ["activities", userId],
+    queryFn: async () => {
+      if (!userId || isDemoMode) return [];
+      const res = await fetch(`/api/activities?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch activities");
+      return res.json();
+    },
+    enabled: !!userId && !isDemoMode
+  });
+  
+  const { data: documents = [] } = useQuery<ScannedDocument[]>({
+    queryKey: ["documents", userId],
+    queryFn: async () => {
+      if (!userId || isDemoMode) return [];
+      const res = await fetch(`/api/scanned-documents?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch documents");
+      return res.json();
+    },
+    enabled: !!userId && !isDemoMode
+  });
+  
+  const createCardMutation = useMutation({
+    mutationFn: async (data: Partial<BusinessCard>) => {
+      const res = await fetch("/api/business-cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, userId, isDefault: true })
+      });
+      if (!res.ok) throw new Error("Failed to create card");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["businessCard", userId] });
+      setIsCardEditorOpen(false);
+      toast({ title: "Success", description: "Business card created!" });
+    }
+  });
+  
+  const updateCardMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<BusinessCard> }) => {
+      const res = await fetch(`/api/business-cards/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error("Failed to update card");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["businessCard", userId] });
+      setIsCardEditorOpen(false);
+      toast({ title: "Success", description: "Business card updated!" });
+    }
+  });
+  
+  const createContactMutation = useMutation({
+    mutationFn: async (data: Partial<Client>) => {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, userId })
+      });
+      if (!res.ok) throw new Error("Failed to create contact");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients", userId] });
+      setIsContactModalOpen(false);
+      setContactForm({ name: "", email: "", phone: "", company: "", jobTitle: "", notes: "", tags: [] });
+      toast({ title: "Success", description: "Contact added!" });
+    }
+  });
+  
+  const updateContactMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Client> }) => {
+      const res = await fetch(`/api/clients/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error("Failed to update contact");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients", userId] });
+      setIsContactModalOpen(false);
+      setEditingContact(null);
+      toast({ title: "Success", description: "Contact updated!" });
+    }
+  });
+  
+  const deleteContactMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete contact");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients", userId] });
+      setSelectedContact(null);
+      toast({ title: "Deleted", description: "Contact removed." });
+    }
+  });
   
   const startVoiceNote = () => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -196,10 +345,7 @@ export default function PortfolioPage() {
 
     recognition.onstart = () => {
       setIsRecording(true);
-      toast({
-        title: "Recording Started",
-        description: "Speak now... Click stop when done.",
-      });
+      toast({ title: "Recording Started", description: "Speak now... Click stop when done." });
     };
 
     recognition.onresult = (event: any) => {
@@ -224,7 +370,7 @@ export default function PortfolioPage() {
       
       const finalText = transcriptRef.current.trim();
       if (finalText) {
-        createVoiceNote(finalText);
+        toast({ title: "Voice Note Captured", description: finalText.slice(0, 100) + (finalText.length > 100 ? "..." : "") });
       }
     };
 
@@ -234,11 +380,7 @@ export default function PortfolioPage() {
       recognitionRef.current = null;
       
       if (event.error !== "aborted") {
-        toast({
-          title: "Recording Error",
-          description: "Could not capture your voice. Please try again.",
-          variant: "destructive"
-        });
+        toast({ title: "Recording Error", description: "Could not capture your voice.", variant: "destructive" });
       }
     };
 
@@ -252,470 +394,842 @@ export default function PortfolioPage() {
     }
   };
   
-  const createVoiceNote = (text: string) => {
-    const now = new Date();
-    const timestamp = now.toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
+  const handleSaveCard = () => {
+    if (!cardForm.fullName) {
+      toast({ title: "Required", description: "Please enter your full name.", variant: "destructive" });
+      return;
+    }
     
-    createNoteMutation.mutate({
-      userId,
-      title: `Voice Note - ${timestamp}`,
-      templateType: "general",
-      structuredData: {},
-      freeformNotes: text,
-      isPinned: false,
-      color: "default"
-    });
+    if (businessCard) {
+      updateCardMutation.mutate({ id: businessCard.id, data: cardForm });
+    } else {
+      createCardMutation.mutate(cardForm);
+    }
+  };
+  
+  const handleSaveContact = () => {
+    if (!contactForm.name) {
+      toast({ title: "Required", description: "Please enter a name.", variant: "destructive" });
+      return;
+    }
     
-    toast({
-      title: "Voice Note Saved!",
-      description: "Your spoken note has been captured.",
+    if (editingContact) {
+      updateContactMutation.mutate({ id: editingContact.id, data: contactForm });
+    } else {
+      createContactMutation.mutate(contactForm);
+    }
+  };
+  
+  const openEditContact = (contact: Client) => {
+    setEditingContact(contact);
+    setContactForm({
+      name: contact.name,
+      email: contact.email || "",
+      phone: contact.phone || "",
+      company: contact.company || "",
+      jobTitle: contact.jobTitle || "",
+      notes: contact.notes || "",
+      tags: contact.tags || [],
     });
-  };
-
-  // Fetch notes (API or demo mode)
-  const { data: apiNotes = [] } = useQuery<Note[]>({
-    queryKey: ["notes", userId],
-    queryFn: async () => {
-      if (!userId || isDemoMode) return [];
-      const res = await fetch(`/api/notes?userId=${userId}`);
-      if (!res.ok) throw new Error("Failed to fetch notes");
-      return res.json();
-    },
-    enabled: !!userId && !isDemoMode
-  });
-  
-  // Use demo notes or API notes
-  const notes = isDemoMode ? demoNotes : apiNotes;
-
-  // Demo mode CRUD helpers
-  const createDemoNote = (note: Partial<Note>) => {
-    const newNote: Note = {
-      id: `demo-${Date.now()}`,
-      userId: userId || "demo-user",
-      title: note.title || "New Note",
-      templateType: note.templateType || "general",
-      structuredData: note.structuredData || null,
-      freeformNotes: note.freeformNotes || null,
-      isPinned: note.isPinned || false,
-      color: note.color || "default",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setDemoNotes(prev => [newNote, ...prev]);
-    setActiveNote(newNote);
-    setIsDialogOpen(false);
-    toast({ title: "Success", description: "Note created! (Demo Mode - not saved to server)" });
-    return newNote;
+    setIsContactModalOpen(true);
   };
   
-  const updateDemoNote = (id: string, data: Partial<Note>) => {
-    setDemoNotes(prev => prev.map(n => 
-      n.id === id ? { ...n, ...data, updatedAt: new Date().toISOString() } : n
-    ));
-    setActiveNote(prev => prev?.id === id ? { ...prev, ...data } as Note : prev);
-    toast({ title: "Saved", description: "Note updated! (Demo Mode)" });
+  const openNewContact = () => {
+    setEditingContact(null);
+    setContactForm({ name: "", email: "", phone: "", company: "", jobTitle: "", notes: "", tags: [] });
+    setIsContactModalOpen(true);
   };
   
-  const deleteDemoNote = (id: string) => {
-    setDemoNotes(prev => prev.filter(n => n.id !== id));
-    setActiveNote(null);
-    toast({ title: "Deleted", description: "Note deleted! (Demo Mode)" });
-  };
-
-  // Create note mutation
-  const createNoteMutation = useMutation({
-    mutationFn: async (note: Partial<Note>) => {
-      if (isDemoMode) {
-        return createDemoNote(note);
-      }
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(note)
+  const openCardEditor = () => {
+    if (businessCard) {
+      setCardForm({
+        fullName: businessCard.fullName,
+        jobTitle: businessCard.jobTitle || "",
+        company: businessCard.company || "",
+        email: businessCard.email || "",
+        phone: businessCard.phone || "",
+        website: businessCard.website || "",
+        address: businessCard.address || "",
+        linkedIn: businessCard.linkedIn || "",
+        tagline: businessCard.tagline || "",
+        colorTheme: businessCard.colorTheme || "coffee",
       });
-      if (!res.ok) throw new Error("Failed to create note");
-      return res.json();
-    },
-    onSuccess: (newNote) => {
-      if (!isDemoMode) {
-        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-        setActiveNote(newNote);
-        setIsDialogOpen(false);
-        toast({ title: "Success", description: "Note created successfully!" });
-      }
     }
-  });
-
-  // Update note mutation
-  const updateNoteMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Note> }) => {
-      if (isDemoMode) {
-        updateDemoNote(id, data);
-        return data;
-      }
-      const res = await fetch(`/api/notes/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error("Failed to update note");
-      return res.json();
-    },
-    onSuccess: () => {
-      if (!isDemoMode) {
-        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-        toast({ title: "Saved", description: "Note updated successfully!" });
-      }
-    }
-  });
-
-  // Delete note mutation
-  const deleteNoteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (isDemoMode) {
-        deleteDemoNote(id);
-        return {};
-      }
-      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete note");
-      return res.json();
-    },
-    onSuccess: () => {
-      if (!isDemoMode) {
-        queryClient.invalidateQueries({ queryKey: ["notes", userId] });
-        setActiveNote(null);
-        toast({ title: "Deleted", description: "Note deleted successfully!" });
-      }
-    }
-  });
-
-  const handleNewNote = () => {
-    createNoteMutation.mutate({
-      userId,
-      title: "New Note",
-      templateType: selectedTemplate,
-      structuredData: {},
-      freeformNotes: "",
-      isPinned: false,
-      color: "default"
-    });
+    setIsCardEditorOpen(true);
   };
-
-  const handleSave = () => {
-    if (!activeNote) return;
-    updateNoteMutation.mutate({
-      id: activeNote.id,
-      data: {
-        title: activeNote.title,
-        structuredData: activeNote.structuredData,
-        freeformNotes: activeNote.freeformNotes
-      }
-    });
+  
+  const exportCardToPDF = async () => {
+    if (!businessCard) return;
+    
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: [90, 55] });
+    
+    doc.setFillColor(26, 15, 9);
+    doc.rect(0, 0, 90, 55, "F");
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(businessCard.fullName, 5, 12);
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(200, 180, 150);
+    
+    let y = 18;
+    if (businessCard.jobTitle) { doc.text(businessCard.jobTitle, 5, y); y += 4; }
+    if (businessCard.company) { doc.text(businessCard.company, 5, y); y += 6; }
+    if (businessCard.email) { doc.text(businessCard.email, 5, y); y += 4; }
+    if (businessCard.phone) { doc.text(businessCard.phone, 5, y); y += 4; }
+    if (businessCard.website) { doc.text(businessCard.website, 5, y); }
+    
+    doc.save(`${businessCard.fullName.replace(/\s+/g, "_")}_card.pdf`);
+    toast({ title: "Downloaded", description: "Business card exported to PDF!" });
   };
-
-  const handleDelete = (id: string) => {
-    deleteNoteMutation.mutate(id);
-  };
-
+  
+  const filteredClients = clients.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.company && c.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  
+  const currentTheme = colorThemes.find(t => t.id === (businessCard?.colorTheme || cardForm.colorTheme)) || colorThemes[0];
+  
   if (!userId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <Book className="h-16 w-16 mx-auto mb-4 text-amber-600" />
-          <h2 className="text-2xl font-serif mb-2">Create an Account for Portfolio</h2>
+          <Briefcase className="h-16 w-16 mx-auto mb-4 text-amber-600" />
+          <h2 className="text-2xl font-serif mb-2">Access Your Digital Briefcase</h2>
           <p className="text-muted-foreground mb-6">
-            To save meeting notes and access your portfolio, please create a free account with a 4-digit PIN.
+            Sign in to manage your business card, contacts, documents, and more.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button 
               onClick={() => window.location.href = "/dashboard?action=register"}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-amber-600 hover:bg-amber-700 text-white shine-effect"
+              data-testid="button-register"
             >
               Create Account
             </Button>
             <Button 
               variant="outline"
               onClick={() => window.location.href = "/dashboard?action=login"}
+              data-testid="button-login"
             >
-              I Have an Account
+              Sign In
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
-            Or <button onClick={() => window.location.href = "/portfolio?demo=true"} className="text-amber-600 hover:underline">try the demo</button> to explore without an account.
-          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8 overflow-x-hidden">
-      {/* Demo Mode Banner */}
+    <div className="min-h-screen bg-gradient-to-b from-[#0d0705] to-[#1a0f09] text-foreground pb-20 overflow-x-hidden">
       {isDemoMode && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-3 flex items-center justify-between gap-2 shadow-lg">
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium min-w-0">
-            <Sparkles className="h-4 w-4 shrink-0" />
-            <span className="truncate">Demo Mode - Notes saved locally only</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+            <Sparkles className="h-4 w-4" />
+            <span>Demo Mode - Data is temporary</span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={exitDemoMode}
-            className="text-white hover:bg-white/20 text-xs shrink-0"
-            data-testid="button-exit-demo"
-          >
+          <Button variant="ghost" size="sm" onClick={exitDemoMode} className="text-white hover:bg-white/20 text-xs" data-testid="button-exit-demo">
             Exit
           </Button>
         </div>
       )}
       
-      <div className={`max-w-6xl mx-auto overflow-x-hidden ${isDemoMode ? 'pt-12' : ''}`}>
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href={isDemoMode ? "/" : "/dashboard"}>
-              <Button variant="ghost" size="icon" className="hover-3d shrink-0" data-testid="button-back">
+      <div className={`max-w-7xl mx-auto p-4 md:p-6 lg:p-8 ${isDemoMode ? 'pt-14' : ''}`}>
+        <header className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon" className="hover:bg-white/5" data-testid="button-back">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div className="min-w-0">
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2">
-                <Book className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-                <span className="truncate">Portfolio & CRM</span>
+            <div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-amber-100 flex items-center gap-2">
+                <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 text-amber-500" />
+                Digital Briefcase
               </h1>
-              <p className="text-muted-foreground text-sm">Notes, job details, and industry templates</p>
+              <p className="text-amber-200/60 text-sm hidden sm:block">Your CRM, business card, and documents in one place</p>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2 shrink-0">
-            <motion.div
-              animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
-              transition={{ repeat: Infinity, duration: 1 }}
-            >
-              <Button
-                onClick={isRecording ? stopVoiceNote : startVoiceNote}
-                variant={isRecording ? "destructive" : "outline"}
-                size="sm"
-                className={`gap-1.5 ${isRecording ? "animate-pulse" : "hover-3d"}`}
-                data-testid="button-voice-note"
-              >
-                {isRecording ? (
-                  <>
-                    <MicOff className="h-4 w-4" />
-                    <span className="hidden sm:inline">Stop</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4" />
-                    <span className="hidden sm:inline">Record</span>
-                  </>
-                )}
-              </Button>
-            </motion.div>
-            
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5" data-testid="button-new-entry">
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New Entry</span><span className="sm:hidden">New</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Choose a Template</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-1 gap-2">
-                    {Object.entries(TEMPLATES).map(([key, template]) => (
-                      <Button
-                        key={key}
-                        variant={selectedTemplate === key ? "default" : "outline"}
-                        className="justify-start h-auto py-3 px-4"
-                        onClick={() => setSelectedTemplate(key as TemplateType)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${selectedTemplate === key ? 'bg-white/20' : 'bg-muted'}`}>
-                            {template.icon}
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold">{template.name}</div>
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                  <Button onClick={handleNewNote} className="w-full mt-2" disabled={createNoteMutation.isPending}>
-                    {createNoteMutation.isPending ? "Creating..." : "Create Note"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         </header>
 
-        {/* Quick Search */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span className="font-medium">Quick Search</span>
-            <span className="text-muted-foreground/60">• Search the web while working</span>
-          </div>
-          <WebSearch />
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           
-          {/* Sidebar List */}
-          <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-4">
-             <div className="relative">
-               <Input placeholder="Search notes..." className="pl-9" />
-               <Book className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             </div>
-             
-             <ScrollArea className="flex-1 pr-4">
-               <div className="space-y-3">
-                 {notes.map((note) => (
-                   <motion.div
-                     key={note.id}
-                     initial={{ opacity: 0, x: -10 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     onClick={() => setActiveNote(note)}
-                     className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
-                       activeNote?.id === note.id 
-                         ? 'bg-primary/5 border-primary/20 shadow-sm' 
-                         : 'bg-card border-border/50 hover:border-primary/20'
-                     }`}
-                   >
-                     <div className="flex justify-between items-start mb-1">
-                       <h3 className="font-semibold truncate pr-2">{note.title}</h3>
-                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-background/50">
-                         {TEMPLATES[note.templateType]?.name.split(' ')[0]}
-                       </Badge>
-                     </div>
-                     <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                       {note.freeformNotes || "No content yet..."}
-                     </p>
-                     <div className="text-[10px] text-muted-foreground/60 flex justify-between items-center">
-                       <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-                       <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 -mr-2 hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                     </div>
-                   </motion.div>
-                 ))}
-               </div>
-             </ScrollArea>
-          </div>
-
-          {/* Main Editor Area */}
-          <div className="md:col-span-8 lg:col-span-9 bg-card border border-border/50 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-            {activeNote ? (
-              <>
-                <div className="p-6 border-b border-border/50 flex items-center justify-between bg-muted/10">
-                  <div className="flex-1 mr-4">
-                    <Input 
-                      value={activeNote.title} 
-                      onChange={(e) => setActiveNote({ ...activeNote, title: e.target.value })}
-                      className="text-2xl font-serif font-bold bg-transparent border-none shadow-none px-0 focus-visible:ring-0 h-auto placeholder:text-muted-foreground/50"
-                      placeholder="Note Title..."
-                    />
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <span className="flex items-center gap-1">
-                        {TEMPLATES[activeNote.templateType]?.icon}
-                        {TEMPLATES[activeNote.templateType]?.name} Template
-                      </span>
-                      <span>•</span>
-                      <span>{new Date(activeNote.createdAt).toLocaleDateString()}</span>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:col-span-2 lg:col-span-1 lg:row-span-2"
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-amber-500" />
+                  Business Card
+                </h2>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-amber-900/30" onClick={openCardEditor} data-testid="button-edit-card">
+                    <Edit3 className="h-4 w-4 text-amber-400" />
+                  </Button>
+                  {businessCard && (
+                    <>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-amber-900/30" onClick={exportCardToPDF} data-testid="button-export-card">
+                        <Download className="h-4 w-4 text-amber-400" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-amber-900/30" data-testid="button-share-card">
+                            <Share2 className="h-4 w-4 text-amber-400" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/card/${businessCard.id}`);
+                            toast({ title: "Copied!", description: "Card link copied to clipboard" });
+                          }}>
+                            <ExternalLink className="h-4 w-4 mr-2" /> Copy Link
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <QrCode className="h-4 w-4 mr-2" /> Show QR Code
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {businessCard ? (
+                <div className={`bg-gradient-to-br ${currentTheme.gradient} rounded-xl p-5 shadow-xl relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12" />
+                  
+                  <div className="relative z-10">
+                    <h3 className={`font-serif text-xl font-bold ${currentTheme.text} mb-1`}>{businessCard.fullName}</h3>
+                    {businessCard.jobTitle && <p className={`text-sm ${currentTheme.text} opacity-80`}>{businessCard.jobTitle}</p>}
+                    {businessCard.company && <p className={`text-sm ${currentTheme.text} opacity-60 mb-4`}>{businessCard.company}</p>}
+                    
+                    <div className="space-y-2 mt-4">
+                      {businessCard.email && (
+                        <div className={`flex items-center gap-2 text-xs ${currentTheme.text} opacity-80`}>
+                          <Mail className="h-3.5 w-3.5" />
+                          <span>{businessCard.email}</span>
+                        </div>
+                      )}
+                      {businessCard.phone && (
+                        <div className={`flex items-center gap-2 text-xs ${currentTheme.text} opacity-80`}>
+                          <Phone className="h-3.5 w-3.5" />
+                          <span>{businessCard.phone}</span>
+                        </div>
+                      )}
+                      {businessCard.website && (
+                        <div className={`flex items-center gap-2 text-xs ${currentTheme.text} opacity-80`}>
+                          <Globe className="h-3.5 w-3.5" />
+                          <span>{businessCard.website}</span>
+                        </div>
+                      )}
                     </div>
+                    
+                    {businessCard.tagline && (
+                      <p className={`mt-4 text-xs italic ${currentTheme.text} opacity-60 border-t border-white/10 pt-3`}>
+                        "{businessCard.tagline}"
+                      </p>
+                    )}
                   </div>
-                  <Button onClick={handleSave} size="sm" className="gap-2" disabled={updateNoteMutation.isPending}>
-                    <Save className="h-4 w-4" /> {updateNoteMutation.isPending ? "Saving..." : "Save"}
+                  
+                  {businessCard.viewCount > 0 && (
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 text-xs text-white/40">
+                      <Eye className="h-3 w-3" />
+                      {businessCard.viewCount}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div 
+                  onClick={openCardEditor}
+                  className="bg-gradient-to-br from-[#2d1810]/50 to-[#3d2418]/30 rounded-xl p-8 border-2 border-dashed border-amber-900/40 cursor-pointer hover:border-amber-600/50 transition-colors flex flex-col items-center justify-center min-h-[200px]"
+                  data-testid="button-create-card"
+                >
+                  <CreditCard className="h-12 w-12 text-amber-700/50 mb-3" />
+                  <p className="text-amber-200/60 text-sm text-center">Create your digital business card</p>
+                  <Button variant="ghost" size="sm" className="mt-3 text-amber-500 hover:text-amber-400">
+                    <Plus className="h-4 w-4 mr-1" /> Design Card
                   </Button>
                 </div>
-
-                <ScrollArea className="flex-1 p-6">
-                  <div className="max-w-3xl mx-auto space-y-8">
-                    {/* Dynamic Template Fields */}
-                    <div className="grid grid-cols-1 gap-6 p-6 bg-muted/20 rounded-xl border border-border/50">
-                      <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-primary">
-                        <FileText className="h-4 w-4" />
-                        Structured Data
-                      </div>
-                      
-                      {TEMPLATES[activeNote.templateType]?.fields.map((field) => (
-                        <div key={field.id} className="space-y-2">
-                          <label className="text-sm font-medium text-muted-foreground">
-                            {field.label}
-                          </label>
-                          {field.type === 'textarea' ? (
-                            <Textarea 
-                              className="bg-background resize-none" 
-                              rows={3}
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              value={(activeNote.structuredData && activeNote.structuredData[field.id]) || ''}
-                              onChange={(e) => setActiveNote({
-                                ...activeNote,
-                                structuredData: { ...(activeNote.structuredData || {}), [field.id]: e.target.value }
-                              })}
-                            />
-                          ) : (
-                            <Input 
-                              className="bg-background"
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              value={(activeNote.structuredData && activeNote.structuredData[field.id]) || ''}
-                              onChange={(e) => setActiveNote({
-                                ...activeNote,
-                                structuredData: { ...(activeNote.structuredData || {}), [field.id]: e.target.value }
-                              })}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Freeform Notes */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                        <PenTool className="h-4 w-4" />
-                        Additional Notes
-                      </div>
-                      <Textarea 
-                        className="min-h-[300px] p-4 text-lg leading-relaxed bg-transparent border-none resize-none focus-visible:ring-0 shadow-none" 
-                        placeholder="Start typing your freeform notes here..."
-                        value={activeNote.freeformNotes || ""}
-                        onChange={(e) => setActiveNote({ ...activeNote, freeformNotes: e.target.value })}
-                      />
-                    </div>
+              )}
+              
+              {businessCard && (
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <div className="bg-white p-2 rounded-lg">
+                    <QRCode value={`${window.location.origin}/card/${businessCard.id}`} size={80} />
                   </div>
-                </ScrollArea>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center">
-                <div className="h-24 w-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
-                  <Book className="h-10 w-10 opacity-50" />
                 </div>
-                <h3 className="text-xl font-serif font-medium mb-2">Select a Note or Create New</h3>
-                <p className="max-w-md text-sm opacity-70">
-                  Choose a note from the sidebar to view details, or create a new entry using one of our industry-specific templates.
-                </p>
+              )}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-2"
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-amber-500" />
+                  Contacts
+                  <Badge variant="secondary" className="ml-1 bg-amber-900/50 text-amber-200">{clients.length}</Badge>
+                </h2>
+                <Button size="sm" onClick={openNewContact} className="bg-amber-600 hover:bg-amber-700 text-white gap-1" data-testid="button-add-contact">
+                  <UserPlus className="h-4 w-4" /> Add
+                </Button>
               </div>
-            )}
-          </div>
-
+              
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-600/50" />
+                <Input 
+                  placeholder="Search contacts..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-[#0d0705]/50 border-amber-900/30 text-amber-100 placeholder:text-amber-700/50"
+                  data-testid="input-search-contacts"
+                />
+              </div>
+              
+              <ScrollArea className="h-[180px]">
+                {filteredClients.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-amber-600/50 py-8">
+                    <Users className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm">{searchQuery ? "No contacts found" : "No contacts yet"}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredClients.slice(0, 5).map((client) => (
+                      <div 
+                        key={client.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-[#0d0705]/40 hover:bg-[#0d0705]/60 transition-colors cursor-pointer group"
+                        onClick={() => setSelectedContact(client)}
+                        data-testid={`contact-row-${client.id}`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 flex items-center justify-center text-amber-100 font-medium text-sm shrink-0">
+                            {client.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-amber-100 font-medium text-sm truncate">{client.name}</p>
+                            <p className="text-amber-600/60 text-xs truncate">{client.company || client.email || "—"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEditContact(client); }}>
+                            <Edit3 className="h-3.5 w-3.5 text-amber-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+              
+              {clients.length > 5 && (
+                <Button variant="ghost" className="w-full mt-2 text-amber-500 hover:text-amber-400 text-xs" onClick={() => setLocation("/contacts")}>
+                  View all {clients.length} contacts
+                </Button>
+              )}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-500" />
+                  Activity
+                </h2>
+              </div>
+              
+              <ScrollArea className="h-[200px]">
+                {activities.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-amber-600/50">
+                    <Clock className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activities.slice(0, 10).map((activity) => (
+                      <div key={activity.id} className="flex gap-3 text-sm">
+                        <div className="h-2 w-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                        <div>
+                          <p className="text-amber-200/80">{activity.description}</p>
+                          <p className="text-amber-600/50 text-xs">{new Date(activity.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5 text-amber-500" />
+                  Filing Cabinet
+                </h2>
+                <Link href="/scan">
+                  <Button variant="ghost" size="sm" className="text-amber-500 hover:text-amber-400 gap-1" data-testid="button-scan-document">
+                    <Camera className="h-4 w-4" /> Scan
+                  </Button>
+                </Link>
+              </div>
+              
+              <ScrollArea className="h-[200px]">
+                {documents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-amber-600/50">
+                    <FolderOpen className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm text-center">No documents yet</p>
+                    <Link href="/scan">
+                      <Button variant="ghost" size="sm" className="mt-2 text-amber-500">
+                        <Camera className="h-4 w-4 mr-1" /> Scan your first document
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.slice(0, 5).map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg bg-[#0d0705]/40 hover:bg-[#0d0705]/60 transition-colors cursor-pointer">
+                        <FileText className="h-5 w-5 text-amber-600 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-amber-100 text-sm truncate">{doc.title}</p>
+                          <p className="text-amber-600/50 text-xs">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-1"
+          >
+            <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2">
+                  <Mic className="h-5 w-5 text-amber-500" />
+                  Voice Notes
+                </h2>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center py-6">
+                <motion.button
+                  onClick={isRecording ? stopVoiceNote : startVoiceNote}
+                  animate={isRecording ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className={`h-20 w-20 rounded-full flex items-center justify-center transition-all ${
+                    isRecording 
+                      ? "bg-red-600 shadow-lg shadow-red-600/30" 
+                      : "bg-gradient-to-br from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600"
+                  }`}
+                  data-testid="button-voice-record"
+                >
+                  {isRecording ? (
+                    <MicOff className="h-8 w-8 text-white" />
+                  ) : (
+                    <Mic className="h-8 w-8 text-white" />
+                  )}
+                </motion.button>
+                
+                <p className="text-amber-200/60 text-sm mt-4 text-center">
+                  {isRecording ? "Recording... Tap to stop" : "Tap to record a voice note"}
+                </p>
+                
+                {recordingTranscript && (
+                  <div className="mt-4 p-3 bg-[#0d0705]/50 rounded-lg w-full">
+                    <p className="text-amber-100 text-sm">{recordingTranscript}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="md:col-span-2 lg:col-span-2"
+          >
+            <div className="bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
+              <h2 className="font-serif text-lg text-amber-100 flex items-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                Quick Actions
+              </h2>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                  onClick={openNewContact}
+                  data-testid="action-new-contact"
+                >
+                  <UserPlus className="h-5 w-5 text-amber-500" />
+                  <span className="text-amber-200 text-xs">New Contact</span>
+                </Button>
+                
+                <Link href="/scan" className="contents">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                    data-testid="action-scan"
+                  >
+                    <Camera className="h-5 w-5 text-amber-500" />
+                    <span className="text-amber-200 text-xs">Scan Document</span>
+                  </Button>
+                </Link>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                  onClick={() => businessCard ? exportCardToPDF() : openCardEditor()}
+                  data-testid="action-share-card"
+                >
+                  <Share2 className="h-5 w-5 text-amber-500" />
+                  <span className="text-amber-200 text-xs">Share Card</span>
+                </Button>
+                
+                <Link href="/schedule" className="contents">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                    data-testid="action-schedule"
+                  >
+                    <Calendar className="h-5 w-5 text-amber-500" />
+                    <span className="text-amber-200 text-xs">Schedule Order</span>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
+      
+      <Dialog open={isCardEditorOpen} onOpenChange={setIsCardEditorOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-[#1a0f09] border-amber-900/50 text-amber-100">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">{businessCard ? "Edit" : "Create"} Business Card</DialogTitle>
+            <DialogDescription className="text-amber-200/60">
+              Design your professional digital business card
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Full Name *</label>
+                <Input 
+                  value={cardForm.fullName || ""} 
+                  onChange={(e) => setCardForm({ ...cardForm, fullName: e.target.value })}
+                  placeholder="John Smith"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-card-name"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Job Title</label>
+                <Input 
+                  value={cardForm.jobTitle || ""} 
+                  onChange={(e) => setCardForm({ ...cardForm, jobTitle: e.target.value })}
+                  placeholder="CEO & Founder"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-card-title"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">Company</label>
+              <Input 
+                value={cardForm.company || ""} 
+                onChange={(e) => setCardForm({ ...cardForm, company: e.target.value })}
+                placeholder="Acme Corporation"
+                className="bg-[#0d0705] border-amber-900/50"
+                data-testid="input-card-company"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Email</label>
+                <Input 
+                  type="email"
+                  value={cardForm.email || ""} 
+                  onChange={(e) => setCardForm({ ...cardForm, email: e.target.value })}
+                  placeholder="john@example.com"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-card-email"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Phone</label>
+                <Input 
+                  value={cardForm.phone || ""} 
+                  onChange={(e) => setCardForm({ ...cardForm, phone: e.target.value })}
+                  placeholder="(615) 555-1234"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-card-phone"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">Website</label>
+              <Input 
+                value={cardForm.website || ""} 
+                onChange={(e) => setCardForm({ ...cardForm, website: e.target.value })}
+                placeholder="https://example.com"
+                className="bg-[#0d0705] border-amber-900/50"
+                data-testid="input-card-website"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">LinkedIn</label>
+              <Input 
+                value={cardForm.linkedIn || ""} 
+                onChange={(e) => setCardForm({ ...cardForm, linkedIn: e.target.value })}
+                placeholder="linkedin.com/in/johnsmith"
+                className="bg-[#0d0705] border-amber-900/50"
+                data-testid="input-card-linkedin"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">Tagline</label>
+              <Input 
+                value={cardForm.tagline || ""} 
+                onChange={(e) => setCardForm({ ...cardForm, tagline: e.target.value })}
+                placeholder="Helping businesses grow"
+                className="bg-[#0d0705] border-amber-900/50"
+                data-testid="input-card-tagline"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-2 block">Color Theme</label>
+              <div className="flex gap-2 flex-wrap">
+                {colorThemes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => setCardForm({ ...cardForm, colorTheme: theme.id })}
+                    className={`h-10 w-10 rounded-lg bg-gradient-to-br ${theme.gradient} border-2 transition-all ${
+                      cardForm.colorTheme === theme.id ? "border-white scale-110" : "border-transparent hover:scale-105"
+                    }`}
+                    title={theme.name}
+                    data-testid={`theme-${theme.id}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsCardEditorOpen(false)} className="text-amber-200">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveCard} 
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={createCardMutation.isPending || updateCardMutation.isPending}
+              data-testid="button-save-card"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {createCardMutation.isPending || updateCardMutation.isPending ? "Saving..." : "Save Card"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isContactModalOpen} onOpenChange={(open) => { setIsContactModalOpen(open); if (!open) setEditingContact(null); }}>
+        <DialogContent className="sm:max-w-[500px] bg-[#1a0f09] border-amber-900/50 text-amber-100">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">{editingContact ? "Edit" : "Add"} Contact</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Name *</label>
+                <Input 
+                  value={contactForm.name || ""} 
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  placeholder="Contact name"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-contact-name"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Company</label>
+                <Input 
+                  value={contactForm.company || ""} 
+                  onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
+                  placeholder="Company name"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-contact-company"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Email</label>
+                <Input 
+                  type="email"
+                  value={contactForm.email || ""} 
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  placeholder="email@example.com"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-contact-email"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-amber-200/80 mb-1 block">Phone</label>
+                <Input 
+                  value={contactForm.phone || ""} 
+                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                  placeholder="(555) 123-4567"
+                  className="bg-[#0d0705] border-amber-900/50"
+                  data-testid="input-contact-phone"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">Job Title</label>
+              <Input 
+                value={contactForm.jobTitle || ""} 
+                onChange={(e) => setContactForm({ ...contactForm, jobTitle: e.target.value })}
+                placeholder="Their role"
+                className="bg-[#0d0705] border-amber-900/50"
+                data-testid="input-contact-jobtitle"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-amber-200/80 mb-1 block">Notes</label>
+              <Textarea 
+                value={contactForm.notes || ""} 
+                onChange={(e) => setContactForm({ ...contactForm, notes: e.target.value })}
+                placeholder="Meeting notes, preferences, etc."
+                className="bg-[#0d0705] border-amber-900/50 min-h-[80px]"
+                data-testid="input-contact-notes"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {editingContact && (
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  deleteContactMutation.mutate(editingContact.id);
+                  setIsContactModalOpen(false);
+                }}
+                className="sm:mr-auto"
+                data-testid="button-delete-contact"
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => setIsContactModalOpen(false)} className="text-amber-200">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveContact} 
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={createContactMutation.isPending || updateContactMutation.isPending}
+              data-testid="button-save-contact"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {createContactMutation.isPending || updateContactMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={!!selectedContact} onOpenChange={(open) => !open && setSelectedContact(null)}>
+        <DialogContent className="sm:max-w-[450px] bg-[#1a0f09] border-amber-900/50 text-amber-100">
+          {selectedContact && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center text-amber-100 font-bold text-xl">
+                    {selectedContact.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <DialogTitle className="font-serif text-xl">{selectedContact.name}</DialogTitle>
+                    {selectedContact.company && (
+                      <p className="text-amber-200/60 text-sm">{selectedContact.company}</p>
+                    )}
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-3 py-4">
+                {selectedContact.jobTitle && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Building2 className="h-4 w-4 text-amber-600" />
+                    <span className="text-amber-200">{selectedContact.jobTitle}</span>
+                  </div>
+                )}
+                {selectedContact.email && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Mail className="h-4 w-4 text-amber-600" />
+                    <a href={`mailto:${selectedContact.email}`} className="text-amber-200 hover:text-amber-100">{selectedContact.email}</a>
+                  </div>
+                )}
+                {selectedContact.phone && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="h-4 w-4 text-amber-600" />
+                    <a href={`tel:${selectedContact.phone}`} className="text-amber-200 hover:text-amber-100">{selectedContact.phone}</a>
+                  </div>
+                )}
+                {selectedContact.notes && (
+                  <div className="pt-3 border-t border-amber-900/30">
+                    <p className="text-xs text-amber-600 mb-1">Notes</p>
+                    <p className="text-amber-200/80 text-sm">{selectedContact.notes}</p>
+                  </div>
+                )}
+              </div>
+              
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => openEditContact(selectedContact)} className="text-amber-500">
+                  <Edit3 className="h-4 w-4 mr-2" /> Edit
+                </Button>
+                <Button onClick={() => setSelectedContact(null)} className="bg-amber-600 hover:bg-amber-700">
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

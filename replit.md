@@ -48,9 +48,18 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.5** - December 2024
+**v1.1.7** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.7**: Mobile UX & Form Alignment Fixes
+  - Menu item readability improved with proper contrast backgrounds
+  - Add to Cart buttons now full-width and always visible on mobile
+  - Document scanner "Scan Complete" banner with action buttons
+  - Vendor sign-up website field accepts any format
+  - Virtual Host "Continue to attendees" error fixed (hostEmail optional)
+  - Form layouts responsive: single column mobile, two columns desktop
+  - All form fields properly baseline-aligned
+
 - **v1.1.5**: Dashboard UI Polish & Vendor Portal
   - Quick Actions now display in single horizontal row (4 columns)
   - All Quick Action cards use consistent coffee/brown/amber color palette

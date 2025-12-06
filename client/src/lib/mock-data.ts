@@ -723,7 +723,9 @@ export const SUBSCRIPTION_TIERS = [
     color: '#5c4033',
     popular: false,
     highlight: false,
-    serviceFeeDiscount: 0
+    serviceFeeDiscount: 0,
+    orderLimit: 5,
+    overageDiscount: 10,
   },
   {
     id: 'professional',
@@ -743,7 +745,9 @@ export const SUBSCRIPTION_TIERS = [
     color: '#3d2418',
     popular: true,
     highlight: true,
-    serviceFeeDiscount: 5
+    serviceFeeDiscount: 5,
+    orderLimit: 15,
+    overageDiscount: 15,
   },
   {
     id: 'enterprise',
@@ -765,9 +769,33 @@ export const SUBSCRIPTION_TIERS = [
     color: '#2d1810',
     popular: false,
     highlight: false,
-    serviceFeeDiscount: 10
+    serviceFeeDiscount: 10,
+    orderLimit: -1,
+    overageDiscount: 20,
   }
 ];
+
+// Helper to get tier by ID
+export function getSubscriptionTier(tierId: string) {
+  return SUBSCRIPTION_TIERS.find(t => t.id === tierId);
+}
+
+// Helper to check if user is at/over limit
+export function isAtOrderLimit(tierId: string, ordersUsed: number): boolean {
+  const tier = getSubscriptionTier(tierId);
+  if (!tier || tier.orderLimit === -1) return false;
+  return ordersUsed >= tier.orderLimit;
+}
+
+// Helper to get next tier for upgrade suggestion
+export function getUpgradeTier(currentTierId: string) {
+  const tiers = ['starter', 'professional', 'enterprise'];
+  const currentIndex = tiers.indexOf(currentTierId);
+  if (currentIndex < tiers.length - 1) {
+    return SUBSCRIPTION_TIERS.find(t => t.id === tiers[currentIndex + 1]);
+  }
+  return null;
+}
 
 // Nashville ZIP code coordinates for distance calculation
 export const NASHVILLE_ZIP_COORDS: Record<string, { lat: number; lng: number }> = {

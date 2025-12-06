@@ -717,7 +717,7 @@ const { itemCount } = useCart();
       </div>
 
       {/* Hero Banner - Shimmering Dark Brown */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden pt-4 md:pt-6">
         {/* Rich dark brown gradient background */}
         <div 
           className="absolute inset-0"

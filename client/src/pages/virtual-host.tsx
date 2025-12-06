@@ -353,7 +353,7 @@ export default function VirtualHostPage() {
                       </div>
 
                       {/* Date & Time */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                         <div className="space-y-2">
                           <Label htmlFor="date">Delivery Date *</Label>
                           <Input
@@ -380,7 +380,7 @@ export default function VirtualHostPage() {
                       {/* Delivery Scope */}
                       <div className="space-y-3">
                         <Label>Delivery Area</Label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -441,7 +441,7 @@ export default function VirtualHostPage() {
                       </div>
 
                       {/* Host Info */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                         <div className="space-y-2">
                           <Label htmlFor="hostName">Your Name</Label>
                           <Input
@@ -452,10 +452,10 @@ export default function VirtualHostPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="hostCompany">Company (optional)</Label>
+                          <Label htmlFor="hostCompany">Company</Label>
                           <Input
                             id="hostCompany"
-                            placeholder="Company name"
+                            placeholder="Optional"
                             value={formData.hostCompany}
                             onChange={(e) => setFormData({ ...formData, hostCompany: e.target.value })}
                           />

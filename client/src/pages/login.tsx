@@ -227,7 +227,7 @@ export default function LandingPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
               
-              <div className="absolute inset-0 p-5 md:p-10 flex flex-col justify-end">
+              <div className="absolute inset-0 p-5 pt-8 md:p-10 md:pt-12 flex flex-col justify-end">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

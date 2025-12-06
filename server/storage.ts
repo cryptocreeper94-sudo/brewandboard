@@ -47,6 +47,12 @@ import {
   type InsertVirtualMeetingEvent,
   type ErrorReport,
   type InsertErrorReport,
+  type Payee,
+  type InsertPayee,
+  type Payment1099,
+  type InsertPayment1099,
+  type Filing1099,
+  type InsertFiling1099,
   users,
   crmNotes,
   clients,
@@ -70,7 +76,11 @@ import {
   virtualSelections,
   virtualOrders,
   virtualMeetingEvents,
-  errorReports
+  errorReports,
+  payees,
+  payments1099,
+  filings1099,
+  TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, ilike, or, sql } from "drizzle-orm";
@@ -240,6 +250,33 @@ export interface IStorage {
   getErrorReport(id: string): Promise<ErrorReport | undefined>;
   createErrorReport(report: InsertErrorReport): Promise<ErrorReport>;
   updateErrorReport(id: string, report: Partial<InsertErrorReport>): Promise<ErrorReport>;
+  
+  // 1099 Compliance - Payees
+  getPayees(options?: { type?: string; status?: string }): Promise<Payee[]>;
+  getPayee(id: string): Promise<Payee | undefined>;
+  createPayee(payee: InsertPayee): Promise<Payee>;
+  updatePayee(id: string, payee: Partial<InsertPayee>): Promise<Payee>;
+  deletePayee(id: string): Promise<void>;
+  
+  // 1099 Compliance - Payments
+  getPayments1099(options?: { payeeId?: string; taxYear?: number; category?: string }): Promise<Payment1099[]>;
+  getPayment1099(id: string): Promise<Payment1099 | undefined>;
+  createPayment1099(payment: InsertPayment1099): Promise<Payment1099>;
+  updatePayment1099(id: string, payment: Partial<InsertPayment1099>): Promise<Payment1099>;
+  deletePayment1099(id: string): Promise<void>;
+  
+  // 1099 Compliance - Filings & Summaries
+  getFilings1099(taxYear: number): Promise<Filing1099[]>;
+  getFiling1099(id: string): Promise<Filing1099 | undefined>;
+  getOrCreateFiling1099(payeeId: string, taxYear: number): Promise<Filing1099>;
+  updateFiling1099(id: string, filing: Partial<InsertFiling1099>): Promise<Filing1099>;
+  recalculatePayeeTotals(payeeId: string, taxYear: number): Promise<Filing1099>;
+  get1099Summary(taxYear: number): Promise<{
+    totalPayees: number;
+    totalTaxablePaid: string;
+    payeesOverThreshold: number;
+    payeesUnderThreshold: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1166,6 +1203,216 @@ export class DatabaseStorage implements IStorage {
       .where(eq(errorReports.id, id))
       .returning();
     return updated;
+  }
+
+  // ========================
+  // 1099 COMPLIANCE - PAYEES
+  // ========================
+  async getPayees(options?: { type?: string; status?: string }): Promise<Payee[]> {
+    let conditions = [];
+    if (options?.type) {
+      conditions.push(eq(payees.type, options.type));
+    }
+    if (options?.status) {
+      conditions.push(eq(payees.status, options.status));
+    }
+    
+    if (conditions.length > 0) {
+      return await db
+        .select()
+        .from(payees)
+        .where(and(...conditions))
+        .orderBy(desc(payees.createdAt));
+    }
+    return await db.select().from(payees).orderBy(desc(payees.createdAt));
+  }
+
+  async getPayee(id: string): Promise<Payee | undefined> {
+    const [payee] = await db.select().from(payees).where(eq(payees.id, id));
+    return payee || undefined;
+  }
+
+  async createPayee(payee: InsertPayee): Promise<Payee> {
+    const [newPayee] = await db.insert(payees).values(payee).returning();
+    return newPayee;
+  }
+
+  async updatePayee(id: string, payee: Partial<InsertPayee>): Promise<Payee> {
+    const [updated] = await db
+      .update(payees)
+      .set({ ...payee, updatedAt: new Date() })
+      .where(eq(payees.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePayee(id: string): Promise<void> {
+    await db.delete(payees).where(eq(payees.id, id));
+  }
+
+  // ========================
+  // 1099 COMPLIANCE - PAYMENTS
+  // ========================
+  async getPayments1099(options?: { payeeId?: string; taxYear?: number; category?: string }): Promise<Payment1099[]> {
+    let conditions = [];
+    if (options?.payeeId) {
+      conditions.push(eq(payments1099.payeeId, options.payeeId));
+    }
+    if (options?.taxYear) {
+      conditions.push(eq(payments1099.taxYear, options.taxYear));
+    }
+    if (options?.category) {
+      conditions.push(eq(payments1099.category, options.category));
+    }
+    
+    if (conditions.length > 0) {
+      return await db
+        .select()
+        .from(payments1099)
+        .where(and(...conditions))
+        .orderBy(desc(payments1099.paymentDate));
+    }
+    return await db.select().from(payments1099).orderBy(desc(payments1099.paymentDate));
+  }
+
+  async getPayment1099(id: string): Promise<Payment1099 | undefined> {
+    const [payment] = await db.select().from(payments1099).where(eq(payments1099.id, id));
+    return payment || undefined;
+  }
+
+  async createPayment1099(payment: InsertPayment1099): Promise<Payment1099> {
+    const [newPayment] = await db.insert(payments1099).values(payment).returning();
+    // Recalculate totals for the payee's filing
+    await this.recalculatePayeeTotals(payment.payeeId, payment.taxYear);
+    return newPayment;
+  }
+
+  async updatePayment1099(id: string, payment: Partial<InsertPayment1099>): Promise<Payment1099> {
+    const [updated] = await db
+      .update(payments1099)
+      .set({ ...payment, updatedAt: new Date() })
+      .where(eq(payments1099.id, id))
+      .returning();
+    // Recalculate if payee or year changed
+    if (updated) {
+      await this.recalculatePayeeTotals(updated.payeeId, updated.taxYear);
+    }
+    return updated;
+  }
+
+  async deletePayment1099(id: string): Promise<void> {
+    const [payment] = await db.select().from(payments1099).where(eq(payments1099.id, id));
+    if (payment) {
+      await db.delete(payments1099).where(eq(payments1099.id, id));
+      await this.recalculatePayeeTotals(payment.payeeId, payment.taxYear);
+    }
+  }
+
+  // ========================
+  // 1099 COMPLIANCE - FILINGS
+  // ========================
+  async getFilings1099(taxYear: number): Promise<Filing1099[]> {
+    return await db
+      .select()
+      .from(filings1099)
+      .where(eq(filings1099.taxYear, taxYear))
+      .orderBy(desc(filings1099.totalTaxablePaid));
+  }
+
+  async getFiling1099(id: string): Promise<Filing1099 | undefined> {
+    const [filing] = await db.select().from(filings1099).where(eq(filings1099.id, id));
+    return filing || undefined;
+  }
+
+  async getOrCreateFiling1099(payeeId: string, taxYear: number): Promise<Filing1099> {
+    const [existing] = await db
+      .select()
+      .from(filings1099)
+      .where(and(eq(filings1099.payeeId, payeeId), eq(filings1099.taxYear, taxYear)));
+    
+    if (existing) return existing;
+    
+    const [newFiling] = await db
+      .insert(filings1099)
+      .values({
+        payeeId,
+        taxYear,
+        totalTaxablePaid: "0",
+        thresholdMet: false,
+        filingStatus: "draft"
+      })
+      .returning();
+    return newFiling;
+  }
+
+  async updateFiling1099(id: string, filing: Partial<InsertFiling1099>): Promise<Filing1099> {
+    const [updated] = await db
+      .update(filings1099)
+      .set({ ...filing, updatedAt: new Date() })
+      .where(eq(filings1099.id, id))
+      .returning();
+    return updated;
+  }
+
+  async recalculatePayeeTotals(payeeId: string, taxYear: number): Promise<Filing1099> {
+    // Get or create filing record
+    const filing = await this.getOrCreateFiling1099(payeeId, taxYear);
+    
+    // Sum all taxable payments for this payee/year
+    const result = await db
+      .select({ 
+        total: sql<string>`COALESCE(SUM(CASE WHEN ${payments1099.isTaxable} THEN ${payments1099.amount} ELSE 0 END), 0)` 
+      })
+      .from(payments1099)
+      .where(and(
+        eq(payments1099.payeeId, payeeId),
+        eq(payments1099.taxYear, taxYear)
+      ));
+    
+    const totalTaxablePaid = result[0]?.total || "0";
+    const thresholdMet = parseFloat(totalTaxablePaid) >= TAX_THRESHOLD_1099;
+    
+    const [updated] = await db
+      .update(filings1099)
+      .set({ 
+        totalTaxablePaid, 
+        thresholdMet,
+        updatedAt: new Date()
+      })
+      .where(eq(filings1099.id, filing.id))
+      .returning();
+    
+    return updated;
+  }
+
+  async get1099Summary(taxYear: number): Promise<{
+    totalPayees: number;
+    totalTaxablePaid: string;
+    payeesOverThreshold: number;
+    payeesUnderThreshold: number;
+  }> {
+    const filings = await this.getFilings1099(taxYear);
+    
+    let totalTaxablePaid = 0;
+    let payeesOverThreshold = 0;
+    let payeesUnderThreshold = 0;
+    
+    for (const filing of filings) {
+      const amount = parseFloat(filing.totalTaxablePaid || "0");
+      totalTaxablePaid += amount;
+      if (amount >= TAX_THRESHOLD_1099) {
+        payeesOverThreshold++;
+      } else if (amount > 0) {
+        payeesUnderThreshold++;
+      }
+    }
+    
+    return {
+      totalPayees: filings.length,
+      totalTaxablePaid: totalTaxablePaid.toFixed(2),
+      payeesOverThreshold,
+      payeesUnderThreshold
+    };
   }
 }
 

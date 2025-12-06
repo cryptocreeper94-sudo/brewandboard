@@ -15,6 +15,8 @@ import {
   type InsertOrderEvent,
   type ScannedDocument,
   type InsertScannedDocument,
+  type BusinessCard,
+  type InsertBusinessCard,
   type Franchise,
   type InsertFranchise,
   type FranchiseCustodyTransfer,
@@ -49,6 +51,7 @@ import {
   scheduledOrders,
   orderEvents,
   scannedDocuments,
+  businessCards,
   franchises,
   franchiseCustodyTransfers,
   franchiseInquiries,
@@ -207,6 +210,15 @@ export interface IStorage {
   // Virtual Meeting Events
   getVirtualMeetingEvents(meetingId: string): Promise<VirtualMeetingEvent[]>;
   createVirtualMeetingEvent(event: InsertVirtualMeetingEvent): Promise<VirtualMeetingEvent>;
+  
+  // Business Cards (Digital Card Designer)
+  getBusinessCards(userId: string): Promise<BusinessCard[]>;
+  getBusinessCard(id: string): Promise<BusinessCard | undefined>;
+  getDefaultBusinessCard(userId: string): Promise<BusinessCard | undefined>;
+  createBusinessCard(card: InsertBusinessCard): Promise<BusinessCard>;
+  updateBusinessCard(id: string, card: Partial<InsertBusinessCard>): Promise<BusinessCard>;
+  deleteBusinessCard(id: string): Promise<void>;
+  incrementBusinessCardViews(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -991,6 +1003,55 @@ export class DatabaseStorage implements IStorage {
   async createVirtualMeetingEvent(event: InsertVirtualMeetingEvent): Promise<VirtualMeetingEvent> {
     const [newEvent] = await db.insert(virtualMeetingEvents).values(event).returning();
     return newEvent;
+  }
+
+  // ========================
+  // BUSINESS CARDS
+  // ========================
+  async getBusinessCards(userId: string): Promise<BusinessCard[]> {
+    return await db
+      .select()
+      .from(businessCards)
+      .where(eq(businessCards.userId, userId))
+      .orderBy(desc(businessCards.createdAt));
+  }
+
+  async getBusinessCard(id: string): Promise<BusinessCard | undefined> {
+    const [card] = await db.select().from(businessCards).where(eq(businessCards.id, id));
+    return card || undefined;
+  }
+
+  async getDefaultBusinessCard(userId: string): Promise<BusinessCard | undefined> {
+    const [card] = await db
+      .select()
+      .from(businessCards)
+      .where(and(eq(businessCards.userId, userId), eq(businessCards.isDefault, true)));
+    return card || undefined;
+  }
+
+  async createBusinessCard(card: InsertBusinessCard): Promise<BusinessCard> {
+    const [newCard] = await db.insert(businessCards).values(card).returning();
+    return newCard;
+  }
+
+  async updateBusinessCard(id: string, card: Partial<InsertBusinessCard>): Promise<BusinessCard> {
+    const [updated] = await db
+      .update(businessCards)
+      .set({ ...card, updatedAt: new Date() })
+      .where(eq(businessCards.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBusinessCard(id: string): Promise<void> {
+    await db.delete(businessCards).where(eq(businessCards.id, id));
+  }
+
+  async incrementBusinessCardViews(id: string): Promise<void> {
+    await db
+      .update(businessCards)
+      .set({ viewCount: sql`${businessCards.viewCount} + 1` })
+      .where(eq(businessCards.id, id));
   }
 }
 

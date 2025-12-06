@@ -13,6 +13,7 @@ import {
   insertVendorApplicationSchema,
   insertRegionSchema,
   insertRegionalManagerSchema,
+  insertBusinessCardSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
   MAX_CONCURRENT_ORDERS,
   CAPACITY_WINDOW_HOURS,
@@ -378,6 +379,85 @@ export async function registerRoutes(
   app.delete("/api/clients/:id", async (req, res) => {
     try {
       await storage.deleteClient(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // BUSINESS CARDS ROUTES
+  // ========================
+  
+  app.get("/api/business-cards", async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+      const cards = await storage.getBusinessCards(userId);
+      res.json(cards);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/business-cards/default", async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+      const card = await storage.getDefaultBusinessCard(userId);
+      res.json(card || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/business-cards/:id", async (req, res) => {
+    try {
+      const card = await storage.getBusinessCard(req.params.id);
+      if (!card) {
+        return res.status(404).json({ error: "Business card not found" });
+      }
+      res.json(card);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/business-cards", async (req, res) => {
+    try {
+      const validatedData = insertBusinessCardSchema.parse(req.body);
+      const card = await storage.createBusinessCard(validatedData);
+      res.json(card);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/business-cards/:id", async (req, res) => {
+    try {
+      const card = await storage.updateBusinessCard(req.params.id, req.body);
+      res.json(card);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/business-cards/:id", async (req, res) => {
+    try {
+      await storage.deleteBusinessCard(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/business-cards/:id/view", async (req, res) => {
+    try {
+      await storage.incrementBusinessCardViews(req.params.id);
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

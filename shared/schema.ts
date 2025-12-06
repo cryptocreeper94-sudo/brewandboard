@@ -1202,7 +1202,7 @@ export const virtualMeetings = pgTable(
     // Host info
     hostUserId: varchar("host_user_id").references(() => users.id),
     hostName: varchar("host_name", { length: 255 }).notNull(),
-    hostEmail: varchar("host_email", { length: 255 }).notNull(),
+    hostEmail: varchar("host_email", { length: 255 }),
     hostCompany: varchar("host_company", { length: 255 }),
     
     // Meeting details

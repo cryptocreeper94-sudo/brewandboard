@@ -107,6 +107,7 @@ export default function VirtualHostPage() {
     perPersonBudgetCents: 1500,
     totalBudgetCents: 0,
     hostName: localStorage.getItem("userName") || "",
+    hostEmail: localStorage.getItem("userEmail") || "",
     hostCompany: "",
     hostUserId: localStorage.getItem("userId") || "guest"
   });

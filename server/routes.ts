@@ -15,12 +15,15 @@ import {
   insertRegionalManagerSchema,
   insertBusinessCardSchema,
   insertMeetingPresentationSchema,
+  insertPayeeSchema,
+  insertPayment1099Schema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
   MAX_CONCURRENT_ORDERS,
   CAPACITY_WINDOW_HOURS,
   HALLMARK_MINTING_FEE,
   FRANCHISE_TIERS,
-  PRESENTATION_TEMPLATES
+  PRESENTATION_TEMPLATES,
+  TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
@@ -2255,6 +2258,199 @@ export async function registerRoutes(
       res.json(report);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // 1099 COMPLIANCE - PAYEES
+  // ========================
+  
+  app.get("/api/1099/payees", async (req, res) => {
+    try {
+      const type = req.query.type as string | undefined;
+      const status = req.query.status as string | undefined;
+      const payees = await storage.getPayees({ type, status });
+      res.json(payees);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/1099/payees/:id", async (req, res) => {
+    try {
+      const payee = await storage.getPayee(req.params.id);
+      if (!payee) {
+        return res.status(404).json({ error: "Payee not found" });
+      }
+      res.json(payee);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/1099/payees", async (req, res) => {
+    try {
+      const parsed = insertPayeeSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.message });
+      }
+      const payee = await storage.createPayee(parsed.data);
+      res.json(payee);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/1099/payees/:id", async (req, res) => {
+    try {
+      const payee = await storage.updatePayee(req.params.id, req.body);
+      res.json(payee);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/1099/payees/:id", async (req, res) => {
+    try {
+      await storage.deletePayee(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // 1099 COMPLIANCE - PAYMENTS
+  // ========================
+  
+  app.get("/api/1099/payments", async (req, res) => {
+    try {
+      const payeeId = req.query.payeeId as string | undefined;
+      const taxYear = req.query.taxYear ? parseInt(req.query.taxYear as string) : undefined;
+      const category = req.query.category as string | undefined;
+      const payments = await storage.getPayments1099({ payeeId, taxYear, category });
+      res.json(payments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/1099/payments/:id", async (req, res) => {
+    try {
+      const payment = await storage.getPayment1099(req.params.id);
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+      res.json(payment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/1099/payments", async (req, res) => {
+    try {
+      const parsed = insertPayment1099Schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.message });
+      }
+      const payment = await storage.createPayment1099(parsed.data);
+      res.json(payment);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/1099/payments/:id", async (req, res) => {
+    try {
+      const payment = await storage.updatePayment1099(req.params.id, req.body);
+      res.json(payment);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/1099/payments/:id", async (req, res) => {
+    try {
+      await storage.deletePayment1099(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // 1099 COMPLIANCE - FILINGS & SUMMARIES
+  // ========================
+  
+  app.get("/api/1099/summary/:year", async (req, res) => {
+    try {
+      const taxYear = parseInt(req.params.year);
+      if (isNaN(taxYear)) {
+        return res.status(400).json({ error: "Invalid tax year" });
+      }
+      const summary = await storage.get1099Summary(taxYear);
+      res.json({ ...summary, taxYear, threshold: TAX_THRESHOLD_1099 });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/1099/filings/:year", async (req, res) => {
+    try {
+      const taxYear = parseInt(req.params.year);
+      if (isNaN(taxYear)) {
+        return res.status(400).json({ error: "Invalid tax year" });
+      }
+      const filings = await storage.getFilings1099(taxYear);
+      res.json(filings);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/1099/filing/:id", async (req, res) => {
+    try {
+      const filing = await storage.getFiling1099(req.params.id);
+      if (!filing) {
+        return res.status(404).json({ error: "Filing not found" });
+      }
+      res.json(filing);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/1099/filing/:id", async (req, res) => {
+    try {
+      const filing = await storage.updateFiling1099(req.params.id, req.body);
+      res.json(filing);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Get payee's payment history with filing status
+  app.get("/api/1099/payee-report/:payeeId/:year", async (req, res) => {
+    try {
+      const payeeId = req.params.payeeId;
+      const taxYear = parseInt(req.params.year);
+      
+      const payee = await storage.getPayee(payeeId);
+      if (!payee) {
+        return res.status(404).json({ error: "Payee not found" });
+      }
+      
+      const payments = await storage.getPayments1099({ payeeId, taxYear });
+      const filing = await storage.getOrCreateFiling1099(payeeId, taxYear);
+      
+      res.json({
+        payee,
+        payments,
+        filing,
+        threshold: TAX_THRESHOLD_1099
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

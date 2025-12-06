@@ -30,6 +30,7 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls and unique invite tokens.
 - **Partner Hub**: Provides an accordion-style interface for partners to access information and manage bug reports. Features personalized welcome modals, forced PIN change on first login, and Preview Mode (data not saved until system goes live).
 - **Meeting Presentation Builder**: Enables creation of slideshow-style presentations from templates with document attachments and shareable links.
+- **App Ecosystem Hub**: Cross-app integration system for connecting multiple Replit apps. Features include app registration with unique API keys (shown once), permission scopes (read/write code, data, clients, hallmarks), sync logging, and shared code snippets panel.
 
 ### System Design Choices
 - **Frontend**: React + TypeScript

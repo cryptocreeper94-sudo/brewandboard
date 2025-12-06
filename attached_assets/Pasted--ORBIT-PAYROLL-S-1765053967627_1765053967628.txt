@@ -1,0 +1,399 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ORBIT PAYROLL SYSTEM - COMPLETE AGENT HANDOFF
+# Version: 2.6.1 | Compatible with ORBIT Staffing OS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## SYSTEM OVERVIEW
+Production-ready payroll processing for staffing agencies. Supports all 50 US states,
+2025 federal tax brackets, CCPA-compliant garnishments, automated scheduling.
+
+Tech Stack: React 18 + TypeScript (frontend), Express.js (backend), PostgreSQL + Drizzle ORM (database)
+
+═══════════════════════════════════════════════════════════════════════════════
+## ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+Frontend Routes:
+  /payroll-processing    → Main payroll dashboard (preview, process, history)
+  /tax-documents         → W-4 management, W-2 downloads, ORBIT Pay Card
+  /pto-tracking          → PTO balances, requests, admin approvals
+  /benefits-enrollment   → Benefits overview (health, dental, vision, 401k, HSA)
+  /payroll-setup         → 5-step company onboarding wizard
+
+Backend Files:
+  server/payrollCalculator.ts  → Core calculation engine
+  server/stateTaxRates.ts      → All 50 states tax rates (2025)
+  server/routes.ts             → API endpoints
+  server/storage.ts            → Drizzle ORM database layer
+  shared/schema.ts             → Database models & Zod schemas
+
+═══════════════════════════════════════════════════════════════════════════════
+## API ENDPOINTS
+═══════════════════════════════════════════════════════════════════════════════
+
+GET  /api/payroll/ready?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+  → Returns workers with approved timesheets ready for payroll
+
+POST /api/payroll/preview
+  → Body: { workerIds: string[], periodStart: string, periodEnd: string }
+  → Returns calculated payroll preview (no records created)
+
+POST /api/payroll/process
+  → Body: { workerIds: string[], periodStart: string, periodEnd: string, paymentMethod: string }
+  → Processes payroll, creates records, returns confirmation
+
+GET  /api/payroll/history?workerId=ID
+  → Returns payroll history for worker
+
+POST /api/payroll/:id/void
+  → Voids a payroll record (admin only)
+
+POST /api/payroll/:id/correction
+  → Body: { reason: string, adjustments: object }
+  → Creates correction for processed payroll
+
+GET  /api/w4/:workerId
+  → Returns current W-4 data for worker
+
+POST /api/w4/:workerId
+  → Body: W4 form data
+  → Updates W-4 withholding information
+
+═══════════════════════════════════════════════════════════════════════════════
+## CORE DATA MODELS (shared/schema.ts)
+═══════════════════════════════════════════════════════════════════════════════
+
+// Worker (employee receiving payroll)
+export const workers = pgTable("workers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(),  // Multi-tenant isolation
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  ssn: text("ssn"),  // Encrypted storage required
+  dateOfBirth: date("date_of_birth"),
+  status: varchar("status", { length: 20 }).default("active"),
+  payRate: decimal("pay_rate", { precision: 10, scale: 2 }),
+  payType: varchar("pay_type", { length: 20 }).default("hourly"),
+  workState: varchar("work_state", { length: 2 }),  // "TN", "KY", etc.
+  workCity: varchar("work_city", { length: 100 }),
+});
+
+// W-4 Withholding Data
+export const employeeW4Data = pgTable("employee_w4_data", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  workerId: varchar("worker_id").references(() => workers.id),
+  fillingStatus: varchar("filling_status", { length: 20 }).default("single"), // single, married, hoh
+  dependents: integer("dependents").default(0),
+  otherIncome: decimal("other_income", { precision: 10, scale: 2 }).default("0"),
+  deductions: decimal("deductions", { precision: 10, scale: 2 }).default("0"),
+  extraWithheldPerPaycheck: decimal("extra_withheld", { precision: 10, scale: 2 }).default("0"),
+  standardDeduction: boolean("standard_deduction").default(true),
+  effectiveDate: date("effective_date"),
+  isCurrent: boolean("is_current").default(true),
+});
+
+// Garnishment Orders
+export const garnishmentOrders = pgTable("garnishment_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  workerId: varchar("worker_id").references(() => workers.id),
+  type: varchar("type", { length: 50 }),  // child_support, tax_levy, creditor, student_loan
+  amount: decimal("amount", { precision: 10, scale: 2 }),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }),
+  priority: integer("priority"),  // Lower = higher priority
+  status: varchar("status", { length: 20 }).default("active"),
+  caseNumber: varchar("case_number", { length: 100 }),
+  issuingAgency: varchar("issuing_agency", { length: 255 }),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  remainingBalance: decimal("remaining_balance", { precision: 10, scale: 2 }),
+});
+
+// Payroll Records
+export const payrollRecords = pgTable("payroll_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(),
+  workerId: varchar("worker_id").references(() => workers.id),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  status: varchar("status", { length: 20 }).default("processed"),
+  hoursWorked: decimal("hours_worked", { precision: 8, scale: 2 }),
+  overtimeHours: decimal("overtime_hours", { precision: 8, scale: 2 }),
+  grossPay: decimal("gross_pay", { precision: 12, scale: 2 }),
+  federalIncomeTax: decimal("federal_income_tax", { precision: 10, scale: 2 }),
+  socialSecurityTax: decimal("social_security_tax", { precision: 10, scale: 2 }),
+  medicareTax: decimal("medicare_tax", { precision: 10, scale: 2 }),
+  additionalMedicareTax: decimal("additional_medicare_tax", { precision: 10, scale: 2 }),
+  stateTax: decimal("state_tax", { precision: 10, scale: 2 }),
+  localTax: decimal("local_tax", { precision: 10, scale: 2 }),
+  totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }),
+  totalGarnishments: decimal("total_garnishments", { precision: 10, scale: 2 }),
+  garnishmentsBreakdown: jsonb("garnishments_breakdown"),
+  netPay: decimal("net_pay", { precision: 12, scale: 2 }),
+  paymentMethod: varchar("payment_method", { length: 20 }),
+  calculationBreakdown: jsonb("calculation_breakdown"),
+  processedAt: timestamp("processed_at").default(sql`NOW()`),
+});
+
+═══════════════════════════════════════════════════════════════════════════════
+## PAYROLL CALCULATOR (server/payrollCalculator.ts)
+═══════════════════════════════════════════════════════════════════════════════
+
+import { Decimal } from "decimal.js";
+
+// 2025 Federal Income Tax Brackets
+const TAX_BRACKETS_2025 = {
+  single: [
+    { min: 0, max: 11600, rate: 0.10 },
+    { min: 11600, max: 47150, rate: 0.12 },
+    { min: 47150, max: 100525, rate: 0.22 },
+    { min: 100525, max: 191950, rate: 0.24 },
+    { min: 191950, max: 243725, rate: 0.32 },
+    { min: 243725, max: 609350, rate: 0.35 },
+    { min: 609350, max: Infinity, rate: 0.37 },
+  ],
+  married: [
+    { min: 0, max: 23200, rate: 0.10 },
+    { min: 23200, max: 94300, rate: 0.12 },
+    { min: 94300, max: 201050, rate: 0.22 },
+    { min: 201050, max: 383900, rate: 0.24 },
+    { min: 383900, max: 487450, rate: 0.32 },
+    { min: 487450, max: 731200, rate: 0.35 },
+    { min: 731200, max: Infinity, rate: 0.37 },
+  ],
+  hoh: [
+    { min: 0, max: 17450, rate: 0.10 },
+    { min: 17450, max: 66550, rate: 0.12 },
+    { min: 66550, max: 100525, rate: 0.22 },
+    { min: 100525, max: 191950, rate: 0.24 },
+    { min: 191950, max: 243700, rate: 0.32 },
+    { min: 243700, max: 609350, rate: 0.35 },
+    { min: 609350, max: Infinity, rate: 0.37 },
+  ],
+};
+
+// Standard Deductions 2025
+const STANDARD_DEDUCTIONS_2025 = {
+  single: 15000,
+  married: 30000,
+  hoh: 22500,
+};
+
+// FICA Rates & Limits 2025
+const SOCIAL_SECURITY_WAGE_BASE = 176100;
+const SOCIAL_SECURITY_RATE = 0.062;
+const MEDICARE_RATE = 0.0145;
+const ADDITIONAL_MEDICARE_THRESHOLD_SINGLE = 200000;
+const ADDITIONAL_MEDICARE_THRESHOLD_MARRIED = 250000;
+const ADDITIONAL_MEDICARE_RATE = 0.009;
+
+// CCPA Garnishment Limits
+const CCPA_MIN_WEEKLY_DISPOSABLE = 217.5;
+const CCPA_MAX_GARNISHMENT_PERCENTAGE = 0.25;
+const CCPA_CHILD_SUPPORT_MAX_PERCENTAGE = 0.65;
+
+// Input/Output Interfaces
+interface PayrollCalculationInput {
+  grossPay: number;
+  w4Data: EmployeeW4Data;
+  garnishmentOrders: GarnishmentOrder[];
+  payPeriodDays: number;
+  workState: string;
+  workCity?: string;
+  annualGrossPaid?: number;
+}
+
+interface PayrollCalculationResult {
+  grossPay: number;
+  federalIncomeTax: number;
+  socialSecurityTax: number;
+  medicareTax: number;
+  additionalMedicareTax: number;
+  stateTax: number;
+  localTax: number;
+  totalMandatoryDeductions: number;
+  disposableEarnings: number;
+  garnishmentsApplied: GarnishmentDeduction[];
+  totalGarnishments: number;
+  netPay: number;
+  breakdown: PayrollBreakdown;
+}
+
+// Main Calculation Function
+export function calculatePayroll(input: PayrollCalculationInput): PayrollCalculationResult {
+  const { grossPay, w4Data, garnishmentOrders, workState, workCity, annualGrossPaid = 0 } = input;
+  
+  // 1. Federal Income Tax (annualize → calculate → de-annualize)
+  const federalResult = calculateFederalIncomeTax(grossPay, w4Data);
+  const federalIncomeTax = federalResult.tax;
+  
+  // 2. Social Security Tax (6.2% up to $176,100 annual wage base)
+  const socialSecurityTax = calculateSocialSecurityTax(grossPay, annualGrossPaid);
+  
+  // 3. Medicare Tax (1.45% + 0.9% additional on high earners)
+  const medicareResult = calculateMedicareTax(grossPay, w4Data, annualGrossPaid);
+  const medicareTax = medicareResult.regular;
+  const additionalMedicareTax = medicareResult.additional;
+  
+  // 4. State Tax (uses stateTaxRates.ts for all 50 states)
+  const stateTax = calculateStateTax(grossPay, workState, w4Data.fillingStatus);
+  
+  // 5. Local Tax (KY, OH, PA, IN, MI, MD, NY, MO cities)
+  const localTax = calculateLocalTax(grossPay, workState, workCity);
+  
+  // 6. Total Mandatory Deductions
+  const totalMandatoryDeductions = federalIncomeTax + socialSecurityTax + 
+    medicareTax + additionalMedicareTax + stateTax + localTax;
+  
+  // 7. Disposable Earnings (for CCPA garnishment limits)
+  const disposableEarnings = grossPay - totalMandatoryDeductions;
+  
+  // 8. Garnishments (CCPA compliant, priority-ordered)
+  const garnishmentsApplied = calculateGarnishments(disposableEarnings, garnishmentOrders);
+  const totalGarnishments = garnishmentsApplied.reduce((sum, g) => sum + g.amount, 0);
+  
+  // 9. Net Pay
+  const netPay = disposableEarnings - totalGarnishments;
+  
+  return {
+    grossPay,
+    federalIncomeTax,
+    socialSecurityTax,
+    medicareTax,
+    additionalMedicareTax,
+    stateTax,
+    localTax,
+    totalMandatoryDeductions,
+    disposableEarnings,
+    garnishmentsApplied,
+    totalGarnishments,
+    netPay,
+    breakdown: { /* detailed breakdown object */ }
+  };
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+## STATE TAX RATES (server/stateTaxRates.ts) - ALL 50 STATES
+═══════════════════════════════════════════════════════════════════════════════
+
+// No Income Tax States (9)
+AK, FL, NV, NH, SD, TN, TX, WA, WY
+
+// Flat Rate States (11)
+AZ: 2.5%    CO: 4.4%    ID: 5.8%    IL: 4.95%   IN: 3.05%
+KY: 4.0%    MA: 5.0%    MI: 4.25%   NC: 4.75%   PA: 3.07%   UT: 4.65%
+
+// Graduated Rate States (31 + DC)
+AL: 2-5%          AR: 2-4.4%        CA: 1-12.3%
+CT: 3-6.99%       DC: 4-10.75%      DE: 2.2-6.6%
+GA: 1-5.49%       HI: 1.4-11%       IA: 4.4-6%
+KS: 3.1-5.7%      LA: 1.85-4.25%    ME: 5.8-7.15%
+MD: 2-5.75%       MN: 5.35-9.85%    MO: 2-4.8%
+MS: 4-5%          MT: 4.7-5.9%      NE: 2.46-5.84%
+NJ: 1.4-10.75%    NM: 1.7-5.9%      NY: 4-10.9%
+ND: 1.95%         OH: 0-3.75%       OK: 0.25-4.75%
+OR: 4.75-9.9%     RI: 3.75-5.99%    SC: 0-6.4%
+VT: 3.35-8.75%    VA: 2-5.75%       WI: 3.5-7.65%
+WV: 2.36-5.12%
+
+// States with Local Tax
+IL, IN, KY, MD, MI, MO, NY, OH, PA
+
+═══════════════════════════════════════════════════════════════════════════════
+## GARNISHMENT PRIORITY ORDER (CCPA Compliant)
+═══════════════════════════════════════════════════════════════════════════════
+
+Priority 1: Child Support / Alimony (up to 65% of disposable)
+Priority 2: Federal Tax Levies (IRS)
+Priority 3: State Tax Levies
+Priority 4: Federal Student Loans (up to 15% of disposable)
+Priority 5: Creditor Garnishments (up to 25% of disposable)
+
+CCPA Protection: Cannot garnish if weekly disposable < $217.50
+
+═══════════════════════════════════════════════════════════════════════════════
+## INTEGRATION WITH ORBIT STAFFING OS
+═══════════════════════════════════════════════════════════════════════════════
+
+Required Environment Variables:
+  DATABASE_URL          → PostgreSQL connection string
+  STRIPE_SECRET_KEY     → For ORBIT Pay Card integration
+  STRIPE_PUBLISHABLE_KEY
+
+Multi-Tenant Isolation:
+  - All tables use `tenantId` column for data isolation
+  - Every API call validates tenant access via session/JWT
+  - Workers, payroll records, timesheets scoped to tenant
+
+Integration Points:
+  1. Timesheets → Payroll pulls approved timesheets for hours/gross calculation
+  2. Workers → Uses worker payRate, workState, W-4 data for calculations
+  3. Companies → Uses payrollFrequency, payrollDay for automation
+  4. ORBIT Pay Card → Stripe Issuing for instant pay (requires setup)
+
+Webhook Events to Emit:
+  payroll.processed  → { tenantId, workerId, payrollId, netPay, processedAt }
+  payroll.voided     → { tenantId, payrollId, reason, voidedAt }
+  w4.updated         → { tenantId, workerId, effectiveDate }
+
+═══════════════════════════════════════════════════════════════════════════════
+## FRONTEND COMPONENT PATTERNS
+═══════════════════════════════════════════════════════════════════════════════
+
+// Dark industrial theme with cyan accents
+<Card className="bg-slate-800/50 border-slate-700/50">
+<Button className="bg-cyan-600 hover:bg-cyan-700">
+<Badge className="bg-green-600/20 text-green-400">
+
+// Required data-testid on interactive elements
+<Button data-testid="button-process-payroll">Process Payroll</Button>
+<Input data-testid="input-pay-period" />
+<Select data-testid="select-payment-method">
+
+// API call pattern (direct fetch, not apiRequest helper)
+const response = await fetch('/api/payroll/preview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({ workerIds, periodStart, periodEnd })
+});
+const data = await response.json();
+
+═══════════════════════════════════════════════════════════════════════════════
+## REMAINING TO IMPLEMENT
+═══════════════════════════════════════════════════════════════════════════════
+
+1. W-2 Generation (annual tax document PDF)
+2. Plaid Integration (direct deposit verification - placeholder exists)
+3. Interactive Benefits Enrollment (current UI is read-only display)
+4. Pay stub PDF generation
+
+═══════════════════════════════════════════════════════════════════════════════
+## DEPENDENCIES (package.json)
+═══════════════════════════════════════════════════════════════════════════════
+
+"decimal.js": "^10.x"      → Precise financial calculations
+"drizzle-orm": "^0.x"      → Database ORM
+"drizzle-zod": "^0.x"      → Schema validation
+"stripe": "^14.x"          → Payment processing / Pay Card
+"@radix-ui/*": "^1.x"      → UI components
+"wouter": "^3.x"           → Frontend routing
+"@tanstack/react-query"    → Data fetching
+
+═══════════════════════════════════════════════════════════════════════════════
+## QUICK START FOR NEW AGENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Read shared/schema.ts for all data models
+2. Read server/payrollCalculator.ts for calculation logic
+3. Read server/stateTaxRates.ts for state tax configuration
+4. Follow API patterns in server/routes.ts for new endpoints
+5. Use storage.ts interface for all database operations
+6. Frontend pages in client/src/pages/ with dark theme
+7. Register new routes in client/src/App.tsx
+8. All buttons/inputs need data-testid attributes
+
+═══════════════════════════════════════════════════════════════════════════════
+# END OF ORBIT PAYROLL SYSTEM HANDOFF
+═══════════════════════════════════════════════════════════════════════════════

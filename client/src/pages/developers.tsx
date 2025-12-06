@@ -65,6 +65,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessCardPreview } from "@/components/BusinessCard";
 import { DocumentExportPanel } from "@/components/DocumentExport";
+import { AppEcosystemHub } from "@/components/AppEcosystemHub";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -1979,6 +1980,16 @@ export default function DevelopersPage() {
           <DocumentExportPanel 
             hallmarkCode={companyHallmarks.length > 0 ? companyHallmarks[0]?.serialNumber : undefined} 
           />
+        </motion.div>
+
+        {/* App Ecosystem Hub */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.297 }}
+          className="mb-12"
+        >
+          <AppEcosystemHub />
         </motion.div>
 
         <motion.div

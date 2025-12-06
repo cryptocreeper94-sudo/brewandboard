@@ -42,6 +42,8 @@ export function Footer() {
           
           {/* Attribution - Second Row on Mobile */}
           <div className="flex items-center gap-1">
+            <span className="text-amber-400/60 font-medium">v1.1.8</span>
+            <span className="mx-0.5">•</span>
             <span>Powered by</span>
             <a 
               href="https://darkwavestudios.io" 

@@ -48,9 +48,19 @@ The platform features a premium "Nashville Luxury" aesthetic with a Bento grid l
 - **News Feed**: WKRN (for Nashville news)
 - **Other APIs (Planned Integrations)**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 ## Current Version
-**v1.1.7** - December 2024
+**v1.1.8** - December 2024
 
 ## Recent Changes (December 2024)
+- **v1.1.8**: Meeting Presentation Builder
+  - New slideshow-style presentation builder for meetings
+  - 3 templates: Executive Summary, Board Meeting, Team Huddle
+  - Attach scanned documents to presentations
+  - Add attendee names and emails
+  - Generate shareable links with view tracking
+  - Email presentations to attendees via Resend
+  - Quick Action in Portfolio for easy access
+  - Stamped on Solana mainnet (BB-0000000020)
+
 - **v1.1.7**: Mobile UX & Form Alignment Fixes
   - Menu item readability improved with proper contrast backgrounds
   - Add to Cart buttons now full-width and always visible on mobile

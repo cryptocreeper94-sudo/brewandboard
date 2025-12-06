@@ -27,6 +27,8 @@ import RegionalDashboard from "@/pages/regional";
 import VirtualHostPage from "@/pages/virtual-host";
 import VirtualOrderPage from "@/pages/virtual-order";
 import VendorsPage from "@/pages/vendors";
+import MeetingPresentationsPage from "@/pages/meeting-presentations";
+import PresentationViewerPage from "@/pages/presentation-viewer";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -54,6 +56,8 @@ function Router() {
       <Route path="/virtual-host" component={VirtualHostPage} />
       <Route path="/virtual-order/:token" component={VirtualOrderPage} />
       <Route path="/vendors" component={VendorsPage} />
+      <Route path="/meeting-presentations" component={MeetingPresentationsPage} />
+      <Route path="/presentation/:link" component={PresentationViewerPage} />
       <Route component={NotFound} />
     </Switch>
   );

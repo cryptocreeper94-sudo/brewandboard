@@ -42,7 +42,8 @@ import {
   Percent,
   Delete,
   Equal,
-  Bookmark
+  Bookmark,
+  Presentation
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1057,7 +1058,7 @@ export default function PortfolioPage() {
                 Quick Actions
               </h2>
               
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                 <Button 
                   variant="outline" 
                   className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
@@ -1076,6 +1077,17 @@ export default function PortfolioPage() {
                   >
                     <Camera className="h-5 w-5 text-amber-500" />
                     <span className="text-amber-200 text-xs">Scan Document</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/meeting-presentations" className="contents">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto py-4 flex-col gap-2 bg-[#0d0705]/40 border-amber-900/30 hover:bg-amber-900/20 hover:border-amber-600/40"
+                    data-testid="action-presentations"
+                  >
+                    <Presentation className="h-5 w-5 text-amber-500" />
+                    <span className="text-amber-200 text-xs">Presentations</span>
                   </Button>
                 </Link>
                 

@@ -14,11 +14,13 @@ import {
   insertRegionSchema,
   insertRegionalManagerSchema,
   insertBusinessCardSchema,
+  insertMeetingPresentationSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
   MAX_CONCURRENT_ORDERS,
   CAPACITY_WINDOW_HOURS,
   HALLMARK_MINTING_FEE,
-  FRANCHISE_TIERS
+  FRANCHISE_TIERS,
+  PRESENTATION_TEMPLATES
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
@@ -459,6 +461,169 @@ export async function registerRoutes(
     try {
       await storage.incrementBusinessCardViews(req.params.id);
       res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // MEETING PRESENTATIONS ROUTES
+  // ========================
+  
+  app.get("/api/meeting-presentations/templates", async (req, res) => {
+    res.json(PRESENTATION_TEMPLATES);
+  });
+
+  app.get("/api/meeting-presentations", async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+      const presentations = await storage.getMeetingPresentations(userId);
+      res.json(presentations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/meeting-presentations/:id", async (req, res) => {
+    try {
+      const presentation = await storage.getMeetingPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      res.json(presentation);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/meeting-presentations/view/:link", async (req, res) => {
+    try {
+      const presentation = await storage.getMeetingPresentationByLink(req.params.link);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      await storage.incrementPresentationViews(presentation.id);
+      
+      let documents: any[] = [];
+      if (presentation.documentIds && presentation.documentIds.length > 0) {
+        const docPromises = presentation.documentIds.map(id => storage.getScannedDocument(id));
+        documents = (await Promise.all(docPromises)).filter(Boolean);
+      }
+      
+      res.json({ presentation, documents });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/meeting-presentations", async (req, res) => {
+    try {
+      const validatedData = insertMeetingPresentationSchema.parse(req.body);
+      const presentation = await storage.createMeetingPresentation(validatedData);
+      res.json(presentation);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/meeting-presentations/:id", async (req, res) => {
+    try {
+      const presentation = await storage.updateMeetingPresentation(req.params.id, req.body);
+      res.json(presentation);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/meeting-presentations/:id", async (req, res) => {
+    try {
+      await storage.deleteMeetingPresentation(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/meeting-presentations/:id/send", async (req, res) => {
+    try {
+      const presentation = await storage.getMeetingPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      
+      if (!presentation.attendeeEmails || presentation.attendeeEmails.length === 0) {
+        return res.status(400).json({ error: "No attendees to send to" });
+      }
+      
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const baseUrl = process.env.REPL_SLUG 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        : 'http://localhost:5000';
+      const viewUrl = `${baseUrl}/presentation/${presentation.shareableLink}`;
+      
+      const template = PRESENTATION_TEMPLATES.find(t => t.id === presentation.templateType);
+      
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: Georgia, serif; background: #1a0f09; color: #fef3c7; margin: 0; padding: 40px; }
+              .container { max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #2d1810 0%, #3d2418 100%); border-radius: 16px; padding: 40px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .logo { color: #d97706; font-size: 24px; font-weight: bold; }
+              h1 { color: #fef3c7; margin: 20px 0; font-size: 28px; }
+              .subtitle { color: #fcd34d; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+              .content { background: rgba(13, 7, 5, 0.5); border-radius: 12px; padding: 30px; margin: 20px 0; }
+              .btn { display: inline-block; background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #92400e; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">☕ Brew & Board</div>
+                <div class="subtitle">${template?.name || 'Meeting Presentation'}</div>
+                <h1>${presentation.title}</h1>
+              </div>
+              <div class="content">
+                <p>You've been invited to view a meeting presentation.</p>
+                ${presentation.description ? `<p style="color: #fcd34d;">${presentation.description}</p>` : ''}
+                ${presentation.meetingDate ? `<p><strong>Date:</strong> ${new Date(presentation.meetingDate).toLocaleDateString()}</p>` : ''}
+                ${presentation.meetingTime ? `<p><strong>Time:</strong> ${presentation.meetingTime}</p>` : ''}
+              </div>
+              <div style="text-align: center;">
+                <a href="${viewUrl}" class="btn">View Presentation</a>
+              </div>
+              <div class="footer">
+                <p>Powered by Brew & Board Coffee</p>
+                <p>Nashville's Premier B2B Coffee Delivery</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      const { data, error } = await resend.emails.send({
+        from: 'Brew & Board <presentations@brewandboard.coffee>',
+        to: presentation.attendeeEmails,
+        subject: `Meeting Presentation: ${presentation.title}`,
+        html: emailHtml,
+      });
+      
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+      
+      await storage.updateMeetingPresentation(req.params.id, {
+        status: 'sent',
+        sentAt: new Date(),
+      } as any);
+      
+      res.json({ success: true, emailId: data?.id });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

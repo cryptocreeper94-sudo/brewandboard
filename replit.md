@@ -58,7 +58,7 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
   - Conversation persistence in localStorage across sessions
   - Clear chat button to reset conversation history
   - Improved modal visibility across login and business docs pages
-  - Stamped on Solana mainnet (BB-0000000023)
+  - Stamped on Solana mainnet (BB-0000000023, tx: HG8dSZS36MbXkR79YsrtcY6XMYPM9X2K3Zh4y8xwq6v3FfCAgUDxbuLZ52yDoPaeQsg8mn7drHbdN5Pi2xpWFLo)
 
 - **v1.2.1**: Partner Hub Enhancements & Premium UI
   - Premium Bento grid UI for Partner Hub with keyboard-accessible carousels

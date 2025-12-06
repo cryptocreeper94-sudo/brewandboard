@@ -152,14 +152,25 @@ export default function MyHallmarksPage() {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
-            <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="font-serif text-2xl font-bold mb-2">Login Required</h2>
-            <p className="text-muted-foreground mb-4">
-              Please log in to view your blockchain-verified documents.
+            <Shield className="h-12 w-12 mx-auto mb-4 text-amber-600" />
+            <h2 className="font-serif text-2xl font-bold mb-2">Create an Account</h2>
+            <p className="text-muted-foreground mb-6">
+              To view your blockchain-verified documents, please create a free account with a 4-digit PIN.
             </p>
-            <Link href="/">
-              <Button>Go to Login</Button>
-            </Link>
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={() => window.location.href = "/dashboard?action=register"}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                Create Account
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = "/dashboard?action=login"}
+              >
+                I Have an Account
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

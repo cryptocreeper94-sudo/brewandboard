@@ -326,10 +326,27 @@ export default function SchedulePage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-serif mb-4">Please log in to access the schedule</h2>
-          <Button onClick={() => window.location.href = "/"}>Go to Login</Button>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <Calendar className="h-16 w-16 mx-auto mb-4 text-amber-600" />
+          <h2 className="text-2xl font-serif mb-2">Create an Account to Order</h2>
+          <p className="text-muted-foreground mb-6">
+            To schedule coffee deliveries and access all features, please create a free account with a 4-digit PIN.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              onClick={() => window.location.href = "/dashboard?action=register"}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Create Account
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = "/dashboard?action=login"}
+            >
+              I Have an Account
+            </Button>
+          </div>
         </div>
       </div>
     );

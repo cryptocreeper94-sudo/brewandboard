@@ -597,6 +597,21 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [showRegister, setShowRegister] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+
+  // Check for action parameter in URL to auto-open register/login popup
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    if (action === 'register') {
+      setShowRegister(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (action === 'login') {
+      setShowLogin(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
   const [showWeatherRadar, setShowWeatherRadar] = useState(false);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);

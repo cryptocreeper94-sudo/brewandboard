@@ -1,0 +1,164 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ORBIT STAFFING ↔ BREW & BOARD COFFEE ECOSYSTEM INTEGRATION
+# Agent Handoff Document | v1.0.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## OVERVIEW
+Connect ORBIT Staffing to Brew & Board Coffee's App Ecosystem Hub for:
+- Shared code snippets between apps
+- Contractor/worker data sync
+- 1099 compliance data sharing
+- Activity logging
+
+Brew & Board Base URL: https://brewandboard.coffee (or current Replit URL)
+
+═══════════════════════════════════════════════════════════════════════════════
+## STEP 1: GET API CREDENTIALS (from Brew & Board owner)
+═══════════════════════════════════════════════════════════════════════════════
+
+They will provide:
+  BREWBOARD_API_KEY=bb_app_xxxxxxxxxxxxxxxxxxxx
+  BREWBOARD_API_SECRET=bb_secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Add these as environment variables in ORBIT.
+
+═══════════════════════════════════════════════════════════════════════════════
+## STEP 2: CREATE ECOSYSTEM CLIENT
+═══════════════════════════════════════════════════════════════════════════════
+
+Create file: server/brewboardEcosystem.ts
+
+// ─────────────────────────────────────────────────────────────────────────────
+interface EcosystemConfig {
+  apiKey: string;
+  apiSecret: string;
+  baseUrl: string;
+}
+
+interface CodeSnippet {
+  name: string;
+  description?: string;
+  code: string;
+  language: string;
+  category: 'component' | 'utility' | 'hook' | 'api' | 'config' | 'style';
+  isPublic?: boolean;
+}
+
+export class BrewBoardEcosystem {
+  private config: EcosystemConfig;
+  
+  constructor() {
+    this.config = {
+      apiKey: process.env.BREWBOARD_API_KEY || '',
+      apiSecret: process.env.BREWBOARD_API_SECRET || '',
+      baseUrl: process.env.BREWBOARD_BASE_URL || 'https://brewandboard.coffee',
+    };
+  }
+  
+  private async request<T>(endpoint: string, method: string, body?: any): Promise<T> {
+    const response = await fetch(`${this.config.baseUrl}/api/ecosystem${endpoint}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': this.config.apiKey,
+        'X-API-Secret': this.config.apiSecret,
+        'X-App-Name': 'ORBIT Staffing',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  }
+  
+  async pushSnippet(snippet: CodeSnippet) {
+    return this.request('/snippets', 'POST', snippet);
+  }
+  
+  async getSnippets(category?: string) {
+    const query = category ? `?category=${category}` : '';
+    return this.request<CodeSnippet[]>(`/snippets${query}`, 'GET');
+  }
+  
+  async syncContractors(contractors: Array<{ id: string; name: string; email?: string; totalPaid?: number }>) {
+    return this.request('/sync/contractors', 'POST', { contractors });
+  }
+  
+  async sync1099Data(year: number, payments: Array<{ payeeId: string; payeeName: string; amount: number; date: string }>) {
+    return this.request('/sync/1099', 'POST', { year, payments });
+  }
+  
+  async checkConnection() {
+    try {
+      return await this.request<{ connected: boolean; permissions: string[] }>('/status', 'GET');
+    } catch {
+      return { connected: false, permissions: [] };
+    }
+  }
+  
+  isConfigured(): boolean {
+    return !!(this.config.apiKey && this.config.apiSecret);
+  }
+}
+
+export const brewboard = new BrewBoardEcosystem();
+// ─────────────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════════
+## STEP 3: USAGE EXAMPLES
+═══════════════════════════════════════════════════════════════════════════════
+
+// Push shared utilities
+import { brewboard } from './brewboardEcosystem';
+
+await brewboard.pushSnippet({
+  name: 'calculateOvertimePay',
+  description: 'Calculate OT with configurable multiplier',
+  language: 'typescript',
+  category: 'utility',
+  code: `export function calculateOvertimePay(hours: number, rate: number, otHours: number, mult = 1.5) {
+  return (hours * rate) + (otHours * rate * mult);
+}`,
+});
+
+// Sync contractors for 1099
+await brewboard.sync1099Data(2025, [
+  { payeeId: 'w123', payeeName: 'John Doe', amount: 5000, date: '2025-03-15' },
+]);
+
+// Check connection
+const status = await brewboard.checkConnection();
+console.log(status.connected ? '✓ Connected' : '✗ Not connected');
+
+═══════════════════════════════════════════════════════════════════════════════
+## API ENDPOINTS
+═══════════════════════════════════════════════════════════════════════════════
+
+GET  /api/ecosystem/snippets        → List shared code snippets
+POST /api/ecosystem/snippets        → Push new snippet
+GET  /api/ecosystem/logs            → View sync activity
+POST /api/ecosystem/logs            → Log activity
+GET  /api/ecosystem/status          → Check connection status
+
+Headers required:
+  X-API-Key: bb_app_xxx
+  X-API-Secret: bb_secret_xxx
+  Content-Type: application/json
+
+═══════════════════════════════════════════════════════════════════════════════
+## PERMISSIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+read:code    - Access shared snippets
+write:code   - Push snippets
+read:data    - Access synced data
+write:data   - Push data
+read:clients - Access CRM data
+sync:all     - Full access
+
+═══════════════════════════════════════════════════════════════════════════════
+## NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+- API Secret shown only once when registering - save immediately
+- Store credentials in env vars, never commit to git
+- Compatible with: Brew & Board v1.2.2+, ORBIT v2.6.1+

@@ -246,20 +246,22 @@ function CuratedRoastersCarousel() {
                         return (
                           <div 
                             key={item.id} 
-                            className="flex items-center gap-3 p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
+                            className="p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
                             data-testid={`menu-item-${item.id}`}
                           >
-                            <div className="flex-1 min-w-0">
-                              <h5 className="text-stone-100 font-medium text-sm">{item.name}</h5>
-                              <p className="text-stone-300 text-xs truncate">{item.description}</p>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-stone-100 font-medium text-sm">{item.name}</h5>
+                                <p className="text-stone-300 text-xs line-clamp-2">{item.description}</p>
+                              </div>
+                              <span className="text-[#d4c4b0] font-semibold text-sm whitespace-nowrap">
+                                ${item.price.toFixed(2)}
+                              </span>
                             </div>
-                            <span className="text-[#d4c4b0] font-semibold text-sm whitespace-nowrap">
-                              ${item.price.toFixed(2)}
-                            </span>
                             <Button
                               size="sm"
                               variant={qty > 0 ? "default" : "outline"}
-                              className={`min-w-[70px] shine-effect ${qty > 0 ? "text-white" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
+                              className={`w-full shine-effect ${qty > 0 ? "text-white" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
                               style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
                                 if (item.modifiers && item.modifiers.length > 0) {
@@ -277,7 +279,7 @@ function CuratedRoastersCarousel() {
                               {item.modifiers && item.modifiers.length > 0 ? (
                                 <Settings2 className="h-3 w-3 mr-1" />
                               ) : null}
-                              {qty > 0 ? `${qty}` : "Add"}
+                              {qty > 0 ? `${qty} in cart` : "Add to Cart"}
                             </Button>
                           </div>
                         );
@@ -478,20 +480,20 @@ function FeaturedBoardsCarousel() {
                         return (
                           <div 
                             key={item.id} 
-                            className="flex items-center gap-3 p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
+                            className="p-3 rounded-lg bg-[#3d2418]/40 hover:bg-[#3d2418]/60 transition-colors border border-[#5c4033]/20"
                             data-testid={`boards-menu-item-${item.id}`}
                           >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <h5 className="font-medium text-stone-100 truncate">{item.name}</h5>
-                                <span className="text-[#d4c4b0] font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-medium text-stone-100 text-sm">{item.name}</h5>
+                                <p className="text-xs text-stone-300 line-clamp-2">{item.description}</p>
                               </div>
-                              <p className="text-xs text-stone-300 truncate">{item.description}</p>
+                              <span className="text-[#d4c4b0] font-semibold text-sm flex-shrink-0">${item.price.toFixed(2)}</span>
                             </div>
                             <Button
                               size="sm"
                               variant={qty > 0 ? "secondary" : "outline"}
-                              className={`shine-effect text-xs h-7 px-2 ${qty > 0 ? "text-white border-none" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
+                              className={`w-full shine-effect ${qty > 0 ? "text-white border-none" : "text-[#d4c4b0] hover:bg-[#3d2418]/30"}`}
                               style={qty > 0 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : { borderColor: '#5c4033' }}
                               onClick={() => {
                                 if (item.modifiers && item.modifiers.length > 0) {
@@ -511,7 +513,7 @@ function FeaturedBoardsCarousel() {
                               ) : (
                                 <Plus className="h-3 w-3 mr-1" />
                               )}
-                              {qty > 0 ? `${qty}` : "Add"}
+                              {qty > 0 ? `${qty} in cart` : "Add to Cart"}
                             </Button>
                           </div>
                         );

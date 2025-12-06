@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Mic, MicOff, Sparkles, Coffee, Loader2 } from "lucide-react";
+import { X, Send, Mic, MicOff, Sparkles, Coffee, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,11 +14,20 @@ interface Message {
   timestamp: Date;
 }
 
+interface StoredMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
 interface MascotPopoverProps {
   isOpen: boolean;
   onClose: () => void;
   onSendMessage?: (message: string) => Promise<string>;
 }
+
+const STORAGE_KEY = "mascot_chat_history";
 
 const WELCOME_MESSAGES = [
   "Hi there! I'm Happy Coffee, your friendly assistant! ☕ How can I help you today?",
@@ -26,10 +35,45 @@ const WELCOME_MESSAGES = [
   "Hey friend! Ready to tackle some tasks together? Just ask away!",
 ];
 
+const RETURN_MESSAGES = [
+  "Welcome back! ☕ Where were we?",
+  "Good to see you again! How can I help?",
+  "I'm here and ready to assist! ✨",
+];
+
+function loadMessagesFromStorage(): Message[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed: StoredMessage[] = JSON.parse(stored);
+      return parsed.map(m => ({
+        ...m,
+        timestamp: new Date(m.timestamp)
+      }));
+    }
+  } catch (e) {
+    console.error("Failed to load chat history:", e);
+  }
+  return [];
+}
+
+function saveMessagesToStorage(messages: Message[]) {
+  try {
+    const toStore: StoredMessage[] = messages.map(m => ({
+      ...m,
+      timestamp: m.timestamp.toISOString()
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+  } catch (e) {
+    console.error("Failed to save chat history:", e);
+  }
+}
+
 export function MascotPopover({ isOpen, onClose, onSendMessage }: MascotPopoverProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const { isListening, isSupported, startListening, stopListening, transcript, resetTranscript } = useSpeechToText({
     onResult: (text) => {
@@ -38,16 +82,36 @@ export function MascotPopover({ isOpen, onClose, onSendMessage }: MascotPopoverP
   });
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      const welcomeMessage = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
-      setMessages([{
-        id: "welcome",
-        role: "assistant",
-        content: welcomeMessage,
-        timestamp: new Date(),
-      }]);
+    if (isOpen && !initialized) {
+      const storedMessages = loadMessagesFromStorage();
+      
+      if (storedMessages.length > 0) {
+        setMessages(storedMessages);
+        const returnMessage: Message = {
+          id: `return-${Date.now()}`,
+          role: "assistant",
+          content: RETURN_MESSAGES[Math.floor(Math.random() * RETURN_MESSAGES.length)],
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, returnMessage]);
+      } else {
+        const welcomeMessage = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
+        setMessages([{
+          id: "welcome",
+          role: "assistant",
+          content: welcomeMessage,
+          timestamp: new Date(),
+        }]);
+      }
+      setInitialized(true);
     }
-  }, [isOpen, messages.length]);
+  }, [isOpen, initialized]);
+
+  useEffect(() => {
+    if (messages.length > 0 && initialized) {
+      saveMessagesToStorage(messages);
+    }
+  }, [messages, initialized]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -104,6 +168,17 @@ export function MascotPopover({ isOpen, onClose, onSendMessage }: MascotPopoverP
     }
   };
 
+  const handleClearHistory = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    const welcomeMessage = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
+    setMessages([{
+      id: "welcome-fresh",
+      role: "assistant",
+      content: welcomeMessage,
+      timestamp: new Date(),
+    }]);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -135,6 +210,17 @@ export function MascotPopover({ isOpen, onClose, onSendMessage }: MascotPopoverP
                   </h3>
                   <p className="text-amber-100 text-sm">Your AI Assistant</p>
                 </div>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearHistory}
+                  className="text-white/70 hover:text-white hover:bg-white/20 rounded-full"
+                  title="Clear chat history"
+                  data-testid="button-clear-chat"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
                 
                 <Button
                   variant="ghost"

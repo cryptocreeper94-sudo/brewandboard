@@ -23,6 +23,9 @@ const MASCOT_PHRASES = [
   "How can I assist you today?",
 ];
 
+const INTRO_GREETING = "Hi! I'm Happy Coffee, your AI assistant! ☕✨";
+const RECALL_MESSAGE = "Tap me anytime you need help!";
+
 export function MascotButton({
   onSpeechStart,
   onSpeechEnd,
@@ -32,9 +35,10 @@ export function MascotButton({
   className = "",
 }: MascotButtonProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [currentPhrase, setCurrentPhrase] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
+  const [speechBubbleText, setSpeechBubbleText] = useState("");
   const [displayTranscript, setDisplayTranscript] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [textInput, setTextInput] = useState("");
@@ -45,6 +49,25 @@ export function MascotButton({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const introSeen = localStorage.getItem("mascot_intro_seen");
+    if (!introSeen) {
+      setIsMinimized(false);
+      setTimeout(() => {
+        setSpeechBubbleText(INTRO_GREETING);
+        setShowSpeechBubble(true);
+        setTimeout(() => {
+          setSpeechBubbleText(RECALL_MESSAGE);
+          setTimeout(() => {
+            setShowSpeechBubble(false);
+            setIsMinimized(true);
+            localStorage.setItem("mascot_intro_seen", "true");
+          }, 2500);
+        }, 3000);
+      }, 1000);
+    } else {
+      setIsMinimized(true);
+    }
+
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -53,15 +76,27 @@ export function MascotButton({
   }, []);
 
   const handleMascotClick = () => {
-    if (!isExpanded) {
+    if (isMinimized) {
+      setIsMinimized(false);
       setIsExpanded(true);
       setShowSpeechBubble(true);
-      setCurrentPhrase(Math.floor(Math.random() * MASCOT_PHRASES.length));
+      setSpeechBubbleText(MASCOT_PHRASES[Math.floor(Math.random() * MASCOT_PHRASES.length)]);
+      setTimeout(() => setShowSpeechBubble(false), 3000);
+    } else if (!isExpanded) {
+      setIsExpanded(true);
+      setShowSpeechBubble(true);
+      setSpeechBubbleText(MASCOT_PHRASES[Math.floor(Math.random() * MASCOT_PHRASES.length)]);
       setTimeout(() => setShowSpeechBubble(false), 3000);
     } else {
       setIsExpanded(false);
       setShowSpeechBubble(false);
     }
+  };
+
+  const handleMinimize = () => {
+    setIsExpanded(false);
+    setShowTextInput(false);
+    setIsMinimized(true);
   };
 
   const startListening = () => {
@@ -134,7 +169,6 @@ export function MascotButton({
       if (onTextSubmit) {
         onTextSubmit(textInput.trim());
       }
-      // Simple AI-like responses for demo
       const responses = [
         "I'd love to help you with that! Let me look into it. ☕",
         "Great question! Here's what I think...",
@@ -156,6 +190,48 @@ export function MascotButton({
     }
   };
 
+  if (isMinimized) {
+    return (
+      <div className={`fixed bottom-14 right-4 z-[9999] ${className}`}>
+        <motion.button
+          onClick={handleMascotClick}
+          className="relative group bg-transparent border-none p-0 focus:outline-none outline-none"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          data-testid="button-mascot-minimized"
+        >
+          <div 
+            className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg"
+            style={{ 
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%)',
+              boxShadow: '0 0 20px rgba(251,191,36,0.5)'
+            }}
+          >
+            <img
+              src={mascotImage}
+              alt="Happy Coffee"
+              className="w-full h-full object-cover scale-150 translate-y-2"
+            />
+          </div>
+          <motion.div
+            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-amber-400 rounded-full"
+            animate={{
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 2,
+            }}
+          >
+            <Sparkles className="h-3 w-3 text-white" />
+          </motion.div>
+        </motion.button>
+      </div>
+    );
+  }
+
   return (
     <div className={`fixed bottom-14 right-4 z-[9999] ${className}`}>
       <AnimatePresence>
@@ -170,7 +246,7 @@ export function MascotButton({
               <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-amber-200 transform rotate-45" />
               <p className="text-sm font-medium text-amber-900 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                {MASCOT_PHRASES[currentPhrase]}
+                {speechBubbleText}
               </p>
             </div>
           </motion.div>
@@ -203,7 +279,6 @@ export function MascotButton({
               </Button>
             </motion.div>
 
-            {/* Text Input Button */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 onClick={toggleTextInput}
@@ -232,13 +307,10 @@ export function MascotButton({
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => {
-                  setIsExpanded(false);
-                  setShowTextInput(false);
-                }}
+                onClick={handleMinimize}
                 variant="outline"
                 className="rounded-full w-14 h-14 shadow-lg bg-white"
-                data-testid="button-close-mascot"
+                data-testid="button-minimize-mascot"
               >
                 <X className="h-6 w-6" />
               </Button>
@@ -247,7 +319,6 @@ export function MascotButton({
         )}
       </AnimatePresence>
 
-      {/* Text Input Panel */}
       <AnimatePresence>
         {showTextInput && isExpanded && (
           <motion.div
@@ -355,7 +426,6 @@ export function MascotButton({
         }}
         data-testid="button-mascot"
       >
-        {/* Just the floating mascot image with drop-shadow glow - no containers */}
         <img
           src={mascotImage}
           alt="Happy Coffee - Your AI Assistant"
@@ -365,7 +435,6 @@ export function MascotButton({
           }}
         />
 
-        {/* Sparkle indicator */}
         <motion.div
           className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center"
           animate={{

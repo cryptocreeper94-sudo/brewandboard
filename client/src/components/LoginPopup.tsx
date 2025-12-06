@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { LogIn, AlertTriangle, KeyRound } from "lucide-react";
+import { LogIn, AlertTriangle, KeyRound, User, Mail, Phone, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,12 @@ interface LoginPopupProps {
   onSwitchToRegister: () => void;
 }
 
+interface PartnerOnboardingData {
+  partnerId: string;
+  partnerName: string;
+  initialPin: string;
+}
+
 export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: LoginPopupProps) {
   const [loginPin, setLoginPin] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -28,6 +34,17 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
   const { toast } = useToast();
 
   const [, setLocation] = useLocation();
+  
+  // Partner onboarding state
+  const [showPartnerOnboarding, setShowPartnerOnboarding] = useState(false);
+  const [partnerOnboardingData, setPartnerOnboardingData] = useState<PartnerOnboardingData | null>(null);
+  const [onboardingForm, setOnboardingForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    newPin: "",
+    confirmPin: ""
+  });
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,13 +79,55 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
     // Partner PINs - 3-digit partner access to Partner Hub
     // Sarah = 777, Sid = 444
     if (loginPin === "777" || loginPin === "444") {
-      const issarah = loginPin === "777";
+      const isSarah = loginPin === "777";
+      const partnerId = isSarah ? "partner-sarah" : "partner-sid";
+      const partnerName = isSarah ? "Sarah" : "Sid";
+      
+      // Check if partner has completed onboarding
+      const onboardedKey = `partner_onboarded_${partnerId}`;
+      const isOnboarded = localStorage.getItem(onboardedKey) === "true";
+      
+      if (!isOnboarded) {
+        // First time login - show onboarding modal
+        setPartnerOnboardingData({
+          partnerId,
+          partnerName,
+          initialPin: loginPin
+        });
+        setOnboardingForm({
+          fullName: partnerName,
+          email: "",
+          phone: "",
+          newPin: "",
+          confirmPin: ""
+        });
+        setShowPartnerOnboarding(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Already onboarded - check if using their personal PIN
+      const storedPartner = localStorage.getItem(`partner_data_${partnerId}`);
+      if (storedPartner) {
+        const partnerData = JSON.parse(storedPartner);
+        // They should use their personal PIN now, not the initial one
+        toast({
+          title: "Please use your personal PIN",
+          description: "You've already set up your account. Use your 4-digit personal PIN to log in.",
+          variant: "destructive"
+        });
+        setLoginPin("");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fallback for legacy partners
       const partnerUser = {
-        id: issarah ? "partner-sarah" : "partner-sid",
-        email: issarah ? "sarah@brewandboard.coffee" : "sid@brewandboard.coffee",
+        id: partnerId,
+        email: isSarah ? "sarah@brewandboard.coffee" : "sid@brewandboard.coffee",
         businessName: "Brew & Board Partner",
-        contactName: issarah ? "Sarah" : "Sid",
-        name: issarah ? "Sarah" : "Sid",
+        contactName: partnerName,
+        name: partnerName,
         isPartner: true,
         role: "partner"
       };
@@ -86,6 +145,41 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       onClose();
       setLocation("/partner");
       return;
+    }
+    
+    // Check if this is a partner's personal PIN
+    const partnerIds = ["partner-sarah", "partner-sid"];
+    for (const pId of partnerIds) {
+      const storedPartner = localStorage.getItem(`partner_data_${pId}`);
+      if (storedPartner) {
+        const partnerData = JSON.parse(storedPartner);
+        if (partnerData.pin === loginPin) {
+          const partnerUser = {
+            id: pId,
+            email: partnerData.email,
+            businessName: "Brew & Board Partner",
+            contactName: partnerData.fullName,
+            name: partnerData.fullName,
+            phone: partnerData.phone,
+            isPartner: true,
+            role: "partner"
+          };
+          localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
+          localStorage.setItem("coffee_partner_auth", "true");
+          localStorage.setItem("user_name", partnerData.fullName);
+          localStorage.removeItem("is_guest");
+          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+          localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+          
+          toast({
+            title: `Welcome back, ${partnerData.fullName}!`,
+            description: "Partner access granted. Your Partner Hub is ready.",
+          });
+          onClose();
+          setLocation("/partner");
+          return;
+        }
+      }
     }
     
     try {
@@ -135,6 +229,192 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       setIsLoading(false);
     }
   };
+
+  const handlePartnerOnboarding = async () => {
+    if (!partnerOnboardingData) return;
+    
+    // Validate form
+    if (!onboardingForm.fullName.trim()) {
+      toast({ title: "Name required", description: "Please enter your full name.", variant: "destructive" });
+      return;
+    }
+    if (!onboardingForm.email.trim() || !onboardingForm.email.includes("@")) {
+      toast({ title: "Valid email required", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    if (!onboardingForm.phone.trim()) {
+      toast({ title: "Phone required", description: "Please enter your phone number.", variant: "destructive" });
+      return;
+    }
+    if (onboardingForm.newPin.length !== 4 || !/^\d{4}$/.test(onboardingForm.newPin)) {
+      toast({ title: "Invalid PIN", description: "Please enter a 4-digit PIN.", variant: "destructive" });
+      return;
+    }
+    if (onboardingForm.newPin !== onboardingForm.confirmPin) {
+      toast({ title: "PINs don't match", description: "Please make sure your PINs match.", variant: "destructive" });
+      return;
+    }
+    // Don't allow reserved PINs
+    if (["444", "777", "0424", "5555"].includes(onboardingForm.newPin)) {
+      toast({ title: "Reserved PIN", description: "This PIN is reserved. Please choose a different 4-digit PIN.", variant: "destructive" });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Save partner data to localStorage
+    const partnerData = {
+      fullName: onboardingForm.fullName,
+      email: onboardingForm.email,
+      phone: onboardingForm.phone,
+      pin: onboardingForm.newPin,
+      onboardedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`partner_data_${partnerOnboardingData.partnerId}`, JSON.stringify(partnerData));
+    localStorage.setItem(`partner_onboarded_${partnerOnboardingData.partnerId}`, "true");
+    
+    // Now log them in
+    const partnerUser = {
+      id: partnerOnboardingData.partnerId,
+      email: onboardingForm.email,
+      businessName: "Brew & Board Partner",
+      contactName: onboardingForm.fullName,
+      name: onboardingForm.fullName,
+      phone: onboardingForm.phone,
+      isPartner: true,
+      role: "partner"
+    };
+    localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
+    localStorage.setItem("coffee_partner_auth", "true");
+    localStorage.setItem("user_name", onboardingForm.fullName);
+    localStorage.removeItem("is_guest");
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
+    
+    toast({
+      title: `Welcome, ${onboardingForm.fullName}!`,
+      description: "Your account is set up. Remember your new 4-digit PIN for future logins.",
+    });
+    
+    setShowPartnerOnboarding(false);
+    setPartnerOnboardingData(null);
+    setIsLoading(false);
+    onClose();
+    setLocation("/partner");
+  };
+
+  // Partner onboarding modal
+  if (showPartnerOnboarding && partnerOnboardingData) {
+    return (
+      <Dialog open={true} onOpenChange={() => { setShowPartnerOnboarding(false); setPartnerOnboardingData(null); }}>
+        <DialogContent className="sm:max-w-md bg-card border-border/50 overflow-hidden p-0">
+          <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.3),transparent_50%)]" />
+            </div>
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-full">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-serif text-white">Welcome, {partnerOnboardingData.partnerName}!</DialogTitle>
+                <p className="text-amber-100 text-sm mt-1">Complete your partner account setup</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Please provide your contact information and create a personal 4-digit PIN for future logins.
+            </p>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <User className="h-3 w-3" /> Full Name
+                </Label>
+                <Input 
+                  value={onboardingForm.fullName}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Your full name"
+                  className="h-10"
+                  data-testid="input-partner-name"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Mail className="h-3 w-3" /> Email Address
+                </Label>
+                <Input 
+                  type="email"
+                  value={onboardingForm.email}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="your@email.com"
+                  className="h-10"
+                  data-testid="input-partner-email"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Phone className="h-3 w-3" /> Phone Number
+                </Label>
+                <Input 
+                  type="tel"
+                  value={onboardingForm.phone}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                  className="h-10"
+                  data-testid="input-partner-phone"
+                />
+              </div>
+              
+              <div className="border-t pt-3 mt-3">
+                <p className="text-xs text-center text-muted-foreground mb-3">Create your personal 4-digit PIN</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">New PIN</Label>
+                    <Input 
+                      type="password"
+                      maxLength={4}
+                      value={onboardingForm.newPin}
+                      onChange={(e) => setOnboardingForm(prev => ({ ...prev, newPin: e.target.value.replace(/\D/g, '') }))}
+                      placeholder="••••"
+                      className="text-center text-xl tracking-widest h-12"
+                      data-testid="input-partner-new-pin"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">Confirm PIN</Label>
+                    <Input 
+                      type="password"
+                      maxLength={4}
+                      value={onboardingForm.confirmPin}
+                      onChange={(e) => setOnboardingForm(prev => ({ ...prev, confirmPin: e.target.value.replace(/\D/g, '') }))}
+                      placeholder="••••"
+                      className="text-center text-xl tracking-widest h-12"
+                      data-testid="input-partner-confirm-pin"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handlePartnerOnboarding}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white h-12 text-base"
+              disabled={isLoading}
+              data-testid="button-complete-partner-setup"
+            >
+              {isLoading ? "Setting up..." : "Complete Setup & Enter Partner Hub"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

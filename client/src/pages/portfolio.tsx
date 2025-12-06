@@ -454,44 +454,44 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8">
+    <div className="min-h-screen bg-background text-foreground pb-20 p-4 md:p-8 overflow-x-hidden">
       {/* Demo Mode Banner */}
       {isDemoMode && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Sparkles className="h-4 w-4" />
-            <span>Demo Mode - Play around! Your notes won't be saved to the server.</span>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-3 flex items-center justify-between gap-2 shadow-lg">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium min-w-0">
+            <Sparkles className="h-4 w-4 shrink-0" />
+            <span className="truncate">Demo Mode - Notes saved locally only</span>
           </div>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={exitDemoMode}
-            className="text-white hover:bg-white/20 text-xs"
+            className="text-white hover:bg-white/20 text-xs shrink-0"
             data-testid="button-exit-demo"
           >
-            Exit Demo
+            Exit
           </Button>
         </div>
       )}
       
-      <div className={`max-w-6xl mx-auto ${isDemoMode ? 'pt-12' : ''}`}>
-        <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+      <div className={`max-w-6xl mx-auto overflow-x-hidden ${isDemoMode ? 'pt-12' : ''}`}>
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 min-w-0">
             <Link href={isDemoMode ? "/" : "/dashboard"}>
-              <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
+              <Button variant="ghost" size="icon" className="hover-3d shrink-0" data-testid="button-back">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div>
-              <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
-                <Book className="h-8 w-8 text-primary" />
-                My Portfolio
+            <div className="min-w-0">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2">
+                <Book className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
+                <span className="truncate">Portfolio & CRM</span>
               </h1>
-              <p className="text-muted-foreground">Meeting notes, job details, and templates.</p>
+              <p className="text-muted-foreground text-sm">Notes, job details, and industry templates</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <motion.div
               animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
               transition={{ repeat: Infinity, duration: 1 }}
@@ -499,18 +499,19 @@ export default function PortfolioPage() {
               <Button
                 onClick={isRecording ? stopVoiceNote : startVoiceNote}
                 variant={isRecording ? "destructive" : "outline"}
-                className={`gap-2 ${isRecording ? "animate-pulse" : "hover-3d"}`}
+                size="sm"
+                className={`gap-1.5 ${isRecording ? "animate-pulse" : "hover-3d"}`}
                 data-testid="button-voice-note"
               >
                 {isRecording ? (
                   <>
                     <MicOff className="h-4 w-4" />
-                    Stop Recording
+                    <span className="hidden sm:inline">Stop</span>
                   </>
                 ) : (
                   <>
                     <Mic className="h-4 w-4" />
-                    Record Note
+                    <span className="hidden sm:inline">Record</span>
                   </>
                 )}
               </Button>
@@ -518,8 +519,8 @@ export default function PortfolioPage() {
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" data-testid="button-new-entry">
-                  <Plus className="h-4 w-4" /> New Entry
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5" data-testid="button-new-entry">
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New Entry</span><span className="sm:hidden">New</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">

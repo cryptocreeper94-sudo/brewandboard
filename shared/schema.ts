@@ -63,7 +63,7 @@ export type InsertCrmNote = z.infer<typeof insertCrmNoteSchema>;
 export type CrmNote = typeof crmNotes.$inferSelect;
 
 // ========================
-// CLIENTS (CRM Contacts)
+// CLIENTS (CRM Contacts) - Enhanced HubSpot-style
 // ========================
 export const clients = pgTable(
   "clients",
@@ -71,18 +71,43 @@ export const clients = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: varchar("user_id").notNull().references(() => users.id),
 
+    // Basic Info
     name: varchar("name", { length: 255 }).notNull(),
     contactName: varchar("contact_name", { length: 255 }),
     contactEmail: varchar("contact_email", { length: 255 }),
     contactPhone: varchar("contact_phone", { length: 20 }),
+    
+    // Enhanced CRM Fields
+    jobTitle: varchar("job_title", { length: 100 }),
+    company: varchar("company", { length: 255 }),
+    website: varchar("website", { length: 255 }),
     industry: varchar("industry", { length: 100 }),
-
+    
+    // Social Links
+    linkedIn: varchar("linkedin", { length: 255 }),
+    twitter: varchar("twitter", { length: 100 }),
+    instagram: varchar("instagram", { length: 100 }),
+    
+    // Address
     addressLine1: varchar("address_line1", { length: 255 }),
+    addressLine2: varchar("address_line2", { length: 255 }),
     city: varchar("city", { length: 100 }),
-    state: varchar("state", { length: 2 }),
+    state: varchar("state", { length: 50 }),
     zipCode: varchar("zip_code", { length: 10 }),
-
-    status: varchar("status", { length: 50 }).default("active"), // active, inactive
+    country: varchar("country", { length: 100 }).default("USA"),
+    
+    // CRM Metadata
+    tags: text("tags").array(),
+    source: varchar("source", { length: 100 }), // how they were added: manual, scan, import
+    notes: text("notes"),
+    avatarUrl: text("avatar_url"),
+    
+    // Engagement tracking
+    lastContactedAt: timestamp("last_contacted_at"),
+    preferredChannel: varchar("preferred_channel", { length: 50 }), // email, phone, text
+    birthday: date("birthday"),
+    
+    status: varchar("status", { length: 50 }).default("active"), // active, inactive, lead, customer
     
     createdAt: timestamp("created_at").default(sql`NOW()`),
     updatedAt: timestamp("updated_at").default(sql`NOW()`),
@@ -90,6 +115,7 @@ export const clients = pgTable(
   (table) => ({
     userIdx: index("idx_clients_user_id").on(table.userId),
     nameIdx: index("idx_clients_name").on(table.name),
+    companyIdx: index("idx_clients_company").on(table.company),
   })
 );
 
@@ -100,6 +126,78 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 });
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type Client = typeof clients.$inferSelect;
+
+// ========================
+// USER BUSINESS CARDS (Digital Card Designer)
+// ========================
+export const businessCards = pgTable(
+  "business_cards",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    // Card Identity
+    cardName: varchar("card_name", { length: 100 }).default("My Business Card"),
+    isDefault: boolean("is_default").default(false),
+    
+    // Personal Info on Card
+    fullName: varchar("full_name", { length: 255 }).notNull(),
+    jobTitle: varchar("job_title", { length: 100 }),
+    company: varchar("company", { length: 255 }),
+    tagline: varchar("tagline", { length: 255 }),
+    
+    // Contact Info
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 30 }),
+    website: varchar("website", { length: 255 }),
+    
+    // Social Links
+    linkedIn: varchar("linkedin", { length: 255 }),
+    twitter: varchar("twitter", { length: 100 }),
+    instagram: varchar("instagram", { length: 100 }),
+    
+    // Address
+    addressLine1: varchar("address_line1", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 50 }),
+    zipCode: varchar("zip_code", { length: 10 }),
+    
+    // Design Config
+    template: varchar("template", { length: 50 }).default("classic"), // classic, modern, minimal, luxury
+    primaryColor: varchar("primary_color", { length: 20 }).default("#5c4033"),
+    secondaryColor: varchar("secondary_color", { length: 20 }).default("#d4a574"),
+    logoUrl: text("logo_url"),
+    avatarUrl: text("avatar_url"),
+    backgroundStyle: varchar("background_style", { length: 50 }).default("solid"), // solid, gradient, image
+    
+    // QR Code
+    qrCodeData: text("qr_code_data"), // vCard data or URL
+    
+    // Export
+    pdfUrl: text("pdf_url"),
+    imageUrl: text("image_url"),
+    
+    // Sharing
+    shareableLink: varchar("shareable_link", { length: 255 }),
+    viewCount: integer("view_count").default(0),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_business_cards_user").on(table.userId),
+  })
+);
+
+export const insertBusinessCardSchema = createInsertSchema(businessCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+});
+export type InsertBusinessCard = z.infer<typeof insertBusinessCardSchema>;
+export type BusinessCard = typeof businessCards.$inferSelect;
+
 
 // ========================
 // CRM ACTIVITIES (Timeline Events)

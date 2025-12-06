@@ -27,6 +27,7 @@ import {
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
+import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
 import Parser from "rss-parser";
 import { Resend } from "resend";
 
@@ -40,6 +41,9 @@ export async function registerRoutes(
   
   // Register hallmark routes (Blockchain verification)
   registerHallmarkRoutes(app);
+  
+  // Register app ecosystem routes (Inter-app communication)
+  registerAppEcosystemRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

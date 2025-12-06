@@ -20,7 +20,7 @@ export default function TermsPage() {
               </Link>
               <div>
                 <h1 className="font-serif text-xl font-bold text-amber-100">Terms & Conditions</h1>
-                <p className="text-xs text-amber-300/60">Last updated: December 2024</p>
+                <p className="text-xs text-amber-300/60">Last updated: December 2025</p>
               </div>
             </div>
             <FileText className="h-6 w-6 text-amber-400" />

@@ -169,7 +169,7 @@ export default function LandingPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100">
       
       {/* Elegant Header - Mobile Optimized */}
-      <header className="pt-4 pb-3 px-4 md:px-8 safe-area-top">
+      <header className="pt-8 md:pt-6 pb-3 px-4 md:px-8 safe-area-top">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ opacity: 0, y: -10 }}

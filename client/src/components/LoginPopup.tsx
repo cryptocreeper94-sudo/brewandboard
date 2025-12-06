@@ -59,26 +59,28 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     
-    // Partner PIN - Sarah's full access to Partner Hub (3-digit partner PINs)
-    if (loginPin === "777") {
+    // Partner PINs - 3-digit partner access to Partner Hub
+    // Sarah = 777, Sid = 444
+    if (loginPin === "777" || loginPin === "444") {
+      const issarah = loginPin === "777";
       const partnerUser = {
-        id: "partner-sarah",
-        email: "sarah@brewandboard.coffee",
+        id: issarah ? "partner-sarah" : "partner-sid",
+        email: issarah ? "sarah@brewandboard.coffee" : "sid@brewandboard.coffee",
         businessName: "Brew & Board Partner",
-        contactName: "Sarah",
-        name: "Sarah",
+        contactName: issarah ? "Sarah" : "Sid",
+        name: issarah ? "Sarah" : "Sid",
         isPartner: true,
         role: "partner"
       };
       localStorage.setItem("coffee_user", JSON.stringify(partnerUser));
       localStorage.setItem("coffee_partner_auth", "true");
-      localStorage.setItem("user_name", "Sarah");
+      localStorage.setItem("user_name", partnerUser.name);
       localStorage.removeItem("is_guest");
       const thirtyDays = 30 * 24 * 60 * 60 * 1000;
       localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
       
       toast({
-        title: "Welcome, Sarah!",
+        title: `Welcome, ${partnerUser.name}!`,
         description: "Partner access granted. Your Partner Hub is ready.",
       });
       onClose();

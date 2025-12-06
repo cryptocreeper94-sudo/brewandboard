@@ -51,7 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
-const PARTNER_PIN = "4444";
+const PARTNER_PINS = ["444", "777"]; // Sid and Sarah
 const REGIONAL_MANAGER_PIN = "5555";
 
 interface Hallmark {
@@ -173,12 +173,12 @@ export default function AdminPage() {
         toast({ title: "Developer Access Granted", description: "Redirecting to Developer Hub..." });
         setLocation("/developers");
         return;
-      } else if (pin === PARTNER_PIN) {
+      } else if (PARTNER_PINS.includes(pin)) {
         try {
           const response = await fetch("/api/regional/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pin: PARTNER_PIN })
+            body: JSON.stringify({ pin })
           });
           if (response.ok) {
             const data = await response.json();

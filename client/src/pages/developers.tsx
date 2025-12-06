@@ -695,7 +695,7 @@ export default function DevelopersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
@@ -719,15 +719,32 @@ export default function DevelopersPage() {
                       <Star className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-amber-800">Partner</p>
+                      <p className="font-semibold text-amber-800">Partner (Sid)</p>
                       <p className="text-xs text-amber-600">Full read access + team view</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-amber-100">
                     <span className="text-sm text-muted-foreground">Initial PIN:</span>
-                    <code className="font-mono text-lg font-bold text-amber-700 tracking-widest">4444</code>
+                    <code className="font-mono text-lg font-bold text-amber-700 tracking-widest">444</code>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Access: Regional Portal (/regional)</p>
+                  <p className="text-xs text-muted-foreground mt-2">Access: Partner Hub (/partner)</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-pink-800">Partner (Sarah)</p>
+                      <p className="text-xs text-pink-600">Full read access + team view</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-pink-100">
+                    <span className="text-sm text-muted-foreground">Initial PIN:</span>
+                    <code className="font-mono text-lg font-bold text-pink-700 tracking-widest">777</code>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Access: Partner Hub (/partner)</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200">

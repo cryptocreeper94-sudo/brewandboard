@@ -1490,9 +1490,10 @@ export async function registerRoutes(
     return true;
   };
 
-  // Master PINs for initial access
+  // Master PINs for initial access (3-digit partner PINs)
   const MASTER_PINS = {
-    PARTNER: "4444",      // Sid - Partner level, full access, sees all managers
+    PARTNER_SID: "444",   // Sid - Partner level, full access, sees all managers
+    PARTNER_SARAH: "777", // Sarah - Partner level, full access
     DEMO: "5555"          // Demo partner login - 2-day session for potential partners
   };
 
@@ -1500,18 +1501,19 @@ export async function registerRoutes(
   app.post("/api/regional-managers/login", async (req, res) => {
     try {
       const { pin } = req.body;
-      if (!pin || pin.length !== 4) {
-        return res.status(400).json({ error: "Valid 4-digit PIN is required" });
+      if (!pin || (pin.length !== 3 && pin.length !== 4)) {
+        return res.status(400).json({ error: "Valid 3 or 4-digit PIN is required" });
       }
       
       let manager = await storage.getRegionalManagerByPin(pin);
       
       // Check if using master PIN to create new account
       if (!manager) {
-        if (pin === MASTER_PINS.PARTNER) {
-          // Check if Sid's partner account already exists
+        if (pin === MASTER_PINS.PARTNER_SID || pin === MASTER_PINS.PARTNER_SARAH) {
+          // Check if partner account already exists for this PIN
           const existingManagers = await storage.getRegionalManagers({ isActive: true });
-          const partnerExists = existingManagers.some(m => m.role === "partner" && m.name === "Sid");
+          const partnerName = pin === MASTER_PINS.PARTNER_SID ? "Sid" : "Sarah";
+          const partnerExists = existingManagers.some(m => m.role === "partner" && m.name === partnerName);
           
           if (partnerExists) {
             return res.status(400).json({ 
@@ -1614,7 +1616,7 @@ export async function registerRoutes(
       }
       
       // Check if PIN is a master PIN
-      if (newPin === MASTER_PINS.PARTNER || newPin === MASTER_PINS.DEMO) {
+      if (newPin === MASTER_PINS.PARTNER_SID || newPin === MASTER_PINS.PARTNER_SARAH || newPin === MASTER_PINS.DEMO) {
         return res.status(400).json({ error: "This PIN is reserved. Please choose a different PIN." });
       }
       

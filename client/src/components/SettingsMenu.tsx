@@ -39,7 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
-const ADMIN_PIN = "4444";
+const PARTNER_PINS = ["444", "777"]; // Sid and Sarah
 const CURRENT_VERSION = "1.1.9";
 
 interface AppVersion {
@@ -141,15 +141,15 @@ export function SettingsMenu() {
     setIsLoading(true);
     
     setTimeout(() => {
-      if (adminPin === ADMIN_PIN) {
+      if (PARTNER_PINS.includes(adminPin)) {
         toast({
-          title: "Admin Access Granted",
-          description: "Welcome to the Admin Panel.",
+          title: "Partner Access Granted",
+          description: "Welcome to the Partner Hub.",
         });
         setShowAdminLogin(false);
         setAdminPin("");
         setIsOpen(false);
-        setLocation("/admin");
+        setLocation("/partner");
       } else {
         toast({
           title: "Access Denied",

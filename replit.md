@@ -47,3 +47,20 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **News Feed**: WKRN
 - **Weather API**: Open-Meteo
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
+
+## Current Version
+**v1.1.9** - December 2024 | Stamped on Solana mainnet (BB-0000000021)
+
+## Recent Changes (December 2024)
+- **v1.1.9**: Partner Hub & Error Reporting System
+  - New Partner Hub with accordion-style navigation for mobile-friendly experience
+  - 3-digit PIN access for partners (Sarah = 777)
+  - Comprehensive bug reporting system accessible from hamburger menu
+  - Error reports dashboard in Partner Hub with status/severity filters
+  - Database schema: error_reports table with full issue tracking
+  - Stamped on Solana mainnet (BB-0000000021)
+
+- **v1.1.8**: Meeting Presentation Builder
+  - Slideshow-style presentation builder with 3 templates
+  - Attach scanned documents, add attendees, generate shareable links
+  - Stamped on Solana mainnet (BB-0000000020)

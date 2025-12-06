@@ -40,7 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
 const ADMIN_PIN = "4444";
-const CURRENT_VERSION = "1.1.6";
+const CURRENT_VERSION = "1.1.9";
 
 interface AppVersion {
   version: string;

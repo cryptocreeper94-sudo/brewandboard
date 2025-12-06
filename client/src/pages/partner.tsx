@@ -394,7 +394,7 @@ export default function PartnerHub() {
           transition={{ delay: 0.6 }}
           className="mt-6 text-center text-amber-200/40 text-xs"
         >
-          Brew & Board Coffee Partner Portal v1.1.8
+          Brew & Board Coffee Partner Portal v1.1.9
         </motion.div>
       </div>
     </div>

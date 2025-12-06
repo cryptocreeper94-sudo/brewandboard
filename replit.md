@@ -49,9 +49,17 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.1.9** - December 2024 | Stamped on Solana mainnet (BB-0000000021)
+**v1.2.0** - December 2024 | 1099 Compliance Portal
 
 ## Recent Changes (December 2024)
+- **v1.2.0**: 1099 Compliance Portal
+  - Full 1099-NEC tracking system in Developer Hub
+  - Payee Directory: Add contractors, referral partners, franchise owners, delivery drivers with masked tax IDs
+  - Payment Ledger: Record commissions, referrals, contractor payments with category tracking
+  - Year-End Filing: Automatic $600 threshold tracking, W-9 status monitoring, 1099-NEC generation prep
+  - Database: payees, payments1099, filings1099 tables with secure tax ID storage (last 4 digits only)
+  - API: Full CRUD for /api/1099/payees, /api/1099/payments, /api/1099/summary/:year, /api/1099/filings/:year
+
 - **v1.1.9**: Partner Hub & Error Reporting System
   - New Partner Hub with accordion-style navigation for mobile-friendly experience
   - 3-digit PIN access for partners (Sarah = 777)

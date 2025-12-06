@@ -2294,6 +2294,17 @@ export async function registerRoutes(
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.message });
       }
+      
+      // Server-side validation: taxIdLast4 must be exactly 4 digits
+      if (parsed.data.taxIdLast4) {
+        const cleanedTaxId = parsed.data.taxIdLast4.replace(/\D/g, '');
+        if (cleanedTaxId.length !== 4) {
+          return res.status(400).json({ error: "Tax ID must be exactly 4 digits (last 4 only)" });
+        }
+        // Ensure only digits are stored
+        parsed.data.taxIdLast4 = cleanedTaxId;
+      }
+      
       const payee = await storage.createPayee(parsed.data);
       res.json(payee);
     } catch (error: any) {

@@ -281,6 +281,668 @@ function MethodBadge({ method }: { method: string }) {
   );
 }
 
+interface Payee1099 {
+  id: string;
+  displayName: string;
+  legalName?: string;
+  type: string;
+  taxIdLast4?: string;
+  taxIdType?: string;
+  email?: string;
+  phone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  w9DocumentUrl?: string;
+  w9UploadedAt?: string;
+  status: string;
+  createdAt: string;
+}
+
+interface Payment1099Record {
+  id: string;
+  payeeId: string;
+  amount: string;
+  category: string;
+  description?: string;
+  paymentDate: string;
+  referenceNumber?: string;
+  isTaxable: boolean;
+  taxYear: number;
+}
+
+interface Filing1099Record {
+  id: string;
+  payeeId: string;
+  taxYear: number;
+  totalTaxablePaid: string;
+  thresholdMet: boolean;
+  filingStatus: string;
+}
+
+interface Summary1099 {
+  totalPayees: number;
+  totalTaxablePaid: string;
+  payeesOverThreshold: number;
+  payeesUnderThreshold: number;
+  taxYear: number;
+  threshold: number;
+}
+
+function Compliance1099Portal() {
+  const { toast } = useToast();
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [payees, setPayees] = useState<Payee1099[]>([]);
+  const [payments, setPayments] = useState<Payment1099Record[]>([]);
+  const [summary, setSummary] = useState<Summary1099 | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAddPayee, setShowAddPayee] = useState(false);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [selectedPayee, setSelectedPayee] = useState<string | null>(null);
+  
+  const [newPayee, setNewPayee] = useState({
+    displayName: '',
+    legalName: '',
+    type: 'contractor',
+    taxIdLast4: '',
+    taxIdType: 'SSN',
+    email: '',
+    phone: '',
+    addressLine1: '',
+    city: '',
+    state: 'TN',
+    zipCode: ''
+  });
+  
+  const [newPayment, setNewPayment] = useState({
+    payeeId: '',
+    amount: '',
+    category: 'referral_commission',
+    description: '',
+    paymentDate: new Date().toISOString().split('T')[0],
+    referenceNumber: '',
+    isTaxable: true
+  });
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [payeesRes, paymentsRes, summaryRes] = await Promise.all([
+        fetch('/api/1099/payees'),
+        fetch(`/api/1099/payments?taxYear=${selectedYear}`),
+        fetch(`/api/1099/summary/${selectedYear}`)
+      ]);
+      
+      if (payeesRes.ok) setPayees(await payeesRes.json());
+      if (paymentsRes.ok) setPayments(await paymentsRes.json());
+      if (summaryRes.ok) setSummary(await summaryRes.json());
+    } catch (error) {
+      console.error('Failed to fetch 1099 data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedYear]);
+
+  const handleAddPayee = async () => {
+    if (!newPayee.displayName || !newPayee.taxIdLast4) {
+      toast({ title: "Name and Tax ID (last 4) required", variant: "destructive" });
+      return;
+    }
+    
+    // Validate tax ID is exactly 4 digits
+    if (!/^\d{4}$/.test(newPayee.taxIdLast4)) {
+      toast({ title: "Tax ID must be exactly 4 digits", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/1099/payees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newPayee,
+          status: 'pending_w9'
+        })
+      });
+      
+      if (res.ok) {
+        toast({ title: "Payee added successfully" });
+        setShowAddPayee(false);
+        setNewPayee({ displayName: '', legalName: '', type: 'contractor', taxIdLast4: '', taxIdType: 'SSN', email: '', phone: '', addressLine1: '', city: '', state: 'TN', zipCode: '' });
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast({ title: error.error || "Failed to add payee", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Failed to add payee", variant: "destructive" });
+    }
+  };
+
+  const handleAddPayment = async () => {
+    if (!newPayment.payeeId || !newPayment.amount) {
+      toast({ title: "Payee and amount required", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/1099/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newPayment,
+          taxYear: selectedYear
+        })
+      });
+      
+      if (res.ok) {
+        toast({ title: "Payment recorded successfully" });
+        setShowAddPayment(false);
+        setNewPayment({ payeeId: '', amount: '', category: 'referral_commission', description: '', paymentDate: new Date().toISOString().split('T')[0], referenceNumber: '', isTaxable: true });
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast({ title: error.error || "Failed to record payment", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Failed to record payment", variant: "destructive" });
+    }
+  };
+
+  const getPayeeName = (payeeId: string) => {
+    const payee = payees.find(p => p.id === payeeId);
+    return payee?.displayName || 'Unknown';
+  };
+
+  const formatCurrency = (amount: string | number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+  };
+
+  const categoryLabels: Record<string, string> = {
+    referral_commission: 'Referral Commission',
+    delivery_commission: 'Delivery Commission',
+    franchise_royalty: 'Franchise Royalty',
+    contractor_payment: 'Contractor Payment',
+    bonus: 'Bonus',
+    other: 'Other'
+  };
+
+  return (
+    <Card className="premium-card border-0">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+          <FileCheck className="h-6 w-6 text-rose-600" />
+          1099 Compliance Portal
+        </CardTitle>
+        <CardDescription>
+          Track payments, commissions, referrals, and issue 1099-NEC forms
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Year Selector & Summary */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Tax Year:</span>
+            <select 
+              value={selectedYear} 
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="border rounded-lg px-3 py-2 text-sm bg-white"
+              data-testid="select-tax-year"
+            >
+              {[currentYear, currentYear - 1, currentYear - 2].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          {summary && (
+            <div className="flex flex-wrap gap-4">
+              <div className="px-4 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                <p className="text-xs text-emerald-600">Total Taxable Paid</p>
+                <p className="font-bold text-emerald-700">{formatCurrency(summary.totalTaxablePaid)}</p>
+              </div>
+              <div className="px-4 py-2 rounded-lg bg-rose-50 border border-rose-200">
+                <p className="text-xs text-rose-600">Over $600 Threshold</p>
+                <p className="font-bold text-rose-700">{summary.payeesOverThreshold} payees</p>
+              </div>
+              <div className="px-4 py-2 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-xs text-amber-600">Under Threshold</p>
+                <p className="font-bold text-amber-700">{summary.payeesUnderThreshold} payees</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Accordion type="multiple" className="space-y-4">
+          {/* Payee Directory */}
+          <AccordionItem value="payees" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+            <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-1099-payees">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg">Payee Directory</span>
+                    <Badge className="bg-rose-100 text-rose-700 border-rose-200">{payees.length} payees</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Manage contractors, partners, and referral sources</p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => setShowAddPayee(!showAddPayee)}
+                  variant="outline"
+                  className="w-full border-dashed"
+                  data-testid="button-add-payee"
+                >
+                  {showAddPayee ? 'Cancel' : '+ Add New Payee'}
+                </Button>
+                
+                {showAddPayee && (
+                  <div className="p-4 border rounded-lg bg-white space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Display Name *</label>
+                        <Input 
+                          value={newPayee.displayName}
+                          onChange={(e) => setNewPayee({...newPayee, displayName: e.target.value})}
+                          placeholder="Full name or business name"
+                          data-testid="input-payee-name"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Type</label>
+                        <select
+                          value={newPayee.type}
+                          onChange={(e) => setNewPayee({...newPayee, type: e.target.value})}
+                          className="w-full border rounded-lg px-3 py-2 text-sm"
+                          data-testid="select-payee-type"
+                        >
+                          <option value="contractor">Contractor</option>
+                          <option value="referral_partner">Referral Partner</option>
+                          <option value="franchise_owner">Franchise Owner</option>
+                          <option value="delivery_driver">Delivery Driver</option>
+                          <option value="vendor">Vendor</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Tax ID Type</label>
+                        <select
+                          value={newPayee.taxIdType}
+                          onChange={(e) => setNewPayee({...newPayee, taxIdType: e.target.value})}
+                          className="w-full border rounded-lg px-3 py-2 text-sm"
+                          data-testid="select-payee-taxid-type"
+                        >
+                          <option value="SSN">SSN (Individual)</option>
+                          <option value="EIN">EIN (Business)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Tax ID (last 4 digits only) *</label>
+                        <Input 
+                          value={newPayee.taxIdLast4}
+                          onChange={(e) => setNewPayee({...newPayee, taxIdLast4: e.target.value.replace(/\D/g, '').slice(0, 4)})}
+                          placeholder="1234"
+                          maxLength={4}
+                          data-testid="input-payee-taxid"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Security: Only last 4 digits stored</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Email</label>
+                        <Input 
+                          value={newPayee.email}
+                          onChange={(e) => setNewPayee({...newPayee, email: e.target.value})}
+                          placeholder="email@example.com"
+                          type="email"
+                          data-testid="input-payee-email"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Phone</label>
+                        <Input 
+                          value={newPayee.phone}
+                          onChange={(e) => setNewPayee({...newPayee, phone: e.target.value})}
+                          placeholder="(615) 555-0123"
+                          data-testid="input-payee-phone"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Address</label>
+                        <Input 
+                          value={newPayee.addressLine1}
+                          onChange={(e) => setNewPayee({...newPayee, addressLine1: e.target.value})}
+                          placeholder="123 Main St"
+                          data-testid="input-payee-address"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">City</label>
+                        <Input 
+                          value={newPayee.city}
+                          onChange={(e) => setNewPayee({...newPayee, city: e.target.value})}
+                          placeholder="Nashville"
+                          data-testid="input-payee-city"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500">State</label>
+                          <Input 
+                            value={newPayee.state}
+                            onChange={(e) => setNewPayee({...newPayee, state: e.target.value.toUpperCase().slice(0, 2)})}
+                            placeholder="TN"
+                            maxLength={2}
+                            data-testid="input-payee-state"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500">ZIP</label>
+                          <Input 
+                            value={newPayee.zipCode}
+                            onChange={(e) => setNewPayee({...newPayee, zipCode: e.target.value})}
+                            placeholder="37201"
+                            data-testid="input-payee-zip"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <Button onClick={handleAddPayee} className="w-full bg-rose-600 hover:bg-rose-700" data-testid="button-save-payee">
+                      Save Payee
+                    </Button>
+                  </div>
+                )}
+                
+                {payees.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No payees yet. Add your first contractor or referral partner.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {payees.map(payee => (
+                      <div 
+                        key={payee.id} 
+                        className="p-3 border rounded-lg bg-white hover:border-rose-300 transition-colors"
+                        data-testid={`payee-row-${payee.id}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{payee.displayName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {payee.type.replace('_', ' ')} • {payee.taxIdType || 'SSN'}: ***-**-{payee.taxIdLast4 || '????'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {payee.w9UploadedAt ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">W-9 On File</Badge>
+                            ) : (
+                              <Badge className="bg-amber-100 text-amber-700 border-amber-200">W-9 Needed</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Payment Ledger */}
+          <AccordionItem value="payments" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+            <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-1099-payments">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg">Payment Ledger</span>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">{payments.length} payments</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Record commissions, referrals, and contractor payments</p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => setShowAddPayment(!showAddPayment)}
+                  variant="outline"
+                  className="w-full border-dashed"
+                  disabled={payees.length === 0}
+                  data-testid="button-add-payment"
+                >
+                  {showAddPayment ? 'Cancel' : '+ Record Payment'}
+                </Button>
+                
+                {payees.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center">Add a payee first to record payments</p>
+                )}
+                
+                {showAddPayment && (
+                  <div className="p-4 border rounded-lg bg-white space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Payee *</label>
+                        <select
+                          value={newPayment.payeeId}
+                          onChange={(e) => setNewPayment({...newPayment, payeeId: e.target.value})}
+                          className="w-full border rounded-lg px-3 py-2 text-sm"
+                          data-testid="select-payment-payee"
+                        >
+                          <option value="">Select payee...</option>
+                          {payees.map(p => (
+                            <option key={p.id} value={p.id}>{p.displayName}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Amount *</label>
+                        <Input 
+                          value={newPayment.amount}
+                          onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})}
+                          placeholder="0.00"
+                          type="number"
+                          step="0.01"
+                          data-testid="input-payment-amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Category</label>
+                        <select
+                          value={newPayment.category}
+                          onChange={(e) => setNewPayment({...newPayment, category: e.target.value})}
+                          className="w-full border rounded-lg px-3 py-2 text-sm"
+                          data-testid="select-payment-category"
+                        >
+                          <option value="referral_commission">Referral Commission</option>
+                          <option value="delivery_commission">Delivery Commission</option>
+                          <option value="franchise_royalty">Franchise Royalty</option>
+                          <option value="contractor_payment">Contractor Payment</option>
+                          <option value="bonus">Bonus</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Payment Date</label>
+                        <Input 
+                          value={newPayment.paymentDate}
+                          onChange={(e) => setNewPayment({...newPayment, paymentDate: e.target.value})}
+                          type="date"
+                          data-testid="input-payment-date"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-xs font-medium text-gray-500">Description</label>
+                        <Input 
+                          value={newPayment.description}
+                          onChange={(e) => setNewPayment({...newPayment, description: e.target.value})}
+                          placeholder="Description of payment"
+                          data-testid="input-payment-description"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Reference #</label>
+                        <Input 
+                          value={newPayment.referenceNumber}
+                          onChange={(e) => setNewPayment({...newPayment, referenceNumber: e.target.value})}
+                          placeholder="Check # or transaction ID"
+                          data-testid="input-payment-reference"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={newPayment.isTaxable}
+                          onChange={(e) => setNewPayment({...newPayment, isTaxable: e.target.checked})}
+                          id="is-taxable"
+                          data-testid="checkbox-payment-taxable"
+                        />
+                        <label htmlFor="is-taxable" className="text-sm">Taxable (report on 1099)</label>
+                      </div>
+                    </div>
+                    <Button onClick={handleAddPayment} className="w-full bg-emerald-600 hover:bg-emerald-700" data-testid="button-save-payment">
+                      Record Payment
+                    </Button>
+                  </div>
+                )}
+                
+                {payments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <DollarSign className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No payments recorded for {selectedYear}.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {payments.map(payment => (
+                      <div 
+                        key={payment.id} 
+                        className="p-3 border rounded-lg bg-white hover:border-emerald-300 transition-colors"
+                        data-testid={`payment-row-${payment.id}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{getPayeeName(payment.payeeId)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {categoryLabels[payment.category] || payment.category} • {new Date(payment.paymentDate).toLocaleDateString()}
+                            </p>
+                            {payment.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{payment.description}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">{formatCurrency(payment.amount)}</p>
+                            {payment.isTaxable ? (
+                              <Badge className="bg-rose-100 text-rose-700 border-rose-200 text-xs">Taxable</Badge>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-700 border-gray-200 text-xs">Non-Taxable</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Year-End Filing */}
+          <AccordionItem value="filing" className="border rounded-xl bg-white/50 backdrop-blur px-4">
+            <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-1099-filing">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <FileCheck className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg">Year-End Filing</span>
+                    <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">
+                      {summary?.payeesOverThreshold || 0} to file
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Generate 1099-NEC forms for payees over $600</p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-indigo-600" />
+                    1099-NEC Filing Requirements
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Issue 1099-NEC to payees who received $600+ in non-employee compensation</li>
+                    <li>• Deadline: January 31st (to recipients and IRS)</li>
+                    <li>• Must have W-9 on file before issuing 1099</li>
+                    <li>• Keep records for at least 4 years</li>
+                  </ul>
+                </div>
+                
+                {summary && summary.payeesOverThreshold > 0 ? (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Payees Requiring 1099-NEC ({selectedYear})</h4>
+                    <p className="text-xs text-muted-foreground">
+                      These payees have received over ${summary.threshold} in taxable payments
+                    </p>
+                    {payees.filter(p => {
+                      const payeePayments = payments.filter(pay => pay.payeeId === p.id && pay.isTaxable);
+                      const total = payeePayments.reduce((sum, pay) => sum + Number(pay.amount), 0);
+                      return total >= (summary?.threshold || 600);
+                    }).map(payee => {
+                      const payeePayments = payments.filter(pay => pay.payeeId === payee.id && pay.isTaxable);
+                      const total = payeePayments.reduce((sum, pay) => sum + Number(pay.amount), 0);
+                      return (
+                        <div key={payee.id} className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{payee.displayName}</p>
+                            <p className="text-sm text-muted-foreground">{payee.taxIdType || 'SSN'}: ***-**-{payee.taxIdLast4 || '????'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-rose-600">{formatCurrency(total)}</p>
+                            {payee.w9UploadedAt ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Ready to File</Badge>
+                            ) : (
+                              <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">W-9 Required</Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    <Button variant="outline" className="w-full mt-4" disabled data-testid="button-generate-1099s">
+                      <FileCheck className="h-4 w-4 mr-2" />
+                      Generate 1099-NEC Forms (Coming Soon)
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileCheck className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No payees have reached the $600 threshold for {selectedYear}.</p>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevelopersPage() {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -1545,6 +2207,16 @@ export default function DevelopersPage() {
               </Accordion>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* 1099 Compliance Portal */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.46 }}
+          className="mb-12"
+        >
+          <Compliance1099Portal />
         </motion.div>
 
         <motion.div

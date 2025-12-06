@@ -1667,3 +1667,168 @@ export const insertErrorReportSchema = createInsertSchema(errorReports).omit({
 });
 export type InsertErrorReport = z.infer<typeof insertErrorReportSchema>;
 export type ErrorReport = typeof errorReports.$inferSelect;
+
+// ========================
+// 1099 COMPLIANCE - PAYEES (Contractors, Partners, Referrals)
+// ========================
+export const payees = pgTable(
+  "payees",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Basic Info
+    displayName: varchar("display_name", { length: 255 }).notNull(),
+    type: varchar("type", { length: 50 }).notNull().default("contractor"),
+    // Types: 'contractor', 'partner', 'referral', 'vendor', 'consultant'
+    
+    // Legal/Tax Info (SECURITY: Only store masked last 4 digits, require W-9 for full info)
+    legalName: varchar("legal_name", { length: 255 }),
+    taxIdLast4: varchar("tax_id_last4", { length: 4 }), // Only last 4 digits stored
+    taxIdType: varchar("tax_id_type", { length: 10 }), // 'SSN' or 'EIN'
+    w9DocumentUrl: text("w9_document_url"), // URL to uploaded W-9 form
+    w9UploadedAt: timestamp("w9_uploaded_at"),
+    
+    // Contact Info
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    
+    // Mailing Address (for 1099 delivery)
+    addressLine1: varchar("address_line1", { length: 255 }),
+    addressLine2: varchar("address_line2", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    state: varchar("state", { length: 50 }),
+    zipCode: varchar("zip_code", { length: 10 }),
+    country: varchar("country", { length: 100 }).default("USA"),
+    
+    // Status
+    status: varchar("status", { length: 30 }).default("active"),
+    // Statuses: 'active', 'inactive', 'pending_w9', 'w9_expired'
+    
+    notes: text("notes"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    typeIdx: index("idx_payees_type").on(table.type),
+    statusIdx: index("idx_payees_status").on(table.status),
+    nameIdx: index("idx_payees_name").on(table.displayName),
+  })
+);
+
+export const insertPayeeSchema = createInsertSchema(payees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPayee = z.infer<typeof insertPayeeSchema>;
+export type Payee = typeof payees.$inferSelect;
+
+// Payee type constants
+export const PAYEE_TYPES = ['contractor', 'partner', 'referral', 'vendor', 'consultant'] as const;
+export const PAYEE_STATUSES = ['active', 'inactive', 'pending_w9', 'w9_expired'] as const;
+
+// ========================
+// 1099 COMPLIANCE - PAYMENTS (Individual disbursements)
+// ========================
+export const payments1099 = pgTable(
+  "payments_1099",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    payeeId: varchar("payee_id").notNull().references(() => payees.id),
+    
+    // Payment Details
+    taxYear: integer("tax_year").notNull(),
+    paymentDate: date("payment_date").notNull(),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    
+    // Categorization
+    category: varchar("category", { length: 50 }).notNull().default("contractor"),
+    // Categories: 'contractor', 'referral', 'commission', 'reimbursement', 'bonus'
+    
+    paymentMethod: varchar("payment_method", { length: 30 }).default("check"),
+    // Methods: 'check', 'ach', 'wire', 'cash', 'crypto', 'venmo', 'paypal', 'zelle'
+    
+    memo: text("memo"),
+    referenceNumber: varchar("reference_number", { length: 100 }), // Check #, transaction ID, etc.
+    
+    // Tax classification
+    isTaxable: boolean("is_taxable").default(true),
+    form1099Box: varchar("form_1099_box", { length: 10 }).default("7"), // Box 7 = Nonemployee compensation
+    
+    // Audit trail
+    createdBy: varchar("created_by", { length: 255 }),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    payeeIdx: index("idx_payments_1099_payee").on(table.payeeId),
+    yearIdx: index("idx_payments_1099_year").on(table.taxYear),
+    dateIdx: index("idx_payments_1099_date").on(table.paymentDate),
+    categoryIdx: index("idx_payments_1099_category").on(table.category),
+  })
+);
+
+export const insertPayment1099Schema = createInsertSchema(payments1099).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPayment1099 = z.infer<typeof insertPayment1099Schema>;
+export type Payment1099 = typeof payments1099.$inferSelect;
+
+// Payment category constants
+export const PAYMENT_1099_CATEGORIES = ['contractor', 'referral', 'commission', 'reimbursement', 'bonus'] as const;
+export const PAYMENT_1099_METHODS = ['check', 'ach', 'wire', 'cash', 'crypto', 'venmo', 'paypal', 'zelle'] as const;
+
+// ========================
+// 1099 COMPLIANCE - ANNUAL FILINGS
+// ========================
+export const filings1099 = pgTable(
+  "filings_1099",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    payeeId: varchar("payee_id").notNull().references(() => payees.id),
+    taxYear: integer("tax_year").notNull(),
+    
+    // Calculated totals
+    totalTaxablePaid: decimal("total_taxable_paid", { precision: 12, scale: 2 }).notNull().default("0"),
+    thresholdMet: boolean("threshold_met").default(false), // True if >= $600
+    
+    // Filing status
+    filingStatus: varchar("filing_status", { length: 30 }).default("draft"),
+    // Statuses: 'draft', 'ready', 'generated', 'transmitted', 'accepted', 'corrected', 'rejected'
+    
+    // Form details
+    pdfUrl: text("pdf_url"), // Generated 1099 PDF
+    
+    // Timestamps
+    generatedAt: timestamp("generated_at"),
+    mailedAt: timestamp("mailed_at"),
+    transmittedAt: timestamp("transmitted_at"),
+    
+    notes: text("notes"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    payeeYearIdx: index("idx_filings_1099_payee_year").on(table.payeeId, table.taxYear),
+    statusIdx: index("idx_filings_1099_status").on(table.filingStatus),
+    thresholdIdx: index("idx_filings_1099_threshold").on(table.thresholdMet),
+  })
+);
+
+export const insertFiling1099Schema = createInsertSchema(filings1099).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFiling1099 = z.infer<typeof insertFiling1099Schema>;
+export type Filing1099 = typeof filings1099.$inferSelect;
+
+// 1099 Filing status constants
+export const FILING_1099_STATUSES = ['draft', 'ready', 'generated', 'transmitted', 'accepted', 'corrected', 'rejected'] as const;
+export const TAX_THRESHOLD_1099 = 600; // $600 threshold for 1099-NEC

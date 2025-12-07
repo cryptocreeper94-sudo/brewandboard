@@ -1388,6 +1388,11 @@ export const virtualMeetings = pgTable(
     deliveryProvider: varchar("delivery_provider", { length: 30 }).default("manual"),
     // Values: 'manual', 'local', 'doordash', 'uber_eats'
     
+    // Multi-site/multi-city coordination
+    isCoordinatedOrder: boolean("is_coordinated_order").default(false),
+    // Auto-gratuity for coordinated orders (18% minimum for multi-site/multi-city)
+    autoGratuityPercent: integer("auto_gratuity_percent").default(18),
+    
     // Status workflow
     status: varchar("status", { length: 30 }).default("draft").notNull(),
     // Status: 'draft', 'collecting', 'ready_to_order', 'ordering', 'ordered', 'delivered', 'completed', 'cancelled'
@@ -1498,6 +1503,9 @@ export const virtualSelections = pgTable(
     
     // Special requests
     specialRequests: text("special_requests"),
+    
+    // Attendee additional tip (optional, since host is already tipping)
+    attendeeTipCents: integer("attendee_tip_cents").default(0),
     
     createdAt: timestamp("created_at").default(sql`NOW()`),
     updatedAt: timestamp("updated_at").default(sql`NOW()`),

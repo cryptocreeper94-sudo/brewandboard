@@ -419,6 +419,16 @@ export default function VirtualHostPage() {
                             </div>
                           </motion.div>
                         </div>
+                        
+                        {/* Multi-site/Multi-city Auto-Gratuity Notice */}
+                        <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                          <p className="text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                            <DollarSign className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                            <span>
+                              <strong>Coordinated Order Gratuity:</strong> Orders delivering to multiple sites or cities automatically include a minimum 18% gratuity for our concierge team.
+                            </span>
+                          </p>
+                        </div>
                       </div>
 
                       {/* Budget */}

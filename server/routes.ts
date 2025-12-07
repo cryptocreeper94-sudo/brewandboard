@@ -823,7 +823,15 @@ export async function registerRoutes(
         });
       }
       
-      const order = await storage.createScheduledOrder(validatedData);
+      // Set internal gratuity - for manual/local fulfillment, all gratuity is kept internally
+      // When DoorDash/Uber integration is added, this splits between internal and partner
+      const orderData = {
+        ...validatedData,
+        internalGratuity: validatedData.gratuity || "0.00", // All gratuity kept by Brew & Board
+        partnerGratuity: "0.00", // No delivery partner gets the tip
+      };
+      
+      const order = await storage.createScheduledOrder(orderData);
       
       // Create initial order event
       await storage.createOrderEvent({
@@ -2114,7 +2122,10 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Meeting not found" });
       }
       
-      const { items, specialRequests, addressLine1, addressLine2, city, state, zipCode, deliveryInstructions } = req.body;
+      const { items, specialRequests, addressLine1, addressLine2, city, state, zipCode, deliveryInstructions, attendeeTip } = req.body;
+      
+      // Convert attendee tip to cents (tip comes in as dollars)
+      const attendeeTipCents = attendeeTip ? Math.round(parseFloat(attendeeTip) * 100) : 0;
       
       // Update attendee address if provided
       if (addressLine1) {
@@ -2154,7 +2165,8 @@ export async function registerRoutes(
           subtotalCents,
           budgetStatus,
           overageCents,
-          specialRequests: specialRequests || null
+          specialRequests: specialRequests || null,
+          attendeeTipCents
         });
       } else {
         await storage.createVirtualSelection({
@@ -2163,7 +2175,8 @@ export async function registerRoutes(
           subtotalCents,
           budgetStatus,
           overageCents,
-          specialRequests: specialRequests || null
+          specialRequests: specialRequests || null,
+          attendeeTipCents
         });
       }
       
@@ -2184,7 +2197,7 @@ export async function registerRoutes(
         });
       }
       
-      res.json({ success: true, budgetStatus, overageCents });
+      res.json({ success: true, budgetStatus, overageCents, attendeeTipCents });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }

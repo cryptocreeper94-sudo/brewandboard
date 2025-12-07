@@ -18,7 +18,9 @@ import {
   User,
   CheckCircle2,
   ArrowLeft,
-  Package
+  Package,
+  Heart,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +51,8 @@ export default function VirtualOrderPage() {
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
   const [specialRequests, setSpecialRequests] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [attendeeTip, setAttendeeTip] = useState(0);
+  const [customTip, setCustomTip] = useState("");
   
   // Address form
   const [address, setAddress] = useState({
@@ -153,6 +157,8 @@ export default function VirtualOrderPage() {
     setCart(updated);
   };
 
+  const actualTip = attendeeTip === -1 ? parseFloat(customTip) || 0 : attendeeTip;
+  
   const handleSubmit = () => {
     if (cart.length === 0) {
       toast({ title: "Empty Cart", description: "Please select at least one item", variant: "destructive" });
@@ -167,6 +173,7 @@ export default function VirtualOrderPage() {
     submitMutation.mutate({
       items: cart,
       specialRequests,
+      attendeeTip: actualTip,
       ...address
     });
   };
@@ -620,7 +627,7 @@ export default function VirtualOrderPage() {
                   {/* Total */}
                   <div className={`rounded-lg p-4 ${isOverBudget ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'}`}>
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Total</span>
+                      <span className="font-medium">Subtotal</span>
                       <span className={`font-bold text-lg ${isOverBudget ? 'text-amber-600' : 'text-emerald-600'}`}>
                         ${(cartTotal / 100).toFixed(2)}
                       </span>
@@ -630,6 +637,76 @@ export default function VirtualOrderPage() {
                         ? `$${((cartTotal - budget) / 100).toFixed(2)} over budget - host will be notified`
                         : `$${(budgetRemaining / 100).toFixed(2)} under budget`}
                     </p>
+                  </div>
+
+                  {/* Attendee Tip Section */}
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-2 mb-3">
+                      <Heart className="h-4 w-4 text-rose-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm text-stone-800 dark:text-stone-200">Add an Additional Tip</p>
+                        <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+                          Your host, {meeting.hostName || 'the meeting organizer'}, is already tipping our delivery team. 
+                          This is completely optional!
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/60 dark:bg-stone-900/40 mb-3">
+                      <Info className="h-3.5 w-3.5 text-amber-600" />
+                      <p className="text-xs text-stone-600 dark:text-stone-400">
+                        There's no pressure to tip - you're just attending a meeting!
+                      </p>
+                    </div>
+                    
+                    <div className="flex gap-2 flex-wrap">
+                      {[0, 2, 5, 10].map((amount) => (
+                        <Button
+                          key={amount}
+                          size="sm"
+                          variant={attendeeTip === amount ? "default" : "outline"}
+                          className={`flex-1 min-w-[50px] ${attendeeTip === amount ? "text-white" : ""}`}
+                          style={attendeeTip === amount ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                          onClick={() => { setAttendeeTip(amount); setCustomTip(""); }}
+                          data-testid={`button-attendee-tip-${amount}`}
+                        >
+                          {amount === 0 ? "No tip" : `$${amount}`}
+                        </Button>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant={attendeeTip === -1 ? "default" : "outline"}
+                        className={`flex-1 min-w-[50px] ${attendeeTip === -1 ? "text-white" : ""}`}
+                        style={attendeeTip === -1 ? { background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' } : {}}
+                        onClick={() => setAttendeeTip(-1)}
+                        data-testid="button-attendee-tip-custom"
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                    
+                    {attendeeTip === -1 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          placeholder="0"
+                          value={customTip}
+                          onChange={(e) => setCustomTip(e.target.value)}
+                          className="w-24"
+                          data-testid="input-attendee-tip-custom"
+                        />
+                      </div>
+                    )}
+                    
+                    {actualTip > 0 && (
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-2 flex items-center gap-1">
+                        <Heart className="h-3 w-3 fill-current" />
+                        Thank you! Your ${actualTip.toFixed(2)} tip goes directly to our team.
+                      </p>
+                    )}
                   </div>
 
                   {/* Special Requests */}

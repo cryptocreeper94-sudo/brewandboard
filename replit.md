@@ -89,13 +89,23 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 **v1.2.7** - December 2025 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
-- **v1.2.7**: Operations Control Center, Gratuity System & Version Tracking
+- **v1.2.7**: Operations Control Center, Gratuity System & Release Manager
+  - **Release Manager Panel**: Consolidated DevOps hub in Developer Hub
+    - Category: DevOps and Release Management
+    - Tags: release-manager, version-control, solana-blockchain, devops
+    - One-click Patch/Minor/Major release buttons with Solana stamp
+    - "Verified on Solana" link to Solscan for blockchain verification
+    - Technical Reference accordion with files, CLI, secrets
+    - Automatic on Publish: build process runs version bump + Solana stamp
+  - **Auto-Publish Integration**: script/build.ts runs autoRelease() automatically
+    - Version bump on every publish (no manual command needed)
+    - Solana mainnet stamp with transaction signature
+    - Updates version.json, login.tsx, replit.md automatically
   - **Version Tracking Dashboard**: Developer Hub panel showing version history
     - Current version, build number, last published date
     - Hallmark history with copy-to-clipboard hashes
     - Dynamic footer version (fetches from API automatically)
-    - Pre-publish sweep command in AGENT_COMMANDS.md
-  - **Auto-Version Bump System**: scripts/bump-version.ts for deployment tracking
+  - **Auto-Version Bump System**: scripts/bump-version.ts for manual releases
     - Automatic version increment (patch/minor/major)
     - Build hash generation for each release
     - Hallmark record creation with --hallmark flag

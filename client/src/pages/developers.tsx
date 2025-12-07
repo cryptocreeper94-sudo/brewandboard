@@ -1156,6 +1156,248 @@ function VersionTrackingPanel() {
   );
 }
 
+/**
+ * ============================================
+ * RELEASE MANAGER
+ * ============================================
+ * Category: DevOps and Release Management
+ * Tags: release-manager, version-control, solana-blockchain, drizzle, express, react, devops
+ * 
+ * FEATURES:
+ * - Database-backed release management
+ * - Automated version numbering and semver strings
+ * - Solana blockchain verification on publish
+ * - Dynamic footer version badge with blockchain verification link
+ * - Full CRUD API for releases
+ * 
+ * HOW IT WORKS:
+ * When user clicks "Publish" in Replit, the build process (script/build.ts) automatically:
+ * 1. Bumps version (patch increment: 1.2.7 → 1.2.8)
+ * 2. Generates unique build hash (SHA-256, 16 chars)
+ * 3. Submits transaction to Solana mainnet via Memo program
+ * 4. Updates version.json with new version, hash, tx signature, slot
+ * 5. Updates login.tsx and replit.md with new version
+ * 6. Builds and deploys the app
+ * 
+ * FILES INVOLVED:
+ * - script/build.ts: Contains autoRelease() function that runs on publish
+ * - scripts/bump-version.ts: CLI tool for manual version bumping
+ * - version.json: Stores version history and hallmark records
+ * - server/routes.ts: POST /api/version/release endpoint
+ * - client/src/components/Footer.tsx: Dynamic version badge from API
+ * - server/solanaService.ts: Blockchain anchoring functions
+ * - server/hallmarkService.ts: Hallmark issuance and tracking
+ * 
+ * SOLANA INTEGRATION:
+ * - Uses Memo Program (MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr)
+ * - Transaction format: "BB-VERSION:{version}:{hash}"
+ * - Requires SOLANA_WALLET_PRIVATE_KEY secret (Base58 or JSON array format)
+ * - Optional HELIUS_API_KEY for premium RPC, falls back to public RPC
+ * 
+ * MANUAL CLI USAGE:
+ * npx tsx scripts/bump-version.ts patch --hallmark  (patch bump + Solana stamp)
+ * npx tsx scripts/bump-version.ts minor --hallmark  (minor bump + Solana stamp)
+ * npx tsx scripts/bump-version.ts major --hallmark  (major bump + Solana stamp)
+ * 
+ * API ENDPOINTS:
+ * GET  /api/version/tracking - Returns current version, build number, hallmark history
+ * POST /api/version/release  - Creates new release with Solana stamp
+ *   Body: { bumpType: 'patch'|'minor'|'major', changelog?: string, releaseNotes?: string }
+ *   Returns: { version, buildNumber, buildHash, hallmarkSerial, solanaTx, solanaSlot }
+ * 
+ * VERSION.JSON STRUCTURE:
+ * {
+ *   "version": "1.2.8",
+ *   "buildNumber": 6,
+ *   "lastPublished": "2025-12-07T...",
+ *   "hallmarks": [
+ *     { "version": "1.2.8", "hash": "abc123...", "solanaTx": "sig...", "solanaSlot": 123456 }
+ *   ]
+ * }
+ */
+function ReleaseManagerPanel() {
+  const { toast } = useToast();
+  const [versionData, setVersionData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isReleasing, setIsReleasing] = useState(false);
+
+  useEffect(() => {
+    fetchVersionData();
+  }, []);
+
+  const fetchVersionData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/version/tracking');
+      if (res.ok) setVersionData(await res.json());
+    } catch (error) {
+      console.error('Failed to fetch version:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createRelease = async (bumpType: 'patch' | 'minor' | 'major') => {
+    setIsReleasing(true);
+    try {
+      const res = await fetch('/api/version/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bumpType })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast({ 
+          title: `Released v${data.version}`, 
+          description: data.solanaTx ? `Stamped on Solana: ${data.solanaTx.slice(0, 20)}...` : 'Local hallmark created'
+        });
+        fetchVersionData();
+      } else {
+        const err = await res.json();
+        toast({ title: 'Release failed', description: err.error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Release failed', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsReleasing(false);
+    }
+  };
+
+  const latestHallmark = versionData?.hallmarks?.slice(-1)[0];
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-fuchsia-500/5" />
+      <CardHeader className="relative pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+              <Rocket className="h-6 w-6 text-violet-600" />
+              Release Manager
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2 mt-1">
+              Automated version control with Solana blockchain verification
+            </CardDescription>
+          </div>
+          <Badge className="bg-violet-100 text-violet-700 border-violet-200">
+            DevOps
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="relative pt-0 space-y-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            {/* Current Version */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Current Version</p>
+                  <p className="font-bold text-3xl text-violet-700">v{versionData?.version || '1.0.0'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Build #{versionData?.buildNumber || 0}</p>
+                </div>
+                {latestHallmark?.solanaTx && (
+                  <a 
+                    href={`https://solscan.io/tx/${latestHallmark.solanaTx}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-100 text-emerald-700 text-xs hover:bg-emerald-200 transition-colors"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Verified on Solana
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Release Buttons */}
+            <div className="grid grid-cols-3 gap-3">
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-violet-200 hover:bg-violet-50"
+                onClick={() => createRelease('patch')}
+                disabled={isReleasing}
+                data-testid="button-release-patch"
+              >
+                <span className="font-semibold">Patch</span>
+                <span className="text-xs text-muted-foreground">Bug fixes</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-purple-200 hover:bg-purple-50"
+                onClick={() => createRelease('minor')}
+                disabled={isReleasing}
+                data-testid="button-release-minor"
+              >
+                <span className="font-semibold">Minor</span>
+                <span className="text-xs text-muted-foreground">New features</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-fuchsia-200 hover:bg-fuchsia-50"
+                onClick={() => createRelease('major')}
+                disabled={isReleasing}
+                data-testid="button-release-major"
+              >
+                <span className="font-semibold">Major</span>
+                <span className="text-xs text-muted-foreground">Breaking changes</span>
+              </Button>
+            </div>
+
+            {/* Auto-Release Info */}
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <div className="flex items-start gap-2">
+                <Zap className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Automatic on Publish</p>
+                  <p className="text-xs mt-1">
+                    When you click Publish, the build process automatically bumps version, 
+                    stamps to Solana mainnet, and updates all version references.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Technical Reference */}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="technical" className="border-violet-200">
+                <AccordionTrigger className="text-sm font-medium text-violet-700">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-4 w-4" />
+                    Technical Reference
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-xs space-y-3">
+                  <div className="p-2 rounded bg-slate-100 font-mono">
+                    <p className="font-semibold mb-1">Files:</p>
+                    <p>script/build.ts - autoRelease() on publish</p>
+                    <p>scripts/bump-version.ts - CLI tool</p>
+                    <p>version.json - Version history</p>
+                    <p>server/routes.ts - POST /api/version/release</p>
+                    <p>Footer.tsx - Dynamic version badge</p>
+                  </div>
+                  <div className="p-2 rounded bg-slate-100 font-mono">
+                    <p className="font-semibold mb-1">CLI:</p>
+                    <p>npx tsx scripts/bump-version.ts patch --hallmark</p>
+                  </div>
+                  <div className="p-2 rounded bg-slate-100 font-mono">
+                    <p className="font-semibold mb-1">Secrets Required:</p>
+                    <p>SOLANA_WALLET_PRIVATE_KEY (Base58 or JSON)</p>
+                    <p>HELIUS_API_KEY (optional, for premium RPC)</p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevelopersPage() {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -1803,6 +2045,16 @@ export default function DevelopersPage() {
           className="mb-8"
         >
           <VersionTrackingPanel />
+        </motion.div>
+
+        {/* Release Manager - DevOps and Release Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.095 }}
+          className="mb-8"
+        >
+          <ReleaseManagerPanel />
         </motion.div>
 
         <motion.div

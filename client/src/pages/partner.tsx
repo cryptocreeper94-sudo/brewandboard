@@ -330,22 +330,25 @@ export default function PartnerHub() {
   ];
 
   const quickActions = [
-    { label: "New Order", icon: ShoppingCart, href: "/order", color: "from-amber-500 to-orange-600" },
+    { label: "Operations", icon: Package, href: "/operations", color: "from-red-500 to-rose-600" },
+    { label: "New Order", icon: ShoppingCart, href: "/schedule", color: "from-amber-500 to-orange-600" },
     { label: "View Vendors", icon: Store, href: "/vendors", color: "from-emerald-500 to-green-600" },
     { label: "Portfolio", icon: FileText, href: "/portfolio", color: "from-blue-500 to-indigo-600" },
-    { label: "Scanner", icon: Scan, href: "/scanner", color: "from-purple-500 to-violet-600" },
-    { label: "Calendar", icon: Calendar, href: "/order", color: "from-pink-500 to-rose-600" },
-    { label: "Presentations", icon: Presentation, href: "/presentations", color: "from-cyan-500 to-teal-600" },
+    { label: "Scanner", icon: Scan, href: "/scan", color: "from-purple-500 to-violet-600" },
+    { label: "Virtual Host", icon: Users, href: "/virtual-host", color: "from-pink-500 to-rose-600" },
+    { label: "Presentations", icon: Presentation, href: "/meeting-presentations", color: "from-cyan-500 to-teal-600" },
     { label: "Dev Hub", icon: Shield, href: "/developers", color: "from-slate-500 to-zinc-600" },
   ];
 
   const platformFeatures = [
+    { title: "Operations Center", desc: "Live order board with status tracking", icon: Package },
     { title: "Order Scheduling", desc: "Calendar-based ordering with 2hr lead time", icon: Calendar },
     { title: "Portfolio/CRM", desc: "Full digital briefcase for your business", icon: FileText },
     { title: "Document Scanner", desc: "OCR scanning with PDF export", icon: Scan },
+    { title: "Virtual Host", desc: "Multi-site ordering with budget controls", icon: Users },
     { title: "Presentations", desc: "Meeting presentation builder", icon: Presentation },
-    { title: "Virtual Host", desc: "Multi-location ordering", icon: Users },
     { title: "Blockchain", desc: "Solana hallmark verification", icon: Shield },
+    { title: "1099 Compliance", desc: "Contractor payment tracking", icon: TrendingUp },
   ];
 
   const partnerName = partnerInfo?.name || "Partner";
@@ -355,35 +358,42 @@ export default function PartnerHub() {
     if (partnerName === "Sarah") {
       return {
         greeting: "Hey Sarah!",
-        intro: "It's Jason. Thanks for taking a look at Brew & Board Coffee! I wanted to personally thank you for catching those errors earlier - your feedback has been incredibly valuable.",
+        intro: "It's Jason. Thanks for taking a look at Brew & Board Coffee! Your feedback has been incredibly valuable - here's what's new:",
         improvements: [
-          "Fixed the 1099 Compliance Portal field names you spotted",
-          "Added proper server-side validation for tax ID entries",
-          "Corrected the payment ledger display issues",
-          "Enhanced security with masked tax ID display (***-**-XXXX)"
+          "Operations Control Center - Live order board with real-time status tracking",
+          "Gratuity Protection System - Internal vs partner gratuity split for delivery integrations",
+          "Virtual Host Multi-Site Ordering - 18% auto-gratuity for coordinated orders",
+          "Driver Assignment & GPS Tracking - Timeline events with location data",
+          "Enhanced 1099 Portal - Fixed field names and added W-9 status tracking"
         ],
-        overview: "This platform connects Nashville businesses with local coffee shops for pre-meeting catering. It includes order scheduling, a CRM portfolio, document scanning, meeting presentations, and blockchain verification on Solana.",
-        closing: "Feel free to explore everything - you're in Preview Mode so nothing will save to the live system. I've set it up so you can see exactly how it works!"
+        overview: "This B2B platform connects Nashville businesses with local coffee shops for pre-meeting catering. Now featuring live operations management, blockchain verification on Solana, subscription tiers ($29-$199), and franchise opportunities.",
+        closing: "Explore the new Operations page (/operations) to see the live order dashboard! You're in Preview Mode so nothing saves to the live system."
       };
     } else if (partnerName === "Sid") {
       return {
         greeting: "Hey Sid!",
-        intro: "It's Jason. Welcome to Brew & Board Coffee! I'm excited to show you what we've been building here in Nashville.",
+        intro: "It's Jason. Welcome to Brew & Board Coffee! Here's what we've been building in Nashville:",
         improvements: [
-          "1099 Compliance Portal for tracking contractor payments",
-          "Partner Hub with personalized dashboards",
-          "Emergency admin controls and system monitoring",
-          "Enhanced security features throughout"
+          "Operations Control Center - Real-time order board for admins & regional managers",
+          "Smart Gratuity System - Protected internal gratuity vs partner delivery fees",
+          "Virtual Host Feature - Multi-site meeting coordination with budget controls",
+          "Driver Tracking - Assignment, phone numbers, GPS timeline events",
+          "1099 Compliance Portal - Contractor payments with $600 threshold tracking"
         ],
-        overview: "This B2B platform connects Nashville businesses with local coffee shops for pre-meeting catering. Features include order scheduling, CRM, document scanning, meeting presentations, and blockchain hallmark verification.",
-        closing: "Take your time exploring - you're in Preview Mode so nothing saves to the live system yet. Let me know what you think!"
+        overview: "B2B coffee/tea/juice catering platform with blockchain hallmark verification, subscription tiers, franchise system, Regional Manager dashboards, and now Operations Control Center for live order management.",
+        closing: "Check out /operations for the live order board! Preview Mode is active so nothing saves to production yet. Let me know what you think!"
       };
     }
     return {
       greeting: `Hey ${partnerName}!`,
       intro: "Welcome to Brew & Board Coffee!",
-      improvements: ["Latest platform updates and improvements"],
-      overview: "A B2B coffee catering platform for Nashville businesses.",
+      improvements: [
+        "Operations Control Center with live order tracking",
+        "Smart gratuity protection system",
+        "Virtual Host multi-site ordering",
+        "Driver assignment and GPS tracking"
+      ],
+      overview: "A B2B coffee catering platform for Nashville businesses with blockchain verification and subscription tiers.",
       closing: "Explore freely in Preview Mode - nothing saves to the live system."
     };
   };

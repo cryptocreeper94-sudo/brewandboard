@@ -27,7 +27,9 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Vendor Catalog**: Expanded to diverse vendors (coffee, donuts, juice, bubble tea, breakfast) with categorized badges.
 - **Pricing Model**: Concierge pricing with a 15% service fee on one-off orders, distance-based delivery fees, and subscription tiers.
 - **Blockchain Hallmark System**: Two-tier Solana-based verification for document authenticity (Company Hallmarks for official releases, Subscriber Hallmarks for personalized documents).
-- **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls and unique invite tokens.
+- **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls, unique invite tokens, and 18% auto-gratuity for coordinated orders.
+- **Operations Control Center**: Live order board for admins and regional managers with real-time status tracking, driver assignment, GPS timeline events, and 30-second auto-refresh.
+- **Gratuity Protection System**: Split gratuity handling separating internal tips (kept by Brew & Board) from partner tips (passed to DoorDash/Uber Direct).
 - **Partner Hub**: Provides an accordion-style interface for partners to access information and manage bug reports. Features personalized welcome modals, forced PIN change on first login, and Preview Mode (data not saved until system goes live).
 - **Meeting Presentation Builder**: Enables creation of slideshow-style presentations from templates with document attachments and shareable links.
 - **App Ecosystem Hub**: Cross-app integration system for connecting multiple Replit apps. Features include app registration with unique API keys (shown once), permission scopes (read/write code, data, clients, hallmarks), sync logging, and shared code snippets panel.
@@ -50,9 +52,38 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.2** - December 2024 | AI Mascot & UX Improvements
+**v1.2.3** - December 2024 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
+- **v1.2.3**: Operations Control Center & Gratuity System
+  - **Operations Control Center** (/operations): Live order board with real-time status tracking
+    - Status workflow: scheduled → confirmed → preparing → picked_up → out_for_delivery → delivered
+    - Driver assignment with phone number tracking
+    - Timeline events with GPS coordinates for location tracking
+    - 30-second auto-refresh for live updates
+    - Filter by status, search by vendor/address/contact
+  - **Gratuity Protection System**: Split gratuity handling for delivery integrations
+    - internalGratuity: Tips kept by Brew & Board
+    - partnerGratuity: Tips passed to delivery partners (DoorDash/Uber Direct)
+    - 18% auto-gratuity for multi-site coordinated Virtual Host orders
+    - Attendees see "Add an Additional Tip" messaging (host already tips)
+  - **Virtual Host Enhancements**: Multi-site meeting coordination improvements
+    - Budget controls per attendee
+    - Unique invite tokens for each attendee
+    - Coordinated order flagging (isCoordinatedOrder)
+  - **Partner Hub Updates**: Refreshed welcome modals for Sarah and Sid
+    - Updated feature lists with Operations Center, gratuity system, Virtual Host
+    - Quick action links to /operations, /virtual-host, /scan
+    - Platform features grid with 8 core capabilities
+  - **Database Schema Updates**: 
+    - scheduledOrders: regionId, assignedDriverName, driverPhone, internalGratuity, partnerGratuity, isCoordinatedOrder, autoGratuityPercent
+    - orderEvents: changedByRole, latitude, longitude for GPS tracking
+  - **API Routes**: 
+    - GET /api/operations/orders (with region/status filtering)
+    - POST /api/operations/orders/:id/status (with audit logging)
+    - POST /api/operations/orders/:id/assign-driver
+  - **Storage Methods**: getAllScheduledOrders with proper single-filter handling
+
 - **v1.2.2**: AI Mascot & UX Improvements
   - Happy Coffee AI mascot with auto-minimize intro flow
   - First-time greeting with "Tap me anytime!" message, then auto-minimizes

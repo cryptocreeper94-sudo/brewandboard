@@ -945,6 +945,217 @@ function Compliance1099Portal() {
   );
 }
 
+interface VersionTrackingData {
+  version: string;
+  buildNumber: number;
+  lastPublished: string | null;
+  hallmarks: Array<{
+    version: string;
+    hash: string;
+    timestamp: string;
+    buildNumber: number;
+  }>;
+}
+
+function VersionTrackingPanel() {
+  const { toast } = useToast();
+  const [versionData, setVersionData] = useState<VersionTrackingData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [copiedHash, setCopiedHash] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchVersionData();
+  }, []);
+
+  const fetchVersionData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/version/tracking');
+      if (res.ok) {
+        const data = await res.json();
+        setVersionData(data);
+      } else {
+        toast({ title: "Failed to load version data", variant: "destructive" });
+        setVersionData(null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch version data:', error);
+      toast({ title: "Error loading version data", variant: "destructive" });
+      setVersionData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyHash = async (hash: string) => {
+    await navigator.clipboard.writeText(hash);
+    setCopiedHash(hash);
+    toast({ title: "Hash copied to clipboard" });
+    setTimeout(() => setCopiedHash(null), 2000);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-indigo-500/5" />
+      <CardHeader className="relative pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+              <Hash className="h-6 w-6 text-cyan-600" />
+              Version Tracking
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2 mt-1">
+              Build history and deployment hallmarks
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchVersionData}
+            disabled={isLoading}
+            className="gap-2"
+            data-testid="button-refresh-versions"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="relative pt-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : versionData ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200" data-testid="version-current">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-2">
+                  <Rocket className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">Current Version</p>
+                <p className="font-bold text-2xl text-cyan-700">{versionData.version.startsWith('v') ? versionData.version : `v${versionData.version}`}</p>
+              </div>
+              
+              <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200" data-testid="version-build">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-2">
+                  <Hash className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">Build Number</p>
+                <p className="font-bold text-2xl text-purple-700">#{versionData.buildNumber}</p>
+              </div>
+              
+              <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200" data-testid="version-published">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center mb-2">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">Last Published</p>
+                <p className="font-semibold text-sm text-emerald-700">
+                  {versionData.lastPublished ? formatDate(versionData.lastPublished) : 'Never'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="rounded-xl border bg-white/50 backdrop-blur overflow-hidden">
+              <div className="px-4 py-3 bg-gradient-to-r from-slate-100 to-gray-100 border-b">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-amber-600" />
+                  Hallmark History ({versionData.hallmarks.length} records)
+                </h3>
+              </div>
+              
+              {versionData.hallmarks.length > 0 ? (
+                <ScrollArea className="max-h-64">
+                  <div className="divide-y">
+                    {versionData.hallmarks.slice().reverse().map((hallmark, idx) => (
+                      <div 
+                        key={idx} 
+                        className="p-4 hover:bg-amber-50/50 transition-colors"
+                        data-testid={`hallmark-${hallmark.buildNumber}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                              <Award className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">{hallmark.version.startsWith('v') ? hallmark.version : `v${hallmark.version}`}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  Build #{hallmark.buildNumber}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(hallmark.timestamp)}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <code className="px-2 py-1 bg-slate-100 rounded text-xs font-mono text-slate-600">
+                              {hallmark.hash}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyHash(hallmark.hash)}
+                              className="h-8 w-8 p-0"
+                              data-testid={`copy-hash-${hallmark.buildNumber}`}
+                            >
+                              {copiedHash === hallmark.hash ? (
+                                <Check className="h-4 w-4 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                  <Hash className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No hallmarks recorded yet.</p>
+                  <p className="text-sm">Run the version bump script with --hallmark flag to create records.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200">
+              <div className="flex items-start gap-2">
+                <Terminal className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium">Bump Version Before Publishing</p>
+                  <code className="text-xs bg-blue-100 px-2 py-0.5 rounded mt-1 inline-block">
+                    npx tsx scripts/bump-version.ts patch --hallmark
+                  </code>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>Failed to load version data.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevelopersPage() {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -1582,6 +1793,16 @@ export default function DevelopersPage() {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Version Tracking Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.09 }}
+          className="mb-8"
+        >
+          <VersionTrackingPanel />
         </motion.div>
 
         <motion.div

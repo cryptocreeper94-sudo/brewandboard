@@ -67,6 +67,33 @@ export async function registerRoutes(
   });
 
   // ========================
+  // VERSION TRACKING ROUTES
+  // ========================
+  
+  app.get("/api/version/tracking", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const versionPath = path.resolve(process.cwd(), 'version.json');
+      
+      if (!fs.existsSync(versionPath)) {
+        return res.json({
+          version: "1.0.0",
+          buildNumber: 0,
+          lastPublished: null,
+          hallmarks: []
+        });
+      }
+      
+      const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf-8'));
+      res.json(versionData);
+    } catch (error) {
+      console.error('Failed to read version.json:', error);
+      res.status(500).json({ error: 'Failed to read version data' });
+    }
+  });
+
+  // ========================
   // WEATHER ROUTES
   // ========================
   

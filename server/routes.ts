@@ -93,6 +93,97 @@ export async function registerRoutes(
     }
   });
 
+  // Create new version release with automatic Solana stamping
+  app.post("/api/version/release", async (req, res) => {
+    try {
+      const { bumpType = 'patch', changelog = '', releaseNotes = '' } = req.body;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const crypto = await import('crypto');
+      
+      const versionPath = path.resolve(process.cwd(), 'version.json');
+      
+      if (!fs.existsSync(versionPath)) {
+        return res.status(400).json({ error: 'version.json not found' });
+      }
+      
+      const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf-8'));
+      const oldVersion = versionData.version;
+      
+      // Parse and bump version
+      const [major, minor, patch] = oldVersion.split('.').map(Number);
+      let newVersion: string;
+      switch (bumpType) {
+        case 'major': newVersion = `${major + 1}.0.0`; break;
+        case 'minor': newVersion = `${major}.${minor + 1}.0`; break;
+        default: newVersion = `${major}.${minor}.${patch + 1}`;
+      }
+      
+      // Generate build hash
+      const timestamp = new Date().toISOString();
+      const random = crypto.randomBytes(8).toString('hex');
+      const buildHash = crypto.createHash('sha256').update(Date.now().toString() + random).digest('hex').slice(0, 16);
+      
+      // Stamp to Solana via hallmark service
+      const { issueAppVersionHallmark } = await import('./hallmarkService');
+      const result = await issueAppVersionHallmark({
+        version: newVersion,
+        changelog: changelog || `Version ${newVersion} release`,
+        releaseNotes,
+        releasedBy: 'Brew & Board Release Manager'
+      });
+      
+      // Update version.json
+      versionData.version = newVersion;
+      versionData.buildNumber = (versionData.buildNumber || 0) + 1;
+      versionData.lastPublished = timestamp;
+      
+      const hallmarkEntry: any = {
+        version: newVersion,
+        hash: buildHash,
+        timestamp,
+        buildNumber: versionData.buildNumber
+      };
+      
+      if (result.blockchainResult) {
+        hallmarkEntry.solanaTx = result.blockchainResult.signature;
+        hallmarkEntry.solanaSlot = result.blockchainResult.slot;
+      }
+      
+      versionData.hallmarks = versionData.hallmarks || [];
+      versionData.hallmarks.push(hallmarkEntry);
+      
+      fs.writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
+      
+      // Update version references in files
+      const filesToUpdate = ['client/src/pages/login.tsx', 'replit.md'];
+      for (const file of filesToUpdate) {
+        const fullPath = path.resolve(process.cwd(), file);
+        if (fs.existsSync(fullPath)) {
+          let content = fs.readFileSync(fullPath, 'utf-8');
+          const versionPattern = new RegExp(`v${oldVersion.replace(/\./g, '\\.')}`, 'g');
+          content = content.replace(versionPattern, `v${newVersion}`);
+          fs.writeFileSync(fullPath, content);
+        }
+      }
+      
+      res.json({
+        success: true,
+        version: newVersion,
+        buildNumber: versionData.buildNumber,
+        buildHash,
+        hallmarkSerial: result.hallmark.serialNumber,
+        solanaTx: result.blockchainResult?.signature || null,
+        solanaSlot: result.blockchainResult?.slot || null,
+        timestamp
+      });
+    } catch (error: any) {
+      console.error('Version release failed:', error);
+      res.status(500).json({ error: error.message || 'Failed to create release' });
+    }
+  });
+
   // ========================
   // WEATHER ROUTES
   // ========================

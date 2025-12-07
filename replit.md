@@ -78,10 +78,10 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.4** - December 2025 | Operations Control Center & Gratuity System
+**v1.2.5** - December 2025 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
-- **v1.2.4**: Operations Control Center & Gratuity System
+- **v1.2.5**: Operations Control Center & Gratuity System
   - **Operations Control Center** (/operations): Live order board with real-time status tracking
     - Status workflow: scheduled → confirmed → preparing → picked_up → out_for_delivery → delivered
     - Driver assignment with phone number tracking

@@ -63,6 +63,8 @@ import {
   type InsertAppSyncLog,
   type SharedCodeSnippet,
   type InsertSharedCodeSnippet,
+  type Subscription,
+  type InsertSubscription,
   users,
   crmNotes,
   clients,
@@ -95,6 +97,7 @@ import {
   connectedApps,
   appSyncLogs,
   sharedCodeSnippets,
+  subscriptions,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -305,6 +308,14 @@ export interface IStorage {
   getPartnerAccountByPersonalPin(pin: string): Promise<PartnerAccount | undefined>;
   createPartnerAccount(account: InsertPartnerAccount): Promise<PartnerAccount>;
   updatePartnerAccount(id: string, account: Partial<InsertPartnerAccount>): Promise<PartnerAccount>;
+  
+  // Subscriptions
+  getSubscription(id: string): Promise<Subscription | undefined>;
+  getSubscriptionByUserId(userId: string): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: string, subscription: Partial<InsertSubscription>): Promise<Subscription>;
+  incrementOrdersThisMonth(subscriptionId: string): Promise<void>;
+  resetMonthlyOrders(subscriptionId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1636,6 +1647,55 @@ export class DatabaseStorage implements IStorage {
       .update(sharedCodeSnippets)
       .set({ usageCount: sql`${sharedCodeSnippets.usageCount} + 1` })
       .where(eq(sharedCodeSnippets.id, id));
+  }
+
+  // ========================
+  // SUBSCRIPTIONS
+  // ========================
+  async getSubscription(id: string): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
+    return sub || undefined;
+  }
+
+  async getSubscriptionByUserId(userId: string): Promise<Subscription | undefined> {
+    const [sub] = await db
+      .select()
+      .from(subscriptions)
+      .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+    return sub || undefined;
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [created] = await db.insert(subscriptions).values(subscription).returning();
+    return created;
+  }
+
+  async updateSubscription(id: string, subscription: Partial<InsertSubscription>): Promise<Subscription> {
+    const [updated] = await db
+      .update(subscriptions)
+      .set({ ...subscription, updatedAt: new Date() })
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async incrementOrdersThisMonth(subscriptionId: string): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({ 
+        ordersThisMonth: sql`${subscriptions.ordersThisMonth} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.id, subscriptionId));
+  }
+
+  async resetMonthlyOrders(subscriptionId: string): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({ ordersThisMonth: 0, updatedAt: new Date() })
+      .where(eq(subscriptions.id, subscriptionId));
   }
 }
 

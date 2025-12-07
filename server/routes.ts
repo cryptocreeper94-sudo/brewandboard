@@ -833,6 +833,19 @@ export async function registerRoutes(
         changedBy: 'system'
       });
       
+      // Increment subscription order count if user has active subscription
+      if (validatedData.userId) {
+        try {
+          const subscription = await storage.getSubscriptionByUserId(validatedData.userId);
+          if (subscription) {
+            await storage.incrementOrdersThisMonth(subscription.id);
+          }
+        } catch (err) {
+          console.error("Failed to increment subscription order count:", err);
+          // Don't fail the order if subscription tracking fails
+        }
+      }
+      
       // Send email notification for new order
       if (process.env.RESEND_API_KEY) {
         try {
@@ -1007,6 +1020,38 @@ export async function registerRoutes(
     try {
       const events = await storage.getOrderEvents(req.params.id);
       res.json(events);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // SUBSCRIPTION ROUTES
+  // ========================
+
+  app.get("/api/subscriptions/user/:userId", async (req, res) => {
+    try {
+      const subscription = await storage.getSubscriptionByUserId(req.params.userId);
+      if (!subscription) {
+        return res.status(404).json({ error: "No active subscription found" });
+      }
+      res.json({
+        id: subscription.id,
+        tier: subscription.tier,
+        status: subscription.status,
+        ordersThisMonth: subscription.ordersThisMonth || 0,
+        currentPeriodStart: subscription.currentPeriodStart,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/subscriptions/:id/increment-orders", async (req, res) => {
+    try {
+      await storage.incrementOrdersThisMonth(req.params.id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

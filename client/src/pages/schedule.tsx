@@ -29,8 +29,9 @@ import {
   DoorOpen,
   Lock
 } from "lucide-react";
-import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS } from "@/lib/mock-data";
+import { SERVICE_FEE_PERCENT, DELIVERY_COORDINATION_FEE, EXTENDED_DELIVERY_PREMIUM, EXTENDED_DELIVERY_RADIUS_MILES, NASHVILLE_ZIP_COORDS, isAtOrderLimit, getSubscriptionTier } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
+import { SubscriptionLimitModal, SubscriptionUsageBanner } from "@/components/SubscriptionLimitModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -111,6 +112,7 @@ export default function SchedulePage() {
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<ScheduledOrder | null>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [showSubscriptionLimit, setShowSubscriptionLimit] = useState(false);
 
   // Get user from localStorage
   const userStr = localStorage.getItem("coffee_user");
@@ -136,6 +138,29 @@ export default function SchedulePage() {
     },
     enabled: !!userId,
   });
+
+  // Fetch user subscription info
+  const { data: subscription } = useQuery<{
+    id: string;
+    tier: string;
+    ordersThisMonth: number;
+    currentPeriodEnd: string;
+  } | null>({
+    queryKey: ["subscription", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const res = await fetch(`/api/subscriptions/user/${userId}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  // Check if user is at order limit
+  const userAtLimit = useMemo(() => {
+    if (!subscription) return false;
+    return isAtOrderLimit(subscription.tier, subscription.ordersThisMonth);
+  }, [subscription]);
 
   // Get orders for selected date
   const ordersForSelectedDate = useMemo(() => {
@@ -196,8 +221,23 @@ export default function SchedulePage() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      
+      // Server-side handles subscription order count increment atomically
+      // Optimistically update local cache and refetch for consistency
+      if (subscription) {
+        queryClient.setQueryData(
+          ["subscription", userId],
+          (oldData: typeof subscription) => oldData ? {
+            ...oldData,
+            ordersThisMonth: (oldData.ordersThisMonth || 0) + 1
+          } : null
+        );
+        // Refetch to reconcile with server truth
+        queryClient.invalidateQueries({ queryKey: ["subscription", userId] });
+      }
+      
       setIsNewOrderOpen(false);
       resetNewOrderForm();
       clearCart();
@@ -279,8 +319,14 @@ export default function SchedulePage() {
     return { subtotal, salesTax, serviceFee, deliveryFee, baseFee, extendedFee, isExtendedDelivery, deliveryDistance, gratuity: gratuityAmt, total };
   }, [newOrder.items, newOrder.deliveryAddress, vendorLocation, calculateDeliveryFee, gratuityOption, customGratuity]);
 
-  const handleCreateOrder = () => {
+  const handleCreateOrder = (bypassLimit = false) => {
     const { subtotal, salesTax, serviceFee, deliveryFee, gratuity, total } = orderTotals;
+
+    // Check subscription limit (unless bypassed for overage payment)
+    if (!bypassLimit && userAtLimit) {
+      setShowSubscriptionLimit(true);
+      return;
+    }
 
     createOrderMutation.mutate({
       userId,
@@ -299,7 +345,19 @@ export default function SchedulePage() {
       gratuity: gratuity.toFixed(2),
       total: total.toFixed(2),
       specialInstructions: newOrder.specialInstructions || null,
+      isOverageOrder: bypassLimit && userAtLimit, // Mark as overage if paying full price
     });
+  };
+
+  const handleUpgradeFromLimit = () => {
+    setShowSubscriptionLimit(false);
+    setIsNewOrderOpen(false);
+    window.location.href = '/pricing';
+  };
+
+  const handlePayOverage = () => {
+    setShowSubscriptionLimit(false);
+    handleCreateOrder(true); // Bypass limit, create order anyway
   };
 
   const addOrderItem = () => {
@@ -967,7 +1025,7 @@ export default function SchedulePage() {
                 Cancel
               </Button>
               <Button
-                onClick={handleCreateOrder}
+                onClick={() => handleCreateOrder()}
                 disabled={!isOrderTimeValid || !newOrder.deliveryAddress || createOrderMutation.isPending}
                 data-testid="button-submit-order"
               >
@@ -1077,6 +1135,18 @@ export default function SchedulePage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Subscription Limit Modal */}
+        <SubscriptionLimitModal
+          isOpen={showSubscriptionLimit}
+          onClose={() => setShowSubscriptionLimit(false)}
+          currentTier={subscription?.tier || 'starter'}
+          ordersUsed={subscription?.ordersThisMonth || 0}
+          orderTotal={orderTotals.total}
+          renewalDate={subscription?.currentPeriodEnd ? format(new Date(subscription.currentPeriodEnd), 'MMMM d, yyyy') : undefined}
+          onUpgrade={handleUpgradeFromLimit}
+          onPayFullPrice={handlePayOverage}
+        />
       </div>
     </div>
   );

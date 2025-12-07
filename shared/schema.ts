@@ -363,7 +363,16 @@ export const scheduledOrders = pgTable(
     serviceFee: decimal("service_fee", { precision: 10, scale: 2 }).default("0.00"),
     deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("0.00"),
     gratuity: decimal("gratuity", { precision: 10, scale: 2 }).default("0.00"),
+    // Internal gratuity: kept by Brew & Board (not passed to delivery partners like DoorDash/UberEats)
+    internalGratuity: decimal("internal_gratuity", { precision: 10, scale: 2 }).default("0.00"),
+    // Partner gratuity: passed to delivery partner if using DoorDash/UberEats
+    partnerGratuity: decimal("partner_gratuity", { precision: 10, scale: 2 }).default("0.00"),
+    // Attendee tip: additional tip from attendee when host already tipped
+    attendeeTip: decimal("attendee_tip", { precision: 10, scale: 2 }).default("0.00"),
     total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+    
+    // Multi-site/multi-city coordinated order flag (incurs 18% minimum gratuity)
+    isCoordinatedOrder: boolean("is_coordinated_order").default(false),
     
     // Order status
     status: varchar("status", { length: 30 }).default("scheduled").notNull(),

@@ -86,10 +86,10 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.6** - December 2025 | Operations Control Center & Gratuity System
+**v1.2.7** - December 2025 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
-- **v1.2.6**: Operations Control Center, Gratuity System & Version Tracking
+- **v1.2.7**: Operations Control Center, Gratuity System & Version Tracking
   - **Version Tracking Dashboard**: Developer Hub panel showing version history
     - Current version, build number, last published date
     - Hallmark history with copy-to-clipboard hashes

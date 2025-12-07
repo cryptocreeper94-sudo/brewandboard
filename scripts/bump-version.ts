@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { Connection, Keypair, Transaction, TransactionInstruction, PublicKey } from "@solana/web3.js";
+import bs58 from 'bs58';
 
 interface VersionData {
   version: string;
@@ -29,6 +31,67 @@ function generateBuildHash(): string {
   const timestamp = Date.now().toString();
   const random = crypto.randomBytes(8).toString('hex');
   return crypto.createHash('sha256').update(timestamp + random).digest('hex').slice(0, 16);
+}
+
+// Solana Memo Program ID
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+function getWallet(): Keypair | null {
+  const privateKey = process.env.SOLANA_WALLET_PRIVATE_KEY;
+  if (!privateKey) return null;
+  
+  const trimmedKey = privateKey.trim();
+  
+  if (trimmedKey.startsWith('[')) {
+    try {
+      const secretKey = Uint8Array.from(JSON.parse(trimmedKey));
+      return Keypair.fromSecretKey(secretKey);
+    } catch { return null; }
+  }
+  
+  try {
+    const secretKey = bs58.decode(trimmedKey);
+    return Keypair.fromSecretKey(secretKey);
+  } catch { return null; }
+}
+
+async function anchorToSolana(buildHash: string, version: string): Promise<{ signature: string; slot: number } | null> {
+  const wallet = getWallet();
+  if (!wallet) {
+    console.log('   ⚠️ SOLANA_WALLET_PRIVATE_KEY not set - skipping blockchain');
+    return null;
+  }
+
+  try {
+    const rpcUrl = process.env.HELIUS_API_KEY 
+      ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+      : 'https://api.mainnet-beta.solana.com';
+    
+    const connection = new Connection(rpcUrl, 'confirmed');
+    
+    const memoData = `BB-VERSION:${version}:${buildHash}`;
+    const memoInstruction = new TransactionInstruction({
+      keys: [{ pubkey: wallet.publicKey, isSigner: true, isWritable: false }],
+      programId: MEMO_PROGRAM_ID,
+      data: Buffer.from(memoData, 'utf-8'),
+    });
+    
+    const transaction = new Transaction().add(memoInstruction);
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = wallet.publicKey;
+    
+    transaction.sign(wallet);
+    const signature = await connection.sendRawTransaction(transaction.serialize());
+    const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+    
+    const slot = confirmation.context?.slot || 0;
+    
+    return { signature, slot };
+  } catch (error: any) {
+    console.log(`   ⚠️ Solana tx failed: ${error.message}`);
+    return null;
+  }
 }
 
 function bumpVersion(current: string, type: BumpType): string {
@@ -108,15 +171,27 @@ async function main() {
   versionData.buildNumber += 1;
   versionData.lastPublished = timestamp;
   
+  let solanaTx: { signature: string; slot: number } | null = null;
+  
   if (autoHallmark) {
-    const hallmarkEntry = {
+    console.log('\n🔗 Anchoring to Solana mainnet...');
+    solanaTx = await anchorToSolana(buildHash, newVersion);
+    
+    const hallmarkEntry: any = {
       version: newVersion,
       hash: buildHash,
       timestamp,
       buildNumber: versionData.buildNumber
     };
+    
+    if (solanaTx) {
+      hallmarkEntry.solanaTx = solanaTx.signature;
+      hallmarkEntry.solanaSlot = solanaTx.slot;
+      console.log(`   ✅ Solana tx: ${solanaTx.signature.slice(0, 20)}...`);
+    }
+    
     versionData.hallmarks.push(hallmarkEntry);
-    console.log(`\n🏛️ Hallmark recorded: BB-${String(versionData.buildNumber).padStart(10, '0')}`);
+    console.log(`🏛️ Hallmark recorded: BB-${String(versionData.buildNumber).padStart(10, '0')}`);
   }
   
   fs.writeFileSync(versionFilePath, JSON.stringify(versionData, null, 2));
@@ -144,7 +219,13 @@ async function main() {
     console.log(`   Build: #${versionData.buildNumber}`);
     console.log(`   Hash: ${buildHash}`);
     console.log(`   Time: ${timestamp}`);
-    console.log('\n   Note: For Solana mainnet hallmarking, use the Developer Hub');
+    if (solanaTx) {
+      console.log(`   Solana TX: ${solanaTx.signature}`);
+      console.log(`   Slot: ${solanaTx.slot}`);
+      console.log('\n   ✅ Verified on Solana mainnet!');
+    } else {
+      console.log('\n   ⚠️ Local hallmark only (no Solana wallet configured)');
+    }
   }
 }
 

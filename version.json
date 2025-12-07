@@ -1,7 +1,7 @@
 {
-  "version": "1.2.6",
-  "buildNumber": 4,
-  "lastPublished": "2025-12-07T06:33:41.334Z",
+  "version": "1.2.7",
+  "buildNumber": 5,
+  "lastPublished": "2025-12-07T06:46:51.023Z",
   "hallmarks": [
     {
       "version": "1.2.4",
@@ -20,6 +20,14 @@
       "hash": "a6606bf8b7cd614f",
       "timestamp": "2025-12-07T06:33:41.334Z",
       "buildNumber": 4
+    },
+    {
+      "version": "1.2.7",
+      "hash": "35282022f49bb889",
+      "timestamp": "2025-12-07T06:46:51.023Z",
+      "buildNumber": 5,
+      "solanaTx": "UKJj5rbrwX2vmbtG27MEfyoLPgVZbdJ85r3qUHxPmLknoYSqooRc8wNLvMGEYX16vcTYX2V3mpy6i8kAnPQGQj6",
+      "solanaSlot": 385034761
     }
   ]
 }

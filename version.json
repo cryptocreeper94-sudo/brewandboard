@@ -1,7 +1,7 @@
 {
-  "version": "1.2.5",
-  "buildNumber": 3,
-  "lastPublished": "2025-12-07T06:17:25.735Z",
+  "version": "1.2.6",
+  "buildNumber": 4,
+  "lastPublished": "2025-12-07T06:33:41.334Z",
   "hallmarks": [
     {
       "version": "1.2.4",
@@ -14,6 +14,12 @@
       "hash": "c9da5ff96c8655a8",
       "timestamp": "2025-12-07T06:17:25.735Z",
       "buildNumber": 3
+    },
+    {
+      "version": "1.2.6",
+      "hash": "a6606bf8b7cd614f",
+      "timestamp": "2025-12-07T06:33:41.334Z",
+      "buildNumber": 4
     }
   ]
 }

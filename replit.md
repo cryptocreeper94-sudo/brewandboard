@@ -14,6 +14,14 @@ Brew & Board Coffee is a B2B platform connecting Nashville businesses and meetin
 - **Footer**: Dark brown gradient matching hero, includes Admin/Terms/Contact/Investor links
 - **Version Management**: Auto-bump versions and create blockchain hallmarks on publish
 
+## Agent Commands
+
+See `AGENT_COMMANDS.md` for the full pre-publish sweep command and other agent instructions.
+
+**Quick Reference:**
+- Before publishing, give any agent the "PRE-PUBLISH SWEEP" command from AGENT_COMMANDS.md
+- After sweep is complete, run: `npx tsx scripts/bump-version.ts patch --hallmark`
+
 ## Version Management
 
 ### Auto-Version Bump System

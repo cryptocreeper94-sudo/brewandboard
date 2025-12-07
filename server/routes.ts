@@ -1034,6 +1034,89 @@ export async function registerRoutes(
   });
 
   // ========================
+  // OPERATIONS CONTROL CENTER ROUTES
+  // ========================
+
+  // Get all orders for operations dashboard (with events for timeline)
+  app.get("/api/operations/orders", async (req, res) => {
+    try {
+      const regionId = req.query.regionId as string | undefined;
+      const status = req.query.status as string | undefined;
+      
+      // Get all orders (admin view - no user filter)
+      const orders = await storage.getAllScheduledOrders(regionId, status);
+      
+      // Fetch events for each order to show timeline
+      const ordersWithEvents = await Promise.all(
+        orders.map(async (order) => {
+          const events = await storage.getOrderEvents(order.id);
+          return { ...order, events };
+        })
+      );
+      
+      res.json(ordersWithEvents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update order status from operations dashboard
+  app.post("/api/operations/orders/:id/status", async (req, res) => {
+    try {
+      const { status, note, changedBy, changedByRole } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ error: "status is required" });
+      }
+      
+      // Update order status
+      const order = await storage.updateScheduledOrder(req.params.id, { status });
+      
+      // Create event with operator info
+      await storage.createOrderEvent({
+        orderId: req.params.id,
+        status,
+        note: note || `Status changed to ${status}`,
+        changedBy: changedBy || 'operator',
+        changedByRole: changedByRole || 'admin'
+      });
+      
+      res.json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Assign driver to order
+  app.post("/api/operations/orders/:id/assign-driver", async (req, res) => {
+    try {
+      const { driverName, driverPhone } = req.body;
+      
+      if (!driverName) {
+        return res.status(400).json({ error: "driverName is required" });
+      }
+      
+      const order = await storage.updateScheduledOrder(req.params.id, { 
+        assignedDriverName: driverName,
+        driverPhone: driverPhone || null
+      });
+      
+      // Log the assignment
+      await storage.createOrderEvent({
+        orderId: req.params.id,
+        status: order.status,
+        note: `Driver assigned: ${driverName}`,
+        changedBy: 'operator',
+        changedByRole: 'admin'
+      });
+      
+      res.json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
   // SUBSCRIPTION ROUTES
   // ========================
 

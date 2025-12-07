@@ -376,7 +376,15 @@ export const scheduledOrders = pgTable(
     
     // Order status
     status: varchar("status", { length: 30 }).default("scheduled").notNull(),
-    // Status values: 'scheduled', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'
+    // Status values: 'scheduled', 'confirmed', 'preparing', 'picked_up', 'out_for_delivery', 'delivered', 'cancelled'
+    
+    // Region assignment for operations dashboard filtering
+    regionId: varchar("region_id").references(() => regions.id),
+    
+    // Driver/delivery assignment
+    assignedDriverId: varchar("assigned_driver_id"),
+    assignedDriverName: varchar("assigned_driver_name", { length: 255 }),
+    driverPhone: varchar("driver_phone", { length: 20 }),
     
     // Fulfillment tracking (for manual DoorDash/Uber Eats entry)
     fulfillmentChannel: varchar("fulfillment_channel", { length: 30 }).default("manual"),
@@ -393,6 +401,7 @@ export const scheduledOrders = pgTable(
     userIdx: index("idx_scheduled_orders_user").on(table.userId),
     dateIdx: index("idx_scheduled_orders_date").on(table.scheduledDate),
     statusIdx: index("idx_scheduled_orders_status").on(table.status),
+    regionIdx: index("idx_scheduled_orders_region").on(table.regionId),
   })
 );
 
@@ -418,11 +427,17 @@ export const orderEvents = pgTable(
     
     // Who made the change
     changedBy: varchar("changed_by", { length: 100 }),
+    changedByRole: varchar("changed_by_role", { length: 50 }), // admin, regional_manager, partner, driver
+    
+    // GPS tracking (for delivery events)
+    latitude: decimal("latitude", { precision: 10, scale: 7 }),
+    longitude: decimal("longitude", { precision: 10, scale: 7 }),
     
     createdAt: timestamp("created_at").default(sql`NOW()`),
   },
   (table) => ({
     orderIdx: index("idx_order_events_order").on(table.orderId),
+    statusIdx: index("idx_order_events_status").on(table.status),
   })
 );
 
@@ -1094,10 +1109,22 @@ export const ORDER_STATUSES = [
   'scheduled',
   'confirmed', 
   'preparing',
+  'picked_up',
   'out_for_delivery',
   'delivered',
   'cancelled'
 ] as const;
+
+// Order status display labels and colors for Operations dashboard
+export const ORDER_STATUS_CONFIG = {
+  scheduled: { label: 'Scheduled', color: 'bg-blue-500', icon: 'Clock' },
+  confirmed: { label: 'Confirmed', color: 'bg-emerald-500', icon: 'CheckCircle' },
+  preparing: { label: 'Preparing', color: 'bg-amber-500', icon: 'ChefHat' },
+  picked_up: { label: 'Picked Up', color: 'bg-purple-500', icon: 'Package' },
+  out_for_delivery: { label: 'Out for Delivery', color: 'bg-orange-500', icon: 'Truck' },
+  delivered: { label: 'Delivered', color: 'bg-green-600', icon: 'CheckCircle2' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-500', icon: 'XCircle' },
+} as const;
 export const FULFILLMENT_CHANNELS = ['manual', 'doordash', 'ubereats', 'direct'] as const;
 
 // Hallmark constants

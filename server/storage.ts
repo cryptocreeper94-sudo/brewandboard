@@ -137,6 +137,7 @@ export interface IStorage {
   
   // Scheduled Orders
   getScheduledOrders(userId: string, startDate?: string, endDate?: string): Promise<ScheduledOrder[]>;
+  getAllScheduledOrders(regionId?: string, status?: string): Promise<ScheduledOrder[]>;
   getScheduledOrder(id: string): Promise<ScheduledOrder | undefined>;
   createScheduledOrder(order: InsertScheduledOrder): Promise<ScheduledOrder>;
   updateScheduledOrder(id: string, order: Partial<InsertScheduledOrder>): Promise<ScheduledOrder>;
@@ -496,6 +497,38 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(scheduledOrders)
       .where(eq(scheduledOrders.userId, userId))
+      .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
+  }
+
+  async getAllScheduledOrders(regionId?: string, status?: string): Promise<ScheduledOrder[]> {
+    const conditions = [];
+    
+    if (regionId) {
+      conditions.push(eq(scheduledOrders.regionId, regionId));
+    }
+    if (status) {
+      conditions.push(eq(scheduledOrders.status, status));
+    }
+    
+    if (conditions.length === 1) {
+      return await db
+        .select()
+        .from(scheduledOrders)
+        .where(conditions[0])
+        .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
+    }
+    
+    if (conditions.length > 1) {
+      return await db
+        .select()
+        .from(scheduledOrders)
+        .where(and(...conditions))
+        .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
+    }
+    
+    return await db
+      .select()
+      .from(scheduledOrders)
       .orderBy(scheduledOrders.scheduledDate, scheduledOrders.scheduledTime);
   }
 

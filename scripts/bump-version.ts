@@ -95,7 +95,6 @@ async function main() {
   console.log(`🔑 Build hash: ${buildHash}\n`);
   
   const filesToUpdate = [
-    'client/src/components/Footer.tsx',
     'client/src/pages/login.tsx',
     'replit.md'
   ];

@@ -32,9 +32,10 @@ npx tsx scripts/bump-version.ts patch --hallmark
 
 **Files updated automatically:**
 - `version.json` - Central version tracking
-- `client/src/components/Footer.tsx` - Footer version stamp
 - `client/src/pages/login.tsx` - Login page version
 - `replit.md` - Documentation header
+
+**Note:** The Footer version is now dynamic and fetches from the `/api/version/tracking` endpoint automatically.
 
 **Hallmark records** are stored in `version.json` and can be verified on Solana mainnet through the Developer Hub.
 

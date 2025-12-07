@@ -1,7 +1,22 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
 
 export function Footer() {
+  const [version, setVersion] = useState<string>("...");
+
+  useEffect(() => {
+    fetch('/api/version/tracking')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.version) {
+          const v = data.version.startsWith('v') ? data.version : `v${data.version}`;
+          setVersion(v);
+        }
+      })
+      .catch(() => setVersion("v1.0.0"));
+  }, []);
+
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -69,7 +84,7 @@ export function Footer() {
               Darkwave Studios, LLC
             </a>
             <span className="mx-0.5">•</span>
-            <span className="text-amber-400/60 font-medium">v1.2.4</span>
+            <span className="text-amber-400/60 font-medium" data-testid="footer-version">{version}</span>
           </div>
         </div>
       </div>

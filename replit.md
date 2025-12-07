@@ -89,7 +89,16 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 **v1.2.5** - December 2025 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
-- **v1.2.5**: Operations Control Center & Gratuity System
+- **v1.2.5**: Operations Control Center, Gratuity System & Version Tracking
+  - **Version Tracking Dashboard**: Developer Hub panel showing version history
+    - Current version, build number, last published date
+    - Hallmark history with copy-to-clipboard hashes
+    - Dynamic footer version (fetches from API automatically)
+    - Pre-publish sweep command in AGENT_COMMANDS.md
+  - **Auto-Version Bump System**: scripts/bump-version.ts for deployment tracking
+    - Automatic version increment (patch/minor/major)
+    - Build hash generation for each release
+    - Hallmark record creation with --hallmark flag
   - **Operations Control Center** (/operations): Live order board with real-time status tracking
     - Status workflow: scheduled → confirmed → preparing → picked_up → out_for_delivery → delivered
     - Driver assignment with phone number tracking

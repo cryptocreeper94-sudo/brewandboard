@@ -12,6 +12,31 @@ Brew & Board Coffee is a B2B platform connecting Nashville businesses and meetin
 - **Order Lead Time**: Minimum 2 hours for guaranteed delivery
 - **Navigation**: All pages should have back buttons
 - **Footer**: Dark brown gradient matching hero, includes Admin/Terms/Contact/Investor links
+- **Version Management**: Auto-bump versions and create blockchain hallmarks on publish
+
+## Version Management
+
+### Auto-Version Bump System
+The app uses an automated version bumping system located in `scripts/bump-version.ts`. 
+
+**To bump version before publishing:**
+```bash
+npx tsx scripts/bump-version.ts patch --hallmark
+```
+
+**Options:**
+- `patch` - Bump patch version (1.2.3 → 1.2.4)
+- `minor` - Bump minor version (1.2.3 → 1.3.0)
+- `major` - Bump major version (1.2.3 → 2.0.0)
+- `--hallmark` or `-h` - Create blockchain hallmark record
+
+**Files updated automatically:**
+- `version.json` - Central version tracking
+- `client/src/components/Footer.tsx` - Footer version stamp
+- `client/src/pages/login.tsx` - Login page version
+- `replit.md` - Documentation header
+
+**Hallmark records** are stored in `version.json` and can be verified on Solana mainnet through the Developer Hub.
 
 ## System Architecture
 
@@ -52,10 +77,10 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.3** - December 2024 | Operations Control Center & Gratuity System
+**v1.2.4** - December 2025 | Operations Control Center & Gratuity System
 
 ## Recent Changes (December 2024)
-- **v1.2.3**: Operations Control Center & Gratuity System
+- **v1.2.4**: Operations Control Center & Gratuity System
   - **Operations Control Center** (/operations): Live order board with real-time status tracking
     - Status workflow: scheduled → confirmed → preparing → picked_up → out_for_delivery → delivered
     - Driver assignment with phone number tracking

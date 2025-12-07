@@ -69,7 +69,7 @@ export function Footer() {
               Darkwave Studios, LLC
             </a>
             <span className="mx-0.5">•</span>
-            <span className="text-amber-400/60 font-medium">v1.2.3</span>
+            <span className="text-amber-400/60 font-medium">v1.2.4</span>
           </div>
         </div>
       </div>

@@ -51,6 +51,7 @@ import { AIRecommendations } from "@/components/smart/AIRecommendations";
 import { OrderStatusTimeline } from "@/components/tracking/OrderStatusTimeline";
 import { LoyaltyWidget } from "@/components/loyalty/LoyaltyWidget";
 import { TeamManagementWidget } from "@/components/team/TeamManagementWidget";
+import { CalendarSyncWidget } from "@/components/calendar/CalendarSyncWidget";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -1000,12 +1001,13 @@ const { itemCount } = useCart();
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
             data-tour="tracking-loyalty"
           >
             <OrderStatusTimeline userId={userId} />
             <LoyaltyWidget userId={userId} />
             <TeamManagementWidget userId={userId} />
+            <CalendarSyncWidget userId={userId} />
           </motion.div>
         )}
 

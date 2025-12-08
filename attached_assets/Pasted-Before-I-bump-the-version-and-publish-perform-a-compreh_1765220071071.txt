@@ -1,0 +1,53 @@
+Before I bump the version and publish, perform a comprehensive pre-publish sweep of the Brew & Board Coffee platform. Complete ALL of the following tasks:
+
+1. CONTENT & DOCUMENTATION UPDATES
+- Update all business plans with current features and pricing
+- Update business roadmaps with completed milestones and future plans
+- Update executive summaries to reflect current state
+- Update live business plan documents
+- Review and update all user-facing modals (welcome modals, onboarding, tutorials)
+- Update any slideshow/presentation templates with current info
+- Update investor materials if applicable
+
+2. USER EXPERIENCE
+- Review all descriptive modals for accuracy and clarity
+- Check tutorial content is up-to-date
+- Verify onboarding flows work correctly
+- Ensure all tooltips and help text are accurate
+
+3. MOBILE OPTIMIZATION
+- Test all pages for mobile responsiveness
+- Check touch targets are appropriately sized (min 44px)
+- Verify scrolling works properly on mobile
+- Check modals and dialogs work on small screens
+- Ensure footer and navigation work on mobile
+
+4. ERROR CHECKING
+- Run LSP diagnostics and fix any TypeScript errors
+- Check browser console for JavaScript errors
+- Verify all API endpoints return expected responses
+- Test database connections are healthy
+- Check for broken links or missing assets
+
+5. TASK MANAGEMENT
+- Review and clear completed todo items
+- Update any pending checklists
+- Document any known issues or technical debt
+
+6. SYSTEM VERIFICATION
+- Verify authentication flows work (all PIN types: 0424, 444, 777, 5555)
+- Test critical user paths (login, order, portfolio)
+- Check payment integrations are configured
+- Verify email notifications are working
+- Test hallmark/blockchain features
+
+7. VERSION ALIGNMENT
+- Ensure version references are consistent across the app
+- Update changelog in replit.md with new features
+- Document any breaking changes
+
+After completing all checks, report:
+1. Summary of updates made
+2. Any issues found and fixed
+3. Any issues that need manual attention
+4. Confirmation the app is ready for version bump

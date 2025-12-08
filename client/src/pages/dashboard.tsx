@@ -47,6 +47,10 @@ import { WelcomeWizard, GuidedTour } from "@/components/onboarding";
 import { QuickReorderPanel } from "@/components/reorder/QuickReorderPanel";
 import { FavoritesPanel } from "@/components/favorites/FavoritesPanel";
 import { OrderTemplatesPanel } from "@/components/templates/OrderTemplatesPanel";
+import { AIRecommendations } from "@/components/smart/AIRecommendations";
+import { OrderStatusTimeline } from "@/components/tracking/OrderStatusTimeline";
+import { LoyaltyWidget } from "@/components/loyalty/LoyaltyWidget";
+import { TeamManagementWidget } from "@/components/team/TeamManagementWidget";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -984,6 +988,24 @@ const { itemCount } = useCart();
             <QuickReorderPanel userId={userId} />
             <FavoritesPanel userId={userId} />
             <OrderTemplatesPanel userId={userId} />
+          </motion.div>
+        )}
+
+        {/* Phase 3: AI Recommendations */}
+        <AIRecommendations userId={userId || undefined} />
+
+        {/* Phase 4-6: Active Orders, Loyalty & Team Management for signed-in users */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            data-tour="tracking-loyalty"
+          >
+            <OrderStatusTimeline userId={userId} />
+            <LoyaltyWidget userId={userId} />
+            <TeamManagementWidget userId={userId} />
           </motion.div>
         )}
 

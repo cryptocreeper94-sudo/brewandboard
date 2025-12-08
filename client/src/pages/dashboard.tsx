@@ -40,8 +40,10 @@ import {
   UserCheck,
   Send,
   Building2,
-  Globe2
+  Globe2,
+  HelpCircle
 } from "lucide-react";
+import { WelcomeWizard, GuidedTour } from "@/components/onboarding";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -594,11 +596,45 @@ interface WeatherData {
 
 export default function Dashboard() {
   const userName = localStorage.getItem("user_name") || "Guest";
+  const userId = localStorage.getItem("user_id") || "";
   const isGuest = localStorage.getItem("is_guest") === "true";
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showRegister, setShowRegister] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showWelcomeWizard, setShowWelcomeWizard] = useState(false);
+  const [showGuidedTour, setShowGuidedTour] = useState(false);
+
+  const { data: onboardingProfile, refetch: refetchOnboarding } = useQuery({
+    queryKey: ['onboarding', userId],
+    queryFn: async () => {
+      if (!userId || isGuest) return null;
+      const res = await fetch(`/api/onboarding/profile/${userId}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!userId && !isGuest,
+  });
+
+  useEffect(() => {
+    if (userId && !isGuest && onboardingProfile === null) {
+      const hasSeenWizard = localStorage.getItem(`wizard_dismissed_${userId}`);
+      if (!hasSeenWizard) {
+        setTimeout(() => setShowWelcomeWizard(true), 1000);
+      }
+    }
+  }, [userId, isGuest, onboardingProfile]);
+
+  const handleWizardComplete = () => {
+    setShowWelcomeWizard(false);
+    localStorage.setItem(`wizard_dismissed_${userId}`, 'true');
+    refetchOnboarding();
+    setTimeout(() => {
+      if (!onboardingProfile?.guidedTourCompleted) {
+        setShowGuidedTour(true);
+      }
+    }, 500);
+  };
 
   // Check for action parameter in URL to auto-open register/login popup
   useEffect(() => {
@@ -606,11 +642,12 @@ export default function Dashboard() {
     const action = urlParams.get('action');
     if (action === 'register') {
       setShowRegister(true);
-      // Clean up URL
       window.history.replaceState({}, '', '/dashboard');
     } else if (action === 'login') {
       setShowLogin(true);
-      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (action === 'tour') {
+      setShowGuidedTour(true);
       window.history.replaceState({}, '', '/dashboard');
     }
   }, []);
@@ -717,7 +754,7 @@ const { itemCount } = useCart();
       </div>
 
       {/* Hero Banner - Shimmering Dark Brown */}
-      <div className="relative overflow-hidden pt-4 md:pt-6">
+      <div className="relative overflow-hidden pt-4 md:pt-6" data-tour="hero">
         {/* Rich dark brown gradient background */}
         <div 
           className="absolute inset-0"
@@ -883,6 +920,7 @@ const { itemCount } = useCart();
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          data-tour="quick-actions"
         >
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="font-serif text-lg">Quick Actions</h3>
@@ -1029,7 +1067,9 @@ const { itemCount } = useCart();
         </motion.div>
 
         {/* Curated Vendors - Coffee & Beverages */}
-        <CuratedRoastersCarousel />
+        <div data-tour="vendors">
+          <CuratedRoastersCarousel />
+        </div>
 
         {/* Featured Boards & Treats - Food Section */}
         <FeaturedBoardsCarousel />
@@ -1260,6 +1300,26 @@ const { itemCount } = useCart();
 
       {/* Floating Mascot AI Assistant Button */}
       <MascotButton />
+
+      {/* Onboarding: Welcome Wizard */}
+      {userId && (
+        <WelcomeWizard
+          open={showWelcomeWizard}
+          onComplete={handleWizardComplete}
+          userId={userId}
+        />
+      )}
+
+      {/* Onboarding: Guided Tour */}
+      {userId && (
+        <GuidedTour
+          isActive={showGuidedTour}
+          onComplete={() => setShowGuidedTour(false)}
+          onDismiss={() => setShowGuidedTour(false)}
+          userId={userId}
+          initialStep={onboardingProfile?.guidedTourStep || 0}
+        />
+      )}
     </div>
   );
 }

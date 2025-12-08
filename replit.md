@@ -86,9 +86,46 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
 
 ## Current Version
-**v1.2.7** - December 2025 | Operations Control Center & Gratuity System
+**v1.2.8** - December 2025 | 7-Phase UX Enhancement Suite
 
 ## Recent Changes (December 2024)
+- **v1.2.8**: 7-Phase UX Enhancement Suite
+  - **Phase 1 - First-Time Experience**: Welcome Wizard, Guided Tour, Help Tooltips
+    - Multi-step business onboarding wizard with industry selection
+    - Framer Motion-powered guided tour highlighting key features
+    - Contextual help tooltips on critical UI elements
+    - Database: user_onboarding_profiles table with tour/wizard completion tracking
+  - **Phase 2 - Convenience Features**: Quick Reorder, Favorites, Templates
+    - QuickReorderPanel: One-tap repeat of past orders with save-as-template
+    - FavoritesPanel: Heart button for vendors and menu items with tabbed view
+    - OrderTemplatesPanel: Save custom order configurations for recurring meetings
+    - API: /api/favorites, /api/order-templates, /api/recent-orders
+  - **Phase 3 - Smart Features**: AI Recommendations
+    - AIRecommendations component with personalized suggestions
+    - Context-aware recommendations based on meeting size and time
+    - Visual recommendation cards with vendor matching
+  - **Phase 4 - Order Tracking**: Real-time Timeline
+    - OrderStatusTimeline with visual step-by-step progress
+    - ETA display, driver info, and live status updates
+    - Integration with scheduled orders API
+  - **Phase 5 - Team Management**: Company Accounts
+    - TeamManagementWidget for company setup and member management
+    - Role-based access: admin, manager, member
+    - Spending limits and budget controls per team member
+    - API: /api/company/:userId, /api/company/invite
+  - **Phase 6 - Loyalty Program**: Points & Rewards
+    - LoyaltyWidget with tier system (bronze/silver/gold/platinum)
+    - Referral codes with bonus points for referrer and referee
+    - Points-to-tier progress tracking with visual progress bars
+    - Database: loyalty_accounts, loyalty_transactions tables
+  - **Phase 7 - Calendar Integration**: Meeting Sync
+    - CalendarSyncWidget for Google/Outlook calendar connection
+    - Upcoming meetings with attendee counts and catering suggestions
+    - Auto-suggest toggle and configurable reminder timing
+    - API: /api/calendar/settings, /api/calendar/upcoming
+  - **Dashboard Integration**: All widgets render conditionally for signed-in users
+  - **Testing Compliance**: All interactive elements instrumented with data-testid attributes
+
 - **v1.2.7**: Operations Control Center, Gratuity System & Release Manager
   - **Release Manager Panel**: Consolidated DevOps hub in Developer Hub
     - Category: DevOps and Release Management

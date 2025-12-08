@@ -65,6 +65,16 @@ import {
   type InsertSharedCodeSnippet,
   type Subscription,
   type InsertSubscription,
+  type UserOnboardingProfile,
+  type InsertUserOnboardingProfile,
+  type UserFavorite,
+  type InsertUserFavorite,
+  type OrderTemplate,
+  type InsertOrderTemplate,
+  type LoyaltyAccount,
+  type InsertLoyaltyAccount,
+  type LoyaltyTransaction,
+  type InsertLoyaltyTransaction,
   users,
   crmNotes,
   clients,
@@ -98,6 +108,11 @@ import {
   appSyncLogs,
   sharedCodeSnippets,
   subscriptions,
+  userOnboardingProfiles,
+  userFavorites,
+  orderTemplates,
+  loyaltyAccounts,
+  loyaltyTransactions,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -740,7 +755,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustodyTransfer(transfer: InsertFranchiseCustodyTransfer): Promise<FranchiseCustodyTransfer> {
-    const [newTransfer] = await db.insert(franchiseCustodyTransfers).values([transfer]).returning();
+    const [newTransfer] = await db.insert(franchiseCustodyTransfers).values(transfer as any).returning();
     return newTransfer;
   }
 
@@ -1729,6 +1744,206 @@ export class DatabaseStorage implements IStorage {
       .update(subscriptions)
       .set({ ordersThisMonth: 0, updatedAt: new Date() })
       .where(eq(subscriptions.id, subscriptionId));
+  }
+
+  // ========================
+  // USER ONBOARDING PROFILES (Phase 1)
+  // ========================
+  async getOnboardingProfile(userId: string): Promise<UserOnboardingProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(userOnboardingProfiles)
+      .where(eq(userOnboardingProfiles.userId, userId));
+    return profile || undefined;
+  }
+
+  async upsertOnboardingProfile(userId: string, data: Partial<InsertUserOnboardingProfile>): Promise<UserOnboardingProfile> {
+    const existing = await this.getOnboardingProfile(userId);
+    if (existing) {
+      const [updated] = await db
+        .update(userOnboardingProfiles)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userOnboardingProfiles.userId, userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(userOnboardingProfiles)
+        .values({ userId, ...data })
+        .returning();
+      return created;
+    }
+  }
+
+  async updateTourProgress(userId: string, step: number, completed: boolean): Promise<void> {
+    await db
+      .update(userOnboardingProfiles)
+      .set({ 
+        guidedTourStep: step, 
+        guidedTourCompleted: completed,
+        updatedAt: new Date() 
+      })
+      .where(eq(userOnboardingProfiles.userId, userId));
+  }
+
+  // ========================
+  // USER FAVORITES (Phase 2)
+  // ========================
+  async getFavorites(userId: string, type?: string): Promise<UserFavorite[]> {
+    if (type) {
+      return db
+        .select()
+        .from(userFavorites)
+        .where(and(eq(userFavorites.userId, userId), eq(userFavorites.favoriteType, type)))
+        .orderBy(userFavorites.sortOrder);
+    }
+    return db
+      .select()
+      .from(userFavorites)
+      .where(eq(userFavorites.userId, userId))
+      .orderBy(userFavorites.sortOrder);
+  }
+
+  async addFavorite(favorite: InsertUserFavorite): Promise<UserFavorite> {
+    const [created] = await db.insert(userFavorites).values(favorite).returning();
+    return created;
+  }
+
+  async removeFavorite(userId: string, favoriteType: string, referenceId: string): Promise<void> {
+    await db
+      .delete(userFavorites)
+      .where(
+        and(
+          eq(userFavorites.userId, userId),
+          eq(userFavorites.favoriteType, favoriteType),
+          eq(userFavorites.referenceId, referenceId)
+        )
+      );
+  }
+
+  async isFavorite(userId: string, favoriteType: string, referenceId: string): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(userFavorites)
+      .where(
+        and(
+          eq(userFavorites.userId, userId),
+          eq(userFavorites.favoriteType, favoriteType),
+          eq(userFavorites.referenceId, referenceId)
+        )
+      );
+    return !!result;
+  }
+
+  // ========================
+  // ORDER TEMPLATES (Phase 2)
+  // ========================
+  async getOrderTemplates(userId: string): Promise<OrderTemplate[]> {
+    return db
+      .select()
+      .from(orderTemplates)
+      .where(eq(orderTemplates.userId, userId))
+      .orderBy(desc(orderTemplates.useCount));
+  }
+
+  async getOrderTemplate(id: string): Promise<OrderTemplate | undefined> {
+    const [template] = await db.select().from(orderTemplates).where(eq(orderTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createOrderTemplate(template: InsertOrderTemplate): Promise<OrderTemplate> {
+    const [created] = await db.insert(orderTemplates).values(template as any).returning();
+    return created;
+  }
+
+  async updateOrderTemplate(id: string, template: Partial<InsertOrderTemplate>): Promise<OrderTemplate> {
+    const [updated] = await db
+      .update(orderTemplates)
+      .set({ ...template, updatedAt: new Date() } as any)
+      .where(eq(orderTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteOrderTemplate(id: string): Promise<void> {
+    await db.delete(orderTemplates).where(eq(orderTemplates.id, id));
+  }
+
+  async incrementTemplateUseCount(id: string): Promise<void> {
+    await db
+      .update(orderTemplates)
+      .set({ 
+        useCount: sql`${orderTemplates.useCount} + 1`,
+        lastUsedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(orderTemplates.id, id));
+  }
+
+  // ========================
+  // LOYALTY ACCOUNTS (Phase 6)
+  // ========================
+  async getLoyaltyAccount(userId: string): Promise<LoyaltyAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(loyaltyAccounts)
+      .where(eq(loyaltyAccounts.userId, userId));
+    return account || undefined;
+  }
+
+  async createLoyaltyAccount(account: InsertLoyaltyAccount): Promise<LoyaltyAccount> {
+    const [created] = await db.insert(loyaltyAccounts).values(account).returning();
+    return created;
+  }
+
+  async addLoyaltyPoints(userId: string, points: number, type: string, description: string, orderId?: string): Promise<void> {
+    const account = await this.getLoyaltyAccount(userId);
+    if (!account) return;
+    
+    await db
+      .update(loyaltyAccounts)
+      .set({ 
+        currentPoints: sql`${loyaltyAccounts.currentPoints} + ${points}`,
+        lifetimePoints: points > 0 ? sql`${loyaltyAccounts.lifetimePoints} + ${points}` : loyaltyAccounts.lifetimePoints,
+        updatedAt: new Date()
+      })
+      .where(eq(loyaltyAccounts.userId, userId));
+
+    await db.insert(loyaltyTransactions).values({
+      loyaltyAccountId: account.id,
+      type,
+      points,
+      description,
+      relatedOrderId: orderId,
+    });
+  }
+
+  async getLoyaltyTransactions(accountId: string, limit = 50): Promise<LoyaltyTransaction[]> {
+    return db
+      .select()
+      .from(loyaltyTransactions)
+      .where(eq(loyaltyTransactions.loyaltyAccountId, accountId))
+      .orderBy(desc(loyaltyTransactions.createdAt))
+      .limit(limit);
+  }
+
+  async updateLoyaltyTier(userId: string, tier: string): Promise<void> {
+    await db
+      .update(loyaltyAccounts)
+      .set({ tier, updatedAt: new Date() })
+      .where(eq(loyaltyAccounts.userId, userId));
+  }
+
+  // ========================
+  // QUICK REORDER (Phase 2)
+  // ========================
+  async getRecentOrders(userId: string, limit = 5): Promise<ScheduledOrder[]> {
+    return db
+      .select()
+      .from(scheduledOrders)
+      .where(eq(scheduledOrders.userId, userId))
+      .orderBy(desc(scheduledOrders.createdAt))
+      .limit(limit);
   }
 }
 

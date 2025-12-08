@@ -2077,3 +2077,204 @@ export const CODE_CATEGORIES = [
   'config',
   'integration',
 ] as const;
+
+// ========================
+// USER ONBOARDING PROFILES (Phase 1: First-Time Experience)
+// ========================
+export const userOnboardingProfiles = pgTable(
+  "user_onboarding_profiles",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id).unique(),
+    
+    // Business Setup
+    businessType: varchar("business_type", { length: 50 }), // corporate, startup, agency, nonprofit, other
+    typicalMeetingSize: integer("typical_meeting_size"), // average attendees
+    preferredDeliveryWindows: text("preferred_delivery_windows").array().default(sql`ARRAY[]::text[]`), // morning, lunch, afternoon
+    preferredVendorCategories: text("preferred_vendor_categories").array().default(sql`ARRAY[]::text[]`), // coffee, donuts, juice, etc.
+    
+    // Onboarding Progress
+    welcomeWizardCompleted: boolean("welcome_wizard_completed").default(false),
+    guidedTourCompleted: boolean("guided_tour_completed").default(false),
+    guidedTourStep: integer("guided_tour_step").default(0), // current step in tour
+    tooltipHintsDismissed: boolean("tooltip_hints_dismissed").default(false),
+    
+    // Preferences learned over time
+    frequentOrderDays: text("frequent_order_days").array().default(sql`ARRAY[]::text[]`), // monday, tuesday, etc.
+    averageOrderValue: decimal("average_order_value", { precision: 10, scale: 2 }),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_onboarding_user").on(table.userId),
+  })
+);
+
+export const insertUserOnboardingProfileSchema = createInsertSchema(userOnboardingProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  averageOrderValue: true,
+});
+export type InsertUserOnboardingProfile = z.infer<typeof insertUserOnboardingProfileSchema>;
+export type UserOnboardingProfile = typeof userOnboardingProfiles.$inferSelect;
+
+// ========================
+// USER FAVORITES (Phase 2: Convenience Features)
+// ========================
+export const userFavorites = pgTable(
+  "user_favorites",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    favoriteType: varchar("favorite_type", { length: 20 }).notNull(), // vendor, item, template
+    referenceId: varchar("reference_id", { length: 100 }).notNull(), // vendor slug or item id
+    referenceName: varchar("reference_name", { length: 255 }).notNull(), // display name
+    referenceData: jsonb("reference_data"), // additional data like image, price, etc.
+    
+    sortOrder: integer("sort_order").default(0),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_favorites_user").on(table.userId),
+    typeIdx: index("idx_favorites_type").on(table.favoriteType),
+  })
+);
+
+export const insertUserFavoriteSchema = createInsertSchema(userFavorites).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertUserFavorite = z.infer<typeof insertUserFavoriteSchema>;
+export type UserFavorite = typeof userFavorites.$inferSelect;
+
+// ========================
+// ORDER TEMPLATES (Phase 2: Saved Custom Orders)
+// ========================
+export const orderTemplates = pgTable(
+  "order_templates",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    
+    name: varchar("name", { length: 100 }).notNull(), // "Monday Morning Coffee Run"
+    description: text("description"),
+    
+    vendorSlug: varchar("vendor_slug", { length: 100 }).notNull(),
+    vendorName: varchar("vendor_name", { length: 255 }).notNull(),
+    
+    items: jsonb("items").$type<Array<{ name: string; quantity: number; price: number }>>().default([]),
+    defaultAttendees: integer("default_attendees").default(1),
+    defaultGratuityPercent: integer("default_gratuity_percent").default(15),
+    
+    useCount: integer("use_count").default(0),
+    lastUsedAt: timestamp("last_used_at"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_order_templates_user").on(table.userId),
+    vendorIdx: index("idx_order_templates_vendor").on(table.vendorSlug),
+  })
+);
+
+export const insertOrderTemplateSchema = createInsertSchema(orderTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  useCount: true,
+  lastUsedAt: true,
+});
+export type InsertOrderTemplate = z.infer<typeof insertOrderTemplateSchema>;
+export type OrderTemplate = typeof orderTemplates.$inferSelect;
+
+// ========================
+// LOYALTY POINTS (Phase 6: Rewards)
+// ========================
+export const loyaltyAccounts = pgTable(
+  "loyalty_accounts",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").notNull().references(() => users.id).unique(),
+    
+    currentPoints: integer("current_points").default(0),
+    lifetimePoints: integer("lifetime_points").default(0),
+    tier: varchar("tier", { length: 20 }).default("bronze"), // bronze, silver, gold, platinum
+    
+    referralCode: varchar("referral_code", { length: 20 }).unique(),
+    referredByCode: varchar("referred_by_code", { length: 20 }),
+    referralCount: integer("referral_count").default(0),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_loyalty_user").on(table.userId),
+    tierIdx: index("idx_loyalty_tier").on(table.tier),
+    referralCodeIdx: index("idx_loyalty_referral").on(table.referralCode),
+  })
+);
+
+export const insertLoyaltyAccountSchema = createInsertSchema(loyaltyAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lifetimePoints: true,
+  referralCount: true,
+});
+export type InsertLoyaltyAccount = z.infer<typeof insertLoyaltyAccountSchema>;
+export type LoyaltyAccount = typeof loyaltyAccounts.$inferSelect;
+
+// ========================
+// LOYALTY TRANSACTIONS (Points history)
+// ========================
+export const loyaltyTransactions = pgTable(
+  "loyalty_transactions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    loyaltyAccountId: varchar("loyalty_account_id").notNull().references(() => loyaltyAccounts.id),
+    
+    type: varchar("type", { length: 20 }).notNull(), // earn, redeem, bonus, referral
+    points: integer("points").notNull(), // positive for earn, negative for redeem
+    description: text("description"),
+    
+    relatedOrderId: varchar("related_order_id"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    accountIdx: index("idx_loyalty_tx_account").on(table.loyaltyAccountId),
+    typeIdx: index("idx_loyalty_tx_type").on(table.type),
+  })
+);
+
+export const insertLoyaltyTransactionSchema = createInsertSchema(loyaltyTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLoyaltyTransaction = z.infer<typeof insertLoyaltyTransactionSchema>;
+export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
+
+// Business type options
+export const BUSINESS_TYPES = [
+  'corporate',
+  'startup',
+  'agency',
+  'nonprofit',
+  'government',
+  'healthcare',
+  'education',
+  'hospitality',
+  'other',
+] as const;
+
+// Loyalty tier thresholds
+export const LOYALTY_TIERS = {
+  bronze: { minPoints: 0, discount: 0, perks: ['Basic rewards'] },
+  silver: { minPoints: 500, discount: 5, perks: ['5% discount', 'Priority support'] },
+  gold: { minPoints: 2000, discount: 10, perks: ['10% discount', 'Priority support', 'Free delivery'] },
+  platinum: { minPoints: 5000, discount: 15, perks: ['15% discount', 'Dedicated concierge', 'Free delivery', 'Exclusive events'] },
+} as const;

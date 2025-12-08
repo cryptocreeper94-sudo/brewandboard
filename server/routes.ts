@@ -2918,5 +2918,202 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // ONBOARDING ROUTES (Phase 1)
+  // ========================
+  app.get("/api/onboarding/profile/:userId", async (req, res) => {
+    try {
+      const profile = await storage.getOnboardingProfile(req.params.userId);
+      res.json(profile || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/onboarding/profile/:userId", async (req, res) => {
+    try {
+      const profile = await storage.upsertOnboardingProfile(req.params.userId, req.body);
+      res.json(profile);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/onboarding/tour-progress/:userId", async (req, res) => {
+    try {
+      const { step, completed } = req.body;
+      await storage.updateTourProgress(req.params.userId, step, completed);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // FAVORITES ROUTES (Phase 2)
+  // ========================
+  app.get("/api/favorites/:userId", async (req, res) => {
+    try {
+      const { type } = req.query;
+      const favorites = await storage.getFavorites(req.params.userId, type as string);
+      res.json(favorites);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/favorites", async (req, res) => {
+    try {
+      const { userId, favoriteType, referenceId, referenceName, referenceData } = req.body;
+      const favorite = await storage.addFavorite({ 
+        userId, favoriteType, referenceId, referenceName, referenceData 
+      });
+      res.status(201).json(favorite);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/favorites/:userId/:type/:referenceId", async (req, res) => {
+    try {
+      await storage.removeFavorite(req.params.userId, req.params.type, req.params.referenceId);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/favorites/:userId/check/:type/:referenceId", async (req, res) => {
+    try {
+      const isFav = await storage.isFavorite(req.params.userId, req.params.type, req.params.referenceId);
+      res.json({ isFavorite: isFav });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // ORDER TEMPLATES ROUTES (Phase 2)
+  // ========================
+  app.get("/api/order-templates/:userId", async (req, res) => {
+    try {
+      const templates = await storage.getOrderTemplates(req.params.userId);
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/order-templates/detail/:id", async (req, res) => {
+    try {
+      const template = await storage.getOrderTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/order-templates", async (req, res) => {
+    try {
+      const template = await storage.createOrderTemplate(req.body);
+      res.status(201).json(template);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/order-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.updateOrderTemplate(req.params.id, req.body);
+      res.json(template);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/order-templates/:id", async (req, res) => {
+    try {
+      await storage.deleteOrderTemplate(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/order-templates/:id/use", async (req, res) => {
+    try {
+      await storage.incrementTemplateUseCount(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // QUICK REORDER ROUTES (Phase 2)
+  // ========================
+  app.get("/api/recent-orders/:userId", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const orders = await storage.getRecentOrders(req.params.userId, limit);
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // LOYALTY ROUTES (Phase 6)
+  // ========================
+  app.get("/api/loyalty/:userId", async (req, res) => {
+    try {
+      const account = await storage.getLoyaltyAccount(req.params.userId);
+      res.json(account || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/loyalty/create", async (req, res) => {
+    try {
+      const { userId, referredByCode } = req.body;
+      // Generate unique referral code
+      const referralCode = `BB${Date.now().toString(36).toUpperCase()}`;
+      const account = await storage.createLoyaltyAccount({
+        userId,
+        referralCode,
+        referredByCode,
+        currentPoints: referredByCode ? 100 : 0, // 100 bonus points for referrals
+        tier: 'bronze'
+      });
+      res.status(201).json(account);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/loyalty/:userId/add-points", async (req, res) => {
+    try {
+      const { points, type, description, orderId } = req.body;
+      await storage.addLoyaltyPoints(req.params.userId, points, type, description, orderId);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/loyalty/:accountId/transactions", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const transactions = await storage.getLoyaltyTransactions(req.params.accountId, limit);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

@@ -44,6 +44,9 @@ import {
   HelpCircle
 } from "lucide-react";
 import { WelcomeWizard, GuidedTour } from "@/components/onboarding";
+import { QuickReorderPanel } from "@/components/reorder/QuickReorderPanel";
+import { FavoritesPanel } from "@/components/favorites/FavoritesPanel";
+import { OrderTemplatesPanel } from "@/components/templates/OrderTemplatesPanel";
 import { Link, useLocation } from "wouter";
 import { COFFEE_SHOPS, Product, Shop } from "@/lib/mock-data";
 import { useCart } from "@/contexts/CartContext";
@@ -968,6 +971,21 @@ const { itemCount } = useCart();
             ))}
           </div>
         </motion.div>
+
+        {/* Phase 2: Convenience Panels for signed-in users */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            data-tour="convenience-panels"
+          >
+            <QuickReorderPanel userId={userId} />
+            <FavoritesPanel userId={userId} />
+            <OrderTemplatesPanel userId={userId} />
+          </motion.div>
+        )}
 
         {/* Virtual Host Feature - Hero Card */}
         <motion.div

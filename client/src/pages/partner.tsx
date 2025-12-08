@@ -343,12 +343,12 @@ export default function PartnerHub() {
   const platformFeatures = [
     { title: "Operations Center", desc: "Live order board with status tracking", icon: Package },
     { title: "Order Scheduling", desc: "Calendar-based ordering with 2hr lead time", icon: Calendar },
-    { title: "Portfolio/CRM", desc: "Full digital briefcase for your business", icon: FileText },
-    { title: "Document Scanner", desc: "OCR scanning with PDF export", icon: Scan },
-    { title: "Virtual Host", desc: "Multi-site ordering with budget controls", icon: Users },
-    { title: "Presentations", desc: "Meeting presentation builder", icon: Presentation },
+    { title: "Quick Reorder", desc: "One-tap repeat orders & favorites", icon: ShoppingCart },
+    { title: "Loyalty Program", desc: "Points, tiers, referral rewards", icon: Star },
+    { title: "Team Management", desc: "Company accounts with spending limits", icon: Users },
+    { title: "Calendar Sync", desc: "Google/Outlook meeting integration", icon: Calendar },
     { title: "Blockchain", desc: "Solana hallmark verification", icon: Shield },
-    { title: "1099 Compliance", desc: "Contractor payment tracking", icon: TrendingUp },
+    { title: "AI Recommendations", desc: "Smart suggestions for meetings", icon: TrendingUp },
   ];
 
   const partnerName = partnerInfo?.name || "Partner";
@@ -358,40 +358,45 @@ export default function PartnerHub() {
     if (partnerName === "Sarah") {
       return {
         greeting: "Hey Sarah!",
-        intro: "It's Jason. Thanks for taking a look at Brew & Board Coffee! Your feedback has been incredibly valuable - here's what's new:",
+        intro: "It's Jason. Thanks for taking a look at Brew & Board Coffee! v1.2.8 just dropped with our 7-Phase UX Enhancement Suite:",
         improvements: [
-          "Operations Control Center - Live order board with real-time status tracking",
-          "Gratuity Protection System - Internal vs partner gratuity split for delivery integrations",
-          "Virtual Host Multi-Site Ordering - 18% auto-gratuity for coordinated orders",
-          "Driver Assignment & GPS Tracking - Timeline events with location data",
-          "Enhanced 1099 Portal - Fixed field names and added W-9 status tracking"
+          "Welcome Wizard & Guided Tour - First-time user onboarding experience",
+          "Quick Reorder & Favorites - One-tap repeat orders, save vendors/items",
+          "AI Recommendations - Context-aware meeting suggestions",
+          "Order Tracking Timeline - Real-time status with driver info & ETA",
+          "Team Management - Company accounts with role-based access",
+          "Loyalty Program - Points, tiers (bronze→platinum), referral codes",
+          "Calendar Integration - Google/Outlook sync with auto-suggestions"
         ],
         overview: "This B2B platform connects Nashville businesses with local coffee shops for pre-meeting catering. Now featuring live operations management, blockchain verification on Solana, subscription tiers ($29-$199), and franchise opportunities.",
-        closing: "Explore the new Operations page (/operations) to see the live order dashboard! You're in Preview Mode so nothing saves to the live system."
+        closing: "Check out the new dashboard widgets after signing in! You're in Preview Mode so nothing saves to the live system."
       };
     } else if (partnerName === "Sid") {
       return {
         greeting: "Hey Sid!",
-        intro: "It's Jason. Welcome to Brew & Board Coffee! Here's what we've been building in Nashville:",
+        intro: "It's Jason. Welcome to Brew & Board Coffee! v1.2.8 includes our 7-Phase UX Enhancement Suite:",
         improvements: [
-          "Operations Control Center - Real-time order board for admins & regional managers",
-          "Smart Gratuity System - Protected internal gratuity vs partner delivery fees",
-          "Virtual Host Feature - Multi-site meeting coordination with budget controls",
-          "Driver Tracking - Assignment, phone numbers, GPS timeline events",
-          "1099 Compliance Portal - Contractor payments with $600 threshold tracking"
+          "Welcome Wizard - Multi-step business onboarding with preferences",
+          "Favorites & Quick Reorder - Save vendors, repeat past orders instantly",
+          "AI-Powered Recommendations - Smart suggestions for meetings",
+          "Order Status Timeline - Visual tracking with driver & ETA display",
+          "Team Management Widget - Invite members with spending limits",
+          "Loyalty Rewards - Points system with tier progression",
+          "Calendar Sync - Connect Google/Outlook for meeting-based ordering"
         ],
-        overview: "B2B coffee/tea/juice catering platform with blockchain hallmark verification, subscription tiers, franchise system, Regional Manager dashboards, and now Operations Control Center for live order management.",
-        closing: "Check out /operations for the live order board! Preview Mode is active so nothing saves to production yet. Let me know what you think!"
+        overview: "B2B coffee/tea/juice catering platform with blockchain hallmark verification, subscription tiers, franchise system, Regional Manager dashboards, and comprehensive UX enhancements.",
+        closing: "Sign in to explore the new dashboard features! Preview Mode is active so nothing saves to production yet."
       };
     }
     return {
       greeting: `Hey ${partnerName}!`,
-      intro: "Welcome to Brew & Board Coffee!",
+      intro: "Welcome to Brew & Board Coffee v1.2.8!",
       improvements: [
-        "Operations Control Center with live order tracking",
-        "Smart gratuity protection system",
-        "Virtual Host multi-site ordering",
-        "Driver assignment and GPS tracking"
+        "Welcome wizard & guided tour for new users",
+        "Quick reorder, favorites, and order templates",
+        "AI recommendations & order tracking timeline",
+        "Team management & loyalty rewards program",
+        "Calendar integration for meeting sync"
       ],
       overview: "A B2B coffee catering platform for Nashville businesses with blockchain verification and subscription tiers.",
       closing: "Explore freely in Preview Mode - nothing saves to the live system."

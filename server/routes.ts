@@ -3115,5 +3115,66 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // COMPANY ROUTES (Phase 5)
+  // ========================
+  app.get("/api/company/:userId", async (req, res) => {
+    try {
+      // Return null if no company - widget shows setup prompt
+      res.json(null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/company/invite", async (req, res) => {
+    try {
+      const { companyId, email, role, spendingLimit } = req.body;
+      // Placeholder for invite logic
+      res.status(201).json({ success: true, message: "Invite sent" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // CALENDAR ROUTES (Phase 7)
+  // ========================
+  app.get("/api/calendar/settings/:userId", async (req, res) => {
+    try {
+      // Return disconnected state - widget shows connect prompt
+      res.json({ connected: false, autoSuggest: false, reminderHours: 4 });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/calendar/settings/:userId", async (req, res) => {
+    try {
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/calendar/upcoming/:userId", async (req, res) => {
+    try {
+      // Return empty array - no meetings synced yet
+      res.json([]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/scheduled-orders", async (req, res) => {
+    try {
+      const { userId, status } = req.query;
+      // Return empty for active orders - no active deliveries
+      res.json([]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

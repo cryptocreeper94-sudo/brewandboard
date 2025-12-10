@@ -76,7 +76,7 @@ function formatRelativeTime(dateStr: string): string {
   return `${hours}h ${mins}m`;
 }
 
-export function OrderStatusTimeline({ userId }: { userId: number }) {
+export function OrderStatusTimeline({ userId }: { userId: string }) {
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
 
   const { data: activeOrders = [], isLoading, refetch } = useQuery<ActiveOrder[]>({

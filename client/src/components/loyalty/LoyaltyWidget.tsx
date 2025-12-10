@@ -69,7 +69,7 @@ const tierConfig = {
   }
 };
 
-export function LoyaltyWidget({ userId }: { userId: number }) {
+export function LoyaltyWidget({ userId }: { userId: string }) {
   const { toast } = useToast();
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);

@@ -59,7 +59,7 @@ const roleConfig = {
   member: { label: "Member", color: "bg-gray-100 text-gray-700", icon: Users }
 };
 
-export function TeamManagementWidget({ userId }: { userId: number }) {
+export function TeamManagementWidget({ userId }: { userId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showInvite, setShowInvite] = useState(false);

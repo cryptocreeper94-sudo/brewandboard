@@ -837,9 +837,9 @@ const { itemCount } = useCart();
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <Link href="/schedule">
+                <Link href="/order">
                   <Button className="text-white font-semibold shadow-lg hover:shadow-xl transition-all shine-effect" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)', borderColor: 'rgba(212,196,176,0.3)' }}>
-                    <Calendar className="h-4 w-4 mr-2" />
+                    <Coffee className="h-4 w-4 mr-2" />
                     Order Now
                   </Button>
                 </Link>

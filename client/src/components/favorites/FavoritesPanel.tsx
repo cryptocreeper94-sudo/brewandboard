@@ -32,7 +32,7 @@ interface Favorite {
   createdAt: string;
 }
 
-export function FavoritesPanel({ userId }: { userId: number }) {
+export function FavoritesPanel({ userId }: { userId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [removingId, setRemovingId] = useState<number | null>(null);

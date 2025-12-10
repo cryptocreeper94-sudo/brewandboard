@@ -46,7 +46,7 @@ interface OrderTemplate {
   usageCount: number;
 }
 
-export function OrderTemplatesPanel({ userId }: { userId: number }) {
+export function OrderTemplatesPanel({ userId }: { userId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingTemplate, setEditingTemplate] = useState<OrderTemplate | null>(null);

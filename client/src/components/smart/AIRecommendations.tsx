@@ -40,7 +40,7 @@ export function AIRecommendations({
   userId,
   context 
 }: { 
-  userId?: number;
+  userId?: string;
   context?: MeetingContext;
 }) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);

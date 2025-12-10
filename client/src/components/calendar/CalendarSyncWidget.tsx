@@ -44,7 +44,7 @@ interface CalendarSyncSettings {
   reminderHours: number;
 }
 
-export function CalendarSyncWidget({ userId }: { userId: number }) {
+export function CalendarSyncWidget({ userId }: { userId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);

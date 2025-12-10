@@ -30,7 +30,7 @@ interface PastOrder {
   headcount?: number;
 }
 
-export function QuickReorderPanel({ userId }: { userId: number }) {
+export function QuickReorderPanel({ userId }: { userId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [reordering, setReordering] = useState<number | null>(null);

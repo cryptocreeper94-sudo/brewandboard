@@ -31,6 +31,7 @@ import MeetingPresentationsPage from "@/pages/meeting-presentations";
 import PresentationViewerPage from "@/pages/presentation-viewer";
 import PartnerHub from "@/pages/partner";
 import OperationsPage from "@/pages/operations";
+import VendorMenuPage from "@/pages/vendor-menu";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -62,6 +63,8 @@ function Router() {
       <Route path="/presentation/:link" component={PresentationViewerPage} />
       <Route path="/partner" component={PartnerHub} />
       <Route path="/operations" component={OperationsPage} />
+      <Route path="/order" component={VendorMenuPage} />
+      <Route path="/order/:vendorId" component={VendorMenuPage} />
       <Route component={NotFound} />
     </Switch>
   );

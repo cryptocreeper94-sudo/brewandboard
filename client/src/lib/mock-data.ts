@@ -1090,30 +1090,6 @@ export const COFFEE_SHOPS: Shop[] = [
     ]
   },
   {
-    id: 'bongo-java',
-    name: 'Bongo Java',
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
-    location: 'Belmont/12South',
-    address: '2007 Belmont Blvd, Nashville, TN 37212',
-    lat: 36.1275,
-    lng: -86.7925,
-    rating: 4.4,
-    specialty: 'Nashville Original Since 1996',
-    type: 'coffee',
-    menu: [
-      { id: 'bj1', name: 'House Blend', description: 'Bongo signature blend', price: 2.95, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS] },
-      { id: 'bj2', name: 'Caffè Latte', description: 'Classic espresso latte', price: 4.50, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS, FLAVOR_MODIFIERS] },
-      { id: 'bj3', name: 'Iced Coffee', description: 'Chilled and refreshing', price: 3.50, category: 'Cold Coffee', modifiers: [COFFEE_SIZE_MODIFIERS] },
-      { id: 'bj4', name: 'Chai Latte', description: 'Spiced tea with milk', price: 4.50, category: 'Tea', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS] },
-      { id: 'bj5', name: 'Matcha Latte', description: 'Green tea powder with milk', price: 5.00, category: 'Tea', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS] },
-      { id: 'bj6', name: 'Breakfast Sandwich', description: 'Egg, cheese, choice of meat', price: 7.95, category: 'Food' },
-      { id: 'bj7', name: 'Veggie Wrap', description: 'Fresh vegetables in wrap', price: 8.95, category: 'Food' },
-      { id: 'bj8', name: 'Muffin', description: 'Daily baked muffin', price: 3.50, category: 'Bakery' },
-      { id: 'bj9', name: 'Scone', description: 'Fresh baked scone', price: 3.75, category: 'Bakery' },
-      { id: 'bj10', name: 'Coffee To-Go Box', description: 'Serves 10', price: 20.95, category: 'Catering' },
-    ]
-  },
-  {
     id: 'dose-coffee',
     name: 'Dose Coffee',
     image: 'https://images.unsplash.com/photo-1511081692775-05d0f180a065?w=400',
@@ -1136,32 +1112,6 @@ export const COFFEE_SHOPS: Shop[] = [
       { id: 'ds9', name: 'Hojicha Latte', description: 'Roasted green tea', price: 5.50, category: 'Tea', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS] },
       { id: 'ds10', name: 'Pastry of the Day', description: 'Fresh baked pastry', price: 4.25, category: 'Bakery' },
       { id: 'ds11', name: 'Coffee Carafe', description: 'Serves 8-10', price: 24.95, category: 'Catering' },
-    ]
-  },
-  {
-    id: 'steadfast-coffee',
-    name: 'Steadfast Coffee',
-    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400',
-    location: 'Germantown',
-    address: '500 Taylor St, Nashville, TN 37208',
-    lat: 36.1785,
-    lng: -86.7935,
-    rating: 4.5,
-    specialty: 'Neighborhood Coffee Shop',
-    type: 'coffee',
-    menu: [
-      { id: 'sf1', name: 'Batch Brew', description: 'Daily rotating roast', price: 3.25, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS] },
-      { id: 'sf2', name: 'Pour Over', description: 'Single origin pour over', price: 5.00, category: 'Hot Coffee' },
-      { id: 'sf3', name: 'Latte', description: 'Smooth espresso latte', price: 4.75, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS, FLAVOR_MODIFIERS] },
-      { id: 'sf4', name: 'Cappuccino', description: 'Classic cap', price: 4.75, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS] },
-      { id: 'sf5', name: 'Mocha', description: 'House-made chocolate', price: 5.25, category: 'Hot Coffee', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS] },
-      { id: 'sf6', name: 'Espresso', description: 'Double shot', price: 3.50, category: 'Hot Coffee' },
-      { id: 'sf7', name: 'Cold Brew', description: 'Smooth and sweet', price: 4.50, category: 'Cold Coffee', modifiers: [COFFEE_SIZE_MODIFIERS] },
-      { id: 'sf8', name: 'Iced Latte', description: 'Espresso over ice with milk', price: 5.00, category: 'Cold Coffee', modifiers: [COFFEE_SIZE_MODIFIERS, MILK_MODIFIERS, FLAVOR_MODIFIERS] },
-      { id: 'sf9', name: 'Tea', description: 'Loose leaf tea selection', price: 3.50, category: 'Tea', modifiers: [COFFEE_SIZE_MODIFIERS] },
-      { id: 'sf10', name: 'Pastry', description: 'Rotating pastry selection', price: 4.00, category: 'Bakery' },
-      { id: 'sf11', name: 'Toast', description: 'Sourdough with seasonal topping', price: 5.50, category: 'Food' },
-      { id: 'sf12', name: 'Coffee Carafe', description: 'Serves 8', price: 22.95, category: 'Catering' },
     ]
   },
 ];

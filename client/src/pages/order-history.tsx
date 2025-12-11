@@ -472,7 +472,10 @@ export default function OrderHistoryPage() {
                 : "Place your first order to see it here"}
             </p>
             <Link href="/schedule">
-              <Button style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
+              <Button 
+                style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
+                data-testid="button-browse-vendors"
+              >
                 <Coffee className="h-4 w-4 mr-2" />
                 Browse Vendors
               </Button>

@@ -951,11 +951,12 @@ export async function registerRoutes(
       
       const order = await storage.createScheduledOrder(orderData);
       
-      // Create initial order event
+      // Create initial order event - use actual order status
+      const initialStatus = validatedData.status || 'scheduled';
       await storage.createOrderEvent({
         orderId: order.id,
-        status: 'scheduled',
-        note: 'Order placed',
+        status: initialStatus,
+        note: initialStatus === 'pending_payment' ? 'Order placed - awaiting payment' : 'Order placed',
         changedBy: 'system'
       });
       

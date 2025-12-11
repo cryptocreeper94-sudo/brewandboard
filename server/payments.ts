@@ -281,6 +281,14 @@ export function registerPaymentRoutes(app: Express) {
             })
             .where(eq(payments.providerSessionId, session.id));
         }
+        
+        // Update order status if this was an order payment
+        if (metadata.type === 'order' && metadata.orderId) {
+          const { scheduledOrders } = await import('@shared/schema');
+          await db.update(scheduledOrders)
+            .set({ status: 'scheduled' })
+            .where(eq(scheduledOrders.id, metadata.orderId));
+        }
         break;
       }
 

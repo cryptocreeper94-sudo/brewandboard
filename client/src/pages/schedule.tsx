@@ -86,6 +86,7 @@ interface ScheduledOrder {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  pending_payment: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" },
   scheduled: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
   confirmed: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
   preparing: { bg: "bg-stone-100", text: "text-stone-700", border: "border-stone-200" },
@@ -95,6 +96,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  pending_payment: "Awaiting Payment",
   scheduled: "Scheduled",
   confirmed: "Confirmed",
   preparing: "Preparing",
@@ -221,27 +223,74 @@ export default function SchedulePage() {
       }
       return res.json();
     },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    onSuccess: async (orderData, variables) => {
+      const isOverageOrder = variables.isOverageOrder;
+      const needsPayment = variables.status === "pending_payment";
       
-      // Server-side handles subscription order count increment atomically
-      // Optimistically update local cache and refetch for consistency
-      if (subscription) {
-        queryClient.setQueryData(
-          ["subscription", userId],
-          (oldData: typeof subscription) => oldData ? {
-            ...oldData,
-            ordersThisMonth: (oldData.ordersThisMonth || 0) + 1
-          } : null
-        );
-        // Refetch to reconcile with server truth
-        queryClient.invalidateQueries({ queryKey: ["subscription", userId] });
+      // For orders requiring payment, redirect to Stripe
+      if (needsPayment) {
+        try {
+          const paymentRes = await fetch("/api/payments/create-order-checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId,
+              orderId: orderData.id,
+              amount: orderData.total,
+              description: `Order from ${orderData.vendorName} - ${newOrder.items.length} items`,
+              successUrl: `${window.location.origin}/payment-success?type=order&orderId=${orderData.id}`,
+              cancelUrl: `${window.location.origin}/schedule`
+            }),
+          });
+          
+          if (paymentRes.ok) {
+            const paymentData = await paymentRes.json();
+            if (paymentData.url) {
+              clearCart();
+              setIsNewOrderOpen(false);
+              resetNewOrderForm();
+              window.location.href = paymentData.url;
+              return;
+            }
+          }
+          // If payment setup fails, order stays in pending_payment state
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+          toast({ 
+            title: "Order Created - Payment Required", 
+            description: "Your order is awaiting payment. Click on it to complete checkout.",
+            variant: "default"
+          });
+        } catch (paymentError) {
+          console.error("Payment redirect failed:", paymentError);
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+          toast({ 
+            title: "Order Created - Payment Required", 
+            description: "Your order is awaiting payment. Please complete payment to confirm.",
+            variant: "default"
+          });
+        }
+      } else {
+        // Subscriber within limits - order is covered by subscription
+        toast({ title: "Success", description: "Order scheduled! Covered by your subscription." });
+        
+        // Server-side handles subscription order count increment atomically
+        // Optimistically update local cache and refetch for consistency
+        if (subscription) {
+          queryClient.setQueryData(
+            ["subscription", userId],
+            (oldData: typeof subscription) => oldData ? {
+              ...oldData,
+              ordersThisMonth: (oldData.ordersThisMonth || 0) + 1
+            } : null
+          );
+          queryClient.invalidateQueries({ queryKey: ["subscription", userId] });
+        }
       }
       
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
       setIsNewOrderOpen(false);
       resetNewOrderForm();
       clearCart();
-      toast({ title: "Success", description: "Order scheduled successfully!" });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -328,6 +377,9 @@ export default function SchedulePage() {
       return;
     }
 
+    const hasActiveSubscription = subscription && subscription.tier && subscription.tier !== 'free';
+    const needsPayment = !hasActiveSubscription || (bypassLimit && userAtLimit);
+    
     createOrderMutation.mutate({
       userId,
       vendorName: newOrder.vendorName,
@@ -345,7 +397,8 @@ export default function SchedulePage() {
       gratuity: gratuity.toFixed(2),
       total: total.toFixed(2),
       specialInstructions: newOrder.specialInstructions || null,
-      isOverageOrder: bypassLimit && userAtLimit, // Mark as overage if paying full price
+      isOverageOrder: bypassLimit && userAtLimit,
+      status: needsPayment ? "pending_payment" : "scheduled",
     });
   };
 

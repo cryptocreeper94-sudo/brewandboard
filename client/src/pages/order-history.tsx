@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import {
   ChevronLeft,
@@ -11,7 +11,6 @@ import {
   Clock,
   Download,
   RotateCcw,
-  Star,
   Filter,
   Search,
   FileText,
@@ -20,16 +19,17 @@ import {
   Package,
   Truck,
   DollarSign,
-  ChevronDown,
-  ChevronUp,
-  Copy,
   Bookmark
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -92,8 +92,6 @@ export default function OrderHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
-  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [savingTemplate, setSavingTemplate] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedOrderForTemplate, setSelectedOrderForTemplate] = useState<Order | null>(null);
@@ -373,60 +371,90 @@ export default function OrderHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex items-center gap-4 mb-8">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="hover-3d" data-testid="button-back">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="font-serif text-3xl font-bold mb-1 flex items-center gap-3">
-              <FileText className="h-8 w-8 text-primary" />
-              Order History
-            </h1>
-            <p className="text-muted-foreground">View past orders, download receipts, and reorder favorites</p>
+    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-background dark:from-[#1a0f09]/30 dark:via-background dark:to-background text-foreground pb-20">
+      {/* Hero Header with Shimmering Effect */}
+      <div className="relative overflow-hidden">
+        <div 
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(135deg, #1a0f09 0%, #2d1810 25%, #3d2216 50%, #4a2c1c 75%, #5a3620 100%)' }}
+        />
+        <motion.div 
+          className="absolute inset-0 opacity-30"
+          animate={{
+            background: [
+              'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+              'linear-gradient(45deg, transparent 100%, rgba(255,255,255,0.3) 150%, transparent 200%)',
+            ]
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{ backgroundSize: '200% 200%' }}
+        />
+        <div className="relative z-10 px-4 py-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="icon" className="text-amber-100 hover:bg-amber-100/20" data-testid="button-back">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="font-serif text-3xl font-bold text-amber-50 flex items-center gap-3">
+                  <FileText className="h-8 w-8 text-amber-200" />
+                  Order History
+                </h1>
+                <p className="text-amber-100/80 text-sm">View past orders, download receipts, and reorder favorites</p>
+              </div>
+            </div>
           </div>
-        </header>
-
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search orders..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-              data-testid="input-search-orders"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[160px]" data-testid="select-status-filter">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-full sm:w-[160px]" data-testid="select-date-filter">
-              <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Date" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="this_month">This Month</SelectItem>
-              <SelectItem value="last_month">Last Month</SelectItem>
-              <SelectItem value="last_3_months">Last 3 Months</SelectItem>
-              <SelectItem value="last_6_months">Last 6 Months</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
+      </div>
+
+      {/* Filters with Glassmorphism */}
+      <div className="max-w-4xl mx-auto px-4 md:px-8 -mt-4">
+        <div className="premium-card p-4 rounded-xl">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-white/50 dark:bg-black/20"
+                data-testid="input-search-orders"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-white/50 dark:bg-black/20" data-testid="select-status-filter">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-white/50 dark:bg-black/20" data-testid="select-date-filter">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="this_month">This Month</SelectItem>
+                <SelectItem value="last_month">Last Month</SelectItem>
+                <SelectItem value="last_3_months">Last 3 Months</SelectItem>
+                <SelectItem value="last_6_months">Last 6 Months</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 md:px-8 mt-6">
 
         {isLoading ? (
           <div className="space-y-4">
@@ -435,7 +463,7 @@ export default function OrderHistoryPage() {
             ))}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <Card className="p-8 text-center">
+          <div className="premium-card p-8 text-center rounded-xl">
             <Coffee className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
             <h3 className="font-serif text-xl mb-2">No Orders Found</h3>
             <p className="text-muted-foreground mb-4">
@@ -443,176 +471,153 @@ export default function OrderHistoryPage() {
                 ? "Try adjusting your filters"
                 : "Place your first order to see it here"}
             </p>
-            <Link href="/order">
+            <Link href="/schedule">
               <Button style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
                 <Coffee className="h-4 w-4 mr-2" />
                 Browse Vendors
               </Button>
             </Link>
-          </Card>
+          </div>
         ) : (
-          <ScrollArea className="h-[calc(100vh-280px)]">
-            <AnimatePresence>
-              <div className="space-y-4">
-                {filteredOrders.map((order, index) => {
-                  const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.scheduled;
-                  const StatusIcon = statusConfig.icon;
-                  const isExpanded = expandedOrder === order.id;
-                  
-                  return (
-                    <motion.div
-                      key={order.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <Card 
-                        className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                        data-testid={`card-order-${order.id}`}
-                      >
-                        <div className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="w-12 h-12 rounded-lg flex items-center justify-center"
-                                style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
-                              >
-                                <Coffee className="h-6 w-6 text-amber-100" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold">{order.vendorName || "Coffee Order"}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {format(parseISO(order.scheduledDate), "MMM d, yyyy")} at {order.scheduledTime}
-                                </p>
-                              </div>
+          <Accordion type="single" collapsible className="space-y-4">
+            {filteredOrders.map((order, index) => {
+              const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.scheduled;
+              const StatusIcon = statusConfig.icon;
+              
+              return (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <AccordionItem 
+                    value={order.id}
+                    className="premium-card rounded-xl overflow-hidden border-0"
+                    data-testid={`card-order-${order.id}`}
+                  >
+                    <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]>div>.chevron]:rotate-180">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3 text-left">
+                            <div 
+                              className="w-12 h-12 rounded-lg flex items-center justify-center"
+                              style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
+                            >
+                              <Coffee className="h-6 w-6 text-amber-100" />
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={`${statusConfig.bg} ${statusConfig.color}`}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {statusConfig.label}
-                              </Badge>
-                              {isExpanded ? (
-                                <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                              ) : (
-                                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                              )}
+                            <div>
+                              <h3 className="font-semibold">{order.vendorName || "Coffee Order"}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {format(parseISO(order.scheduledDate), "MMM d, yyyy")} at {order.scheduledTime}
+                              </p>
                             </div>
                           </div>
-
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Package className="h-4 w-4" />
-                              {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
-                              ${order.total}
-                            </span>
-                            <span className="flex items-center gap-1 truncate max-w-[200px]">
-                              <MapPin className="h-4 w-4 flex-shrink-0" />
-                              {order.deliveryAddress.split(',')[0]}
-                            </span>
-                          </div>
-
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="mt-4 pt-4 border-t space-y-4">
-                                  <div>
-                                    <h4 className="text-sm font-medium mb-2">Items Ordered</h4>
-                                    <div className="space-y-1">
-                                      {order.items.map((item, i) => (
-                                        <div key={i} className="flex justify-between text-sm">
-                                          <span>{item.quantity}x {item.name}</span>
-                                          <span className="text-muted-foreground">
-                                            ${(parseFloat(item.price) * item.quantity).toFixed(2)}
-                                          </span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                      <span className="text-muted-foreground">Subtotal:</span>
-                                      <span className="ml-2">${order.subtotal}</span>
-                                    </div>
-                                    {order.salesTax && (
-                                      <div>
-                                        <span className="text-muted-foreground">Tax:</span>
-                                        <span className="ml-2">${order.salesTax}</span>
-                                      </div>
-                                    )}
-                                    <div>
-                                      <span className="text-muted-foreground">Service:</span>
-                                      <span className="ml-2">${order.serviceFee}</span>
-                                    </div>
-                                    <div>
-                                      <span className="text-muted-foreground">Delivery:</span>
-                                      <span className="ml-2">${order.deliveryFee}</span>
-                                    </div>
-                                    {order.gratuity && parseFloat(order.gratuity) > 0 && (
-                                      <div>
-                                        <span className="text-muted-foreground">Tip:</span>
-                                        <span className="ml-2">${order.gratuity}</span>
-                                      </div>
-                                    )}
-                                    <div className="font-semibold">
-                                      <span>Total:</span>
-                                      <span className="ml-2">${order.total}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex flex-wrap gap-2 pt-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => generateReceiptPDF(order)}
-                                      data-testid={`button-download-receipt-${order.id}`}
-                                    >
-                                      <Download className="h-4 w-4 mr-1" />
-                                      Download Receipt
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => reorderMutation.mutate(order.id)}
-                                      disabled={reorderMutation.isPending}
-                                      style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
-                                      data-testid={`button-reorder-${order.id}`}
-                                    >
-                                      <RotateCcw className="h-4 w-4 mr-1" />
-                                      Reorder
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleSaveAsTemplate(order)}
-                                      data-testid={`button-save-template-${order.id}`}
-                                    >
-                                      <Bookmark className="h-4 w-4 mr-1" />
-                                      Save as Template
-                                    </Button>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <Badge className={`${statusConfig.bg} ${statusConfig.color} ml-2`}>
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {statusConfig.label}
+                          </Badge>
                         </div>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </AnimatePresence>
-          </ScrollArea>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Package className="h-4 w-4" />
+                            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            ${order.total}
+                          </span>
+                          <span className="flex items-center gap-1 truncate max-w-[200px]">
+                            <MapPin className="h-4 w-4 flex-shrink-0" />
+                            {order.deliveryAddress.split(',')[0]}
+                          </span>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="pt-4 border-t space-y-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Items Ordered</h4>
+                          <div className="space-y-1">
+                            {order.items.map((item, i) => (
+                              <div key={i} className="flex justify-between text-sm">
+                                <span>{item.quantity}x {item.name}</span>
+                                <span className="text-muted-foreground">
+                                  ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Subtotal:</span>
+                            <span className="ml-2">${order.subtotal}</span>
+                          </div>
+                          {order.salesTax && (
+                            <div>
+                              <span className="text-muted-foreground">Tax:</span>
+                              <span className="ml-2">${order.salesTax}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-muted-foreground">Service:</span>
+                            <span className="ml-2">${order.serviceFee}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Delivery:</span>
+                            <span className="ml-2">${order.deliveryFee}</span>
+                          </div>
+                          {order.gratuity && parseFloat(order.gratuity) > 0 && (
+                            <div>
+                              <span className="text-muted-foreground">Tip:</span>
+                              <span className="ml-2">${order.gratuity}</span>
+                            </div>
+                          )}
+                          <div className="font-semibold">
+                            <span>Total:</span>
+                            <span className="ml-2">${order.total}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => { e.stopPropagation(); generateReceiptPDF(order); }}
+                            data-testid={`button-download-receipt-${order.id}`}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download Receipt
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); reorderMutation.mutate(order.id); }}
+                            disabled={reorderMutation.isPending}
+                            style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}
+                            data-testid={`button-reorder-${order.id}`}
+                          >
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Reorder
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => { e.stopPropagation(); handleSaveAsTemplate(order); }}
+                            data-testid={`button-save-template-${order.id}`}
+                          >
+                            <Bookmark className="h-4 w-4 mr-1" />
+                            Save as Template
+                          </Button>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              );
+            })}
+          </Accordion>
         )}
 
         <div className="mt-6 text-center text-sm text-muted-foreground">

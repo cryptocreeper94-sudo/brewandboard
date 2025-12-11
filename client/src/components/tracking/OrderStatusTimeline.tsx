@@ -82,7 +82,7 @@ export function OrderStatusTimeline({ userId }: { userId: string }) {
   const { data: activeOrders = [], isLoading, refetch } = useQuery<ActiveOrder[]>({
     queryKey: ["/api/orders/active", userId],
     queryFn: async () => {
-      const res = await fetch(`/api/scheduled-orders?userId=${userId}&status=active`);
+      const res = await fetch(`/api/orders/active/${userId}`);
       if (!res.ok) return [];
       return res.json();
     },

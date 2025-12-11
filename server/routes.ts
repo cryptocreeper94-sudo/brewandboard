@@ -3055,6 +3055,69 @@ export async function registerRoutes(
   // ========================
   // QUICK REORDER ROUTES (Phase 2)
   // ========================
+  
+  // Reorder a previous order
+  app.post("/api/orders/:id/reorder", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      
+      const originalOrder = await storage.getScheduledOrder(req.params.id);
+      if (!originalOrder) {
+        return res.status(404).json({ error: "Original order not found" });
+      }
+      
+      // Create new order based on original
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const newOrder = await storage.createScheduledOrder({
+        userId,
+        vendorName: originalOrder.vendorName,
+        deliveryAddress: originalOrder.deliveryAddress,
+        deliveryInstructions: originalOrder.deliveryInstructions,
+        contactName: originalOrder.contactName,
+        contactPhone: originalOrder.contactPhone,
+        scheduledDate: tomorrow.toISOString().split('T')[0],
+        scheduledTime: originalOrder.scheduledTime || "09:00",
+        items: originalOrder.items,
+        subtotal: originalOrder.subtotal,
+        serviceFee: originalOrder.serviceFee,
+        deliveryFee: originalOrder.deliveryFee,
+        total: originalOrder.total,
+        status: "scheduled",
+        specialInstructions: originalOrder.specialInstructions
+      });
+      
+      res.status(201).json(newOrder);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get active orders for a user (in-progress orders)
+  app.get("/api/orders/active/:userId", async (req, res) => {
+    try {
+      const activeStatuses = ['scheduled', 'confirmed', 'preparing', 'picked_up', 'out_for_delivery'];
+      const orders = await storage.getScheduledOrders(req.params.userId);
+      const activeOrders = orders.filter(order => activeStatuses.includes(order.status || 'scheduled'));
+      
+      // Add events for each order
+      const ordersWithEvents = await Promise.all(
+        activeOrders.map(async (order) => {
+          const events = await storage.getOrderEvents(order.id);
+          return { ...order, events };
+        })
+      );
+      
+      res.json(ordersWithEvents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/recent-orders/:userId", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
@@ -3135,6 +3198,51 @@ export async function registerRoutes(
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
+  });
+
+  // ========================
+  // CALENDAR SYNC ROUTES (Phase 7)
+  // ========================
+  
+  app.get("/api/calendar/settings/:userId", async (req, res) => {
+    try {
+      // Return default settings - not connected yet
+      res.json({
+        connected: false,
+        autoSuggest: false,
+        reminderHours: 4
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/calendar/settings/:userId", async (req, res) => {
+    try {
+      const { autoSuggest, reminderHours } = req.body;
+      // Placeholder - would persist settings
+      res.json({
+        connected: true,
+        autoSuggest: autoSuggest ?? false,
+        reminderHours: reminderHours ?? 4
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/calendar/upcoming/:userId", async (req, res) => {
+    try {
+      // Return empty array when not connected
+      res.json([]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/calendar/connect/google", async (req, res) => {
+    // Placeholder for Google OAuth flow
+    res.redirect("/dashboard?calendar=connected");
   });
 
   // ========================

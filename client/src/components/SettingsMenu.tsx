@@ -16,8 +16,12 @@ import {
   Building2,
   MapPin,
   Bug,
-  Send
+  Send,
+  Palette,
+  Check
 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { themeCategories } from "@/data/themes";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,10 +58,13 @@ interface AppVersion {
 export function SettingsMenu() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { currentTheme, setTheme, availableThemes } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [showDevLogin, setShowDevLogin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("coffee");
   const [versions, setVersions] = useState<AppVersion[]>([]);
   const [currentVersion, setCurrentVersion] = useState<AppVersion | null>(null);
   const [pin, setPin] = useState("");
@@ -320,6 +327,24 @@ export function SettingsMenu() {
               <div className="flex flex-col">
                 <span className="text-sm">Version & Changelog</span>
                 <span className="text-xs text-amber-400/60">v{currentVersion?.version || CURRENT_VERSION}</span>
+              </div>
+            </button>
+            
+            <div className="my-3 border-t border-amber-800/30" />
+            
+            {/* Theme Selector */}
+            <button
+              onClick={() => {
+                setShowThemeSelector(true);
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-amber-200/80 hover:text-amber-100 hover:bg-amber-800/30 transition-colors text-left"
+              data-testid="menu-themes"
+            >
+              <Palette className="h-4 w-4 text-amber-400" />
+              <div className="flex flex-col">
+                <span className="text-sm">App Themes</span>
+                <span className="text-xs text-amber-400/60">{currentTheme.name}</span>
               </div>
             </button>
             
@@ -629,6 +654,96 @@ export function SettingsMenu() {
                   </>
                 )}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Theme Selector Dialog */}
+      <Dialog open={showThemeSelector} onOpenChange={setShowThemeSelector}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-amber-600" />
+              Choose Your Theme
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Category Tabs */}
+            <div className="flex flex-wrap gap-2">
+              {themeCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    selectedCategory === cat.id
+                      ? "bg-amber-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                  data-testid={`theme-category-${cat.id}`}
+                >
+                  <span className="mr-1">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+            
+            {/* Theme Grid */}
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {availableThemes
+                  .filter((t) => t.category === selectedCategory)
+                  .map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => {
+                        setTheme(theme.id);
+                        toast({
+                          title: "Theme Applied",
+                          description: `Switched to ${theme.name}`,
+                        });
+                      }}
+                      className={`relative p-3 rounded-xl border-2 transition-all ${
+                        currentTheme.id === theme.id
+                          ? "border-amber-500 ring-2 ring-amber-500/30"
+                          : "border-slate-200 hover:border-amber-300"
+                      }`}
+                      data-testid={`theme-option-${theme.id}`}
+                    >
+                      {/* Theme Preview */}
+                      <div className={`h-16 rounded-lg bg-gradient-to-br ${theme.colors.primary} mb-2 relative overflow-hidden`}>
+                        {theme.watermark && (
+                          <img
+                            src={theme.watermark}
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-contain opacity-30 p-2"
+                          />
+                        )}
+                        <div className={`absolute bottom-1 left-1 right-1 h-2 rounded ${theme.colors.accent} opacity-80`} />
+                      </div>
+                      
+                      {/* Theme Name */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-700 truncate">
+                          {theme.name}
+                        </span>
+                        {currentTheme.id === theme.id && (
+                          <Check className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </ScrollArea>
+            
+            {/* Current Theme Info */}
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-slate-700">Current Theme</p>
+                <p className="text-xs text-slate-500">{currentTheme.name}</p>
+              </div>
+              <div className={`w-12 h-8 rounded-lg bg-gradient-to-br ${currentTheme.colors.primary}`} />
             </div>
           </div>
         </DialogContent>

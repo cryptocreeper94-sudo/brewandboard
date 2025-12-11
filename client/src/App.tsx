@@ -32,6 +32,7 @@ import PresentationViewerPage from "@/pages/presentation-viewer";
 import PartnerHub from "@/pages/partner";
 import OperationsPage from "@/pages/operations";
 import VendorMenuPage from "@/pages/vendor-menu";
+import OrderHistoryPage from "@/pages/order-history";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/operations" component={OperationsPage} />
       <Route path="/order" component={VendorMenuPage} />
       <Route path="/order/:vendorId" component={VendorMenuPage} />
+      <Route path="/order-history" component={OrderHistoryPage} />
       <Route component={NotFound} />
     </Switch>
   );

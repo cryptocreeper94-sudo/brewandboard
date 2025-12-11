@@ -41,7 +41,8 @@ import {
   Send,
   Building2,
   Globe2,
-  HelpCircle
+  HelpCircle,
+  FileText
 } from "lucide-react";
 import { WelcomeWizard, GuidedTour } from "@/components/onboarding";
 import { QuickReorderPanel } from "@/components/reorder/QuickReorderPanel";
@@ -721,20 +722,20 @@ const { itemCount } = useCart();
       shadowColor: "shadow-[#2d1810]/40"
     },
     {
+      id: "order-history",
+      title: "Order History",
+      subtitle: "Receipts & reorder",
+      href: "/order-history",
+      icon: FileText,
+      gradient: "from-[#6b4423] via-[#4a2c1c] to-[#3d2418]",
+      shadowColor: "shadow-[#3d2418]/40"
+    },
+    {
       id: "find-baristas",
       title: "Find Vendors",
       subtitle: "Coffee, donuts & more",
       href: "/find-baristas",
       icon: Navigation,
-      gradient: "from-[#6b4423] via-[#4a2c1c] to-[#3d2418]",
-      shadowColor: "shadow-[#3d2418]/40"
-    },
-    {
-      id: "portfolio",
-      title: "My Portfolio",
-      subtitle: "Client notes & templates",
-      href: "/portfolio",
-      icon: Users,
       gradient: "from-[#78552b] via-[#5c4033] to-[#4a2c1c]",
       shadowColor: "shadow-[#4a2c1c]/40"
     },

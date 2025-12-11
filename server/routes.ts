@@ -3129,6 +3129,18 @@ export async function registerRoutes(
     }
   });
 
+  // Get full order history for a user (all orders, no date filter)
+  app.get("/api/orders/history/:userId", async (req, res) => {
+    try {
+      const orders = await storage.getScheduledOrders(req.params.userId);
+      // Sort by date descending (newest first)
+      orders.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ========================
   // LOYALTY ROUTES (Phase 6)
   // ========================

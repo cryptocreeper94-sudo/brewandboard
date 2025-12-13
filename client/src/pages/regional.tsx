@@ -876,7 +876,7 @@ export default function RegionalDashboard() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No regional managers yet</p>
-                  <p className="text-sm">New managers can join with PIN 5555</p>
+                  <p className="text-sm">New managers can join with PIN 7777</p>
                 </div>
               ) : (
                 <Accordion type="single" collapsible className="space-y-3">

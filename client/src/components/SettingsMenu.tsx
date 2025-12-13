@@ -43,7 +43,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
-const PARTNER_PINS = ["444", "777"]; // Sid and Sarah
+const PARTNER_PINS = ["444", "5555"]; // Sid and Sarah
 const CURRENT_VERSION = "1.1.9";
 
 interface AppVersion {

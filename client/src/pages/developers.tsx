@@ -1903,7 +1903,7 @@ export default function DevelopersPage() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="p-3 bg-white rounded-lg border border-amber-200">
                     <p className="font-medium">Sarah</p>
-                    <p className="text-muted-foreground text-xs">Initial PIN: 777</p>
+                    <p className="text-muted-foreground text-xs">Initial PIN: 5555</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-amber-200">
                     <p className="font-medium">Sid</p>
@@ -2001,7 +2001,7 @@ export default function DevelopersPage() {
                   </div>
                   <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-pink-100">
                     <span className="text-sm text-muted-foreground">Initial PIN:</span>
-                    <code className="font-mono text-lg font-bold text-pink-700 tracking-widest">777</code>
+                    <code className="font-mono text-lg font-bold text-pink-700 tracking-widest">5555</code>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">Access: Partner Hub (/partner)</p>
                 </div>
@@ -2018,7 +2018,7 @@ export default function DevelopersPage() {
                   </div>
                   <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-blue-100">
                     <span className="text-sm text-muted-foreground">Initial PIN:</span>
-                    <code className="font-mono text-lg font-bold text-blue-700 tracking-widest">5555</code>
+                    <code className="font-mono text-lg font-bold text-blue-700 tracking-widest">7777</code>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">Access: Regional Portal (/regional)</p>
                 </div>

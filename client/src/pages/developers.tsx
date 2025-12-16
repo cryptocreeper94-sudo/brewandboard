@@ -88,6 +88,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BusinessCardPreview } from "@/components/BusinessCard";
 import { DocumentExportPanel } from "@/components/DocumentExport";
 import { AppEcosystemHub } from "@/components/AppEcosystemHub";
+import { SnippetBrowser } from "@/components/SnippetBrowser";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -4017,6 +4018,16 @@ export default function DevelopersPage() {
           className="mb-12"
         >
           <AppEcosystemHub />
+        </motion.div>
+
+        {/* Snippet Library Browser */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2975 }}
+          className="mb-12"
+        >
+          <SnippetBrowser />
         </motion.div>
 
         {/* Darkwave Dev Hub Browser */}

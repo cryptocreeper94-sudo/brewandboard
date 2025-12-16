@@ -539,5 +539,284 @@ curl -X GET "https://yourapp.replit.app/api/partner/v1/billing" \
 
 ---
 
+# SECTION 9: SNIPPET BROWSER UI COMPONENT
+
+## SnippetBrowser.tsx - Full React Component
+
+```tsx
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Code2, Copy, Check, Search, Filter, Maximize2, X,
+  ExternalLink, Download, Share2, FileText, Sparkles, RefreshCw,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface CodeSnippet {
+  id: string;
+  name: string;
+  description?: string;
+  language: string;
+  code: string;
+  category: string;
+  isPublic: boolean;
+  usageCount: number;
+  version?: string;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export function SnippetBrowser() {
+  const { toast } = useToast();
+  const [snippets, setSnippets] = useState<CodeSnippet[]>([]);
+  const [filteredSnippets, setFilteredSnippets] = useState<CodeSnippet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [languageFilter, setLanguageFilter] = useState("all");
+  const [selectedSnippet, setSelectedSnippet] = useState<CodeSnippet | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+
+  const categories = ["all", ...Array.from(new Set(snippets.map(s => s.category)))];
+  const languages = ["all", ...Array.from(new Set(snippets.map(s => s.language)))];
+
+  const fetchSnippets = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/ecosystem/snippets");
+      if (res.ok) {
+        const data = await res.json();
+        setSnippets(data);
+        setFilteredSnippets(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch snippets:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchSnippets(); }, []);
+
+  useEffect(() => {
+    let result = snippets;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(query) ||
+        s.description?.toLowerCase().includes(query) ||
+        s.code.toLowerCase().includes(query)
+      );
+    }
+    if (categoryFilter !== "all") result = result.filter(s => s.category === categoryFilter);
+    if (languageFilter !== "all") result = result.filter(s => s.language === languageFilter);
+    setFilteredSnippets(result);
+  }, [searchQuery, categoryFilter, languageFilter, snippets]);
+
+  const copyToClipboard = async (text: string, id: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast({ title: "Copied!", description: "Content copied to clipboard" });
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const generateShareUrl = (snippet: CodeSnippet) => {
+    const url = `${window.location.origin}/api/ecosystem/snippets/by-name/${encodeURIComponent(snippet.name)}`;
+    setShareUrl(url);
+    setShowShareModal(true);
+  };
+
+  const downloadSnippet = (snippet: CodeSnippet) => {
+    const ext = snippet.language === "typescript" ? "ts" : snippet.language === "markdown" ? "md" : snippet.language;
+    const blob = new Blob([snippet.code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${snippet.name.replace(/\s+/g, "-")}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <Code2 className="h-6 w-6 text-indigo-600" />
+          <div>
+            <CardTitle>Snippet Library</CardTitle>
+            <CardDescription>Browse, search, and recall code snippets</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Search and Filters */}
+        <div className="flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[200px] relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search snippets..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[150px]"><Filter className="h-4 w-4 mr-2" /><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => <SelectItem key={cat} value={cat}>{cat === "all" ? "All Categories" : cat}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={languageFilter} onValueChange={setLanguageFilter}>
+            <SelectTrigger className="w-[150px]"><Code2 className="h-4 w-4 mr-2" /><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {languages.map(lang => <SelectItem key={lang} value={lang}>{lang === "all" ? "All Languages" : lang}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Snippet Grid */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredSnippets.map(snippet => (
+            <motion.div
+              key={snippet.id}
+              className="group p-4 rounded-xl bg-white border shadow-sm hover:shadow-md cursor-pointer"
+              onClick={() => setSelectedSnippet(snippet)}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4 text-indigo-500" />
+                <span className="font-medium">{snippet.name}</span>
+                <Badge variant="outline" className="text-xs">{snippet.language}</Badge>
+                <Badge className="text-xs">{snippet.category}</Badge>
+              </div>
+              {snippet.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{snippet.description}</p>}
+              <pre className="text-xs bg-gray-900 text-gray-100 p-2 rounded max-h-20 overflow-hidden">
+                <code>{snippet.code.slice(0, 200)}...</code>
+              </pre>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Full-Screen Viewer Dialog */}
+        <Dialog open={!!selectedSnippet} onOpenChange={() => setSelectedSnippet(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Code2 className="h-5 w-5" /> {selectedSnippet?.name}
+              </DialogTitle>
+              <DialogDescription>{selectedSnippet?.description}</DialogDescription>
+            </DialogHeader>
+            {selectedSnippet && (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Button onClick={() => copyToClipboard(selectedSnippet.code, selectedSnippet.id)}>
+                    {copiedId === selectedSnippet.id ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                    Copy Code
+                  </Button>
+                  <Button variant="outline" onClick={() => generateShareUrl(selectedSnippet)}>
+                    <Share2 className="h-4 w-4 mr-2" /> Share Link
+                  </Button>
+                  <Button variant="outline" onClick={() => downloadSnippet(selectedSnippet)}>
+                    <Download className="h-4 w-4 mr-2" /> Download
+                  </Button>
+                </div>
+                <ScrollArea className="h-[50vh] rounded-lg border">
+                  <pre className="text-sm bg-gray-900 text-gray-100 p-4"><code>{selectedSnippet.code}</code></pre>
+                </ScrollArea>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                  <p className="text-sm"><strong>API Access:</strong></p>
+                  <code className="text-xs bg-white p-2 rounded block mt-2">
+                    GET {window.location.origin}/api/ecosystem/snippets/by-name/{selectedSnippet.name}
+                  </code>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Share Modal */}
+        <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle><Share2 className="h-5 w-5 inline mr-2" />Share Snippet</DialogTitle>
+            </DialogHeader>
+            <div className="p-3 rounded-lg bg-gray-50 border">
+              <code className="text-xs">{shareUrl}</code>
+              <Button size="sm" className="ml-2" onClick={() => copyToClipboard(shareUrl, "share")}>
+                {copiedId === "share" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Other agents can fetch: <code>curl "{shareUrl}"</code></p>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## API Endpoints for Snippets
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/ecosystem/snippets | List all snippets |
+| GET | /api/ecosystem/snippets?category=documentation | Filter by category |
+| GET | /api/ecosystem/snippets?name=api | Search by name |
+| GET | /api/ecosystem/snippets/by-name/{name} | Get snippet by exact name |
+| GET | /api/ecosystem/snippets/{id} | Get snippet by ID |
+| POST | /api/ecosystem/snippets | Create new snippet |
+| PUT | /api/ecosystem/snippets/{id} | Update snippet |
+| DELETE | /api/ecosystem/snippets/{id} | Delete snippet |
+
+## Create Snippet Example
+```bash
+curl -X POST "https://yourapp.replit.app/api/ecosystem/snippets" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "auth-middleware",
+    "description": "Express authentication middleware",
+    "category": "api",
+    "language": "typescript",
+    "code": "export function authMiddleware(req, res, next) { ... }",
+    "isPublic": true,
+    "version": "1.0.0"
+  }'
+```
+
+## Retrieve Snippet Example
+```bash
+curl "https://yourapp.replit.app/api/ecosystem/snippets/by-name/api.md"
+```
+
+---
+
+# SECTION 10: CROSS-APP SNIPPET ACCESS
+
+For other agents/projects to access snippets from this Dev Hub:
+
+1. **Use the published app's external URL**:
+   ```
+   https://YOUR-PUBLISHED-APP.replit.app/api/ecosystem/snippets/by-name/api.md
+   ```
+
+2. **List all available snippets**:
+   ```bash
+   curl "https://YOUR-PUBLISHED-APP.replit.app/api/ecosystem/snippets"
+   ```
+
+3. **In another agent's code**:
+   ```javascript
+   const res = await fetch("https://brewandboard.replit.app/api/ecosystem/snippets/by-name/api.md");
+   const snippet = await res.json();
+   console.log(snippet.code); // Full snippet content
+   ```
+
+**Important**: The Dev Hub API is only accessible via the EXTERNAL URL of the published app. Local endpoints (localhost) won't work from other Replit projects.
+
+---
+
 *Darkwave Studios - Partner API & Franchise System v1.0.0*
 *Generated: December 2025*

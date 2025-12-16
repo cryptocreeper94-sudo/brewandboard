@@ -3297,5 +3297,334 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // ANALYTICS ROUTES
+  // ========================
+
+  // Get business analytics from real order data
+  app.get("/api/analytics/business", async (req, res) => {
+    try {
+      const { range = "week", regionId, subscriptionTier } = req.query;
+      
+      // Get real order data from database
+      const allOrders = await storage.getAllScheduledOrders();
+      
+      // Calculate date range
+      const now = new Date();
+      let startDate: Date;
+      switch (range) {
+        case "7days":
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "30days":
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "quarter":
+          startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          break;
+        case "year":
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+        default: // week
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      }
+      
+      // Filter orders by date range and optional region
+      const filteredOrders = allOrders.filter(order => {
+        const orderDate = new Date(order.scheduledDate);
+        const inRange = orderDate >= startDate && orderDate <= now;
+        const matchesRegion = !regionId || order.regionId === regionId;
+        return inRange && matchesRegion;
+      });
+      
+      // Calculate metrics
+      const totalOrders = filteredOrders.length;
+      const totalRevenue = filteredOrders.reduce((sum, o) => sum + parseFloat(o.total || "0"), 0);
+      const completedOrders = filteredOrders.filter(o => o.status === "delivered").length;
+      const conversionRate = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      
+      // Group by status
+      const byStatus = filteredOrders.reduce((acc, o) => {
+        acc[o.status] = (acc[o.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Group by vendor
+      const byVendor = filteredOrders.reduce((acc, o) => {
+        const vendor = o.vendorName || "Unknown";
+        if (!acc[vendor]) acc[vendor] = { orders: 0, revenue: 0 };
+        acc[vendor].orders++;
+        acc[vendor].revenue += parseFloat(o.total || "0");
+        return acc;
+      }, {} as Record<string, { orders: number; revenue: number }>);
+      
+      // Top vendors sorted by revenue
+      const topVendors = Object.entries(byVendor)
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+      
+      res.json({
+        range,
+        totalOrders,
+        totalRevenue: totalRevenue.toFixed(2),
+        completedOrders,
+        conversionRate,
+        avgOrderValue: avgOrderValue.toFixed(2),
+        byStatus,
+        topVendors,
+        ordersData: filteredOrders.slice(0, 100).map(o => ({
+          id: o.id,
+          vendorName: o.vendorName,
+          total: o.total,
+          status: o.status,
+          date: o.scheduledDate
+        }))
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get regions for filtering
+  app.get("/api/analytics/regions", async (req, res) => {
+    try {
+      const regions = await storage.getRegions();
+      res.json(regions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // SEO Tags CRUD
+  app.get("/api/seo/tags", async (req, res) => {
+    try {
+      // Read from a local JSON file or return defaults
+      const fs = await import('fs');
+      const path = await import('path');
+      const seoPath = path.resolve(process.cwd(), 'seo-tags.json');
+      
+      if (fs.existsSync(seoPath)) {
+        const tags = JSON.parse(fs.readFileSync(seoPath, 'utf-8'));
+        return res.json(tags);
+      }
+      
+      // Default tags
+      res.json([
+        { id: "1", type: "og", name: "og:title", content: "Brew & Board Coffee - B2B Catering" },
+        { id: "2", type: "og", name: "og:description", content: "Premium coffee and breakfast catering for Nashville businesses" },
+        { id: "3", type: "og", name: "og:image", content: "https://brewandboard.coffee/og-image.png" },
+        { id: "4", type: "twitter", name: "twitter:card", content: "summary_large_image" },
+        { id: "5", type: "twitter", name: "twitter:site", content: "@brewandboard" },
+        { id: "6", type: "meta", name: "description", content: "Nashville's premier B2B coffee and catering service" },
+        { id: "7", type: "meta", name: "keywords", content: "coffee, catering, Nashville, B2B, meetings" },
+      ]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/seo/tags", async (req, res) => {
+    try {
+      const { type, name, content } = req.body;
+      if (!type || !name || !content) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const seoPath = path.resolve(process.cwd(), 'seo-tags.json');
+      
+      let tags = [];
+      if (fs.existsSync(seoPath)) {
+        tags = JSON.parse(fs.readFileSync(seoPath, 'utf-8'));
+      }
+      
+      const newTag = { id: String(Date.now()), type, name, content };
+      tags.push(newTag);
+      
+      fs.writeFileSync(seoPath, JSON.stringify(tags, null, 2));
+      res.json(newTag);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/seo/tags/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, content } = req.body;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const seoPath = path.resolve(process.cwd(), 'seo-tags.json');
+      
+      if (!fs.existsSync(seoPath)) {
+        return res.status(404).json({ error: "No tags found" });
+      }
+      
+      const tags = JSON.parse(fs.readFileSync(seoPath, 'utf-8'));
+      const tagIndex = tags.findIndex((t: any) => t.id === id);
+      
+      if (tagIndex === -1) {
+        return res.status(404).json({ error: "Tag not found" });
+      }
+      
+      if (name) tags[tagIndex].name = name;
+      if (content) tags[tagIndex].content = content;
+      
+      fs.writeFileSync(seoPath, JSON.stringify(tags, null, 2));
+      res.json(tags[tagIndex]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/seo/tags/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const seoPath = path.resolve(process.cwd(), 'seo-tags.json');
+      
+      if (!fs.existsSync(seoPath)) {
+        return res.status(404).json({ error: "No tags found" });
+      }
+      
+      let tags = JSON.parse(fs.readFileSync(seoPath, 'utf-8'));
+      tags = tags.filter((t: any) => t.id !== id);
+      
+      fs.writeFileSync(seoPath, JSON.stringify(tags, null, 2));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Analytics Alerts
+  app.get("/api/analytics/alerts", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const alertsPath = path.resolve(process.cwd(), 'analytics-alerts.json');
+      
+      if (fs.existsSync(alertsPath)) {
+        const alerts = JSON.parse(fs.readFileSync(alertsPath, 'utf-8'));
+        return res.json(alerts);
+      }
+      
+      // Default alerts
+      res.json([
+        { id: "1", metric: "bounceRate", operator: "gt", threshold: 50, enabled: true, name: "High Bounce Rate" },
+        { id: "2", metric: "conversionRate", operator: "lt", threshold: 20, enabled: false, name: "Low Conversion Rate" },
+      ]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/analytics/alerts", async (req, res) => {
+    try {
+      const { metric, operator, threshold, enabled, name } = req.body;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const alertsPath = path.resolve(process.cwd(), 'analytics-alerts.json');
+      
+      let alerts = [];
+      if (fs.existsSync(alertsPath)) {
+        alerts = JSON.parse(fs.readFileSync(alertsPath, 'utf-8'));
+      }
+      
+      const newAlert = { id: String(Date.now()), metric, operator, threshold, enabled: enabled ?? true, name };
+      alerts.push(newAlert);
+      
+      fs.writeFileSync(alertsPath, JSON.stringify(alerts, null, 2));
+      res.json(newAlert);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/analytics/alerts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const alertsPath = path.resolve(process.cwd(), 'analytics-alerts.json');
+      
+      if (!fs.existsSync(alertsPath)) {
+        return res.status(404).json({ error: "No alerts found" });
+      }
+      
+      const alerts = JSON.parse(fs.readFileSync(alertsPath, 'utf-8'));
+      const alertIndex = alerts.findIndex((a: any) => a.id === id);
+      
+      if (alertIndex === -1) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      
+      alerts[alertIndex] = { ...alerts[alertIndex], ...updates };
+      
+      fs.writeFileSync(alertsPath, JSON.stringify(alerts, null, 2));
+      res.json(alerts[alertIndex]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/analytics/alerts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      const alertsPath = path.resolve(process.cwd(), 'analytics-alerts.json');
+      
+      if (!fs.existsSync(alertsPath)) {
+        return res.status(404).json({ error: "No alerts found" });
+      }
+      
+      let alerts = JSON.parse(fs.readFileSync(alertsPath, 'utf-8'));
+      alerts = alerts.filter((a: any) => a.id !== id);
+      
+      fs.writeFileSync(alertsPath, JSON.stringify(alerts, null, 2));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Export analytics as CSV
+  app.get("/api/analytics/export/csv", async (req, res) => {
+    try {
+      const { range = "week" } = req.query;
+      const allOrders = await storage.getAllScheduledOrders();
+      
+      // Generate CSV
+      const headers = ["Order ID", "Vendor", "Total", "Status", "Date", "Region"];
+      const rows = allOrders.map(o => [
+        o.id,
+        o.vendorName || "Unknown",
+        o.total,
+        o.status,
+        o.scheduledDate,
+        o.regionId || "N/A"
+      ]);
+      
+      const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=analytics-${range}-${Date.now()}.csv`);
+      res.send(csv);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

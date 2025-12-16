@@ -65,6 +65,11 @@ import {
   Trash2,
   Save,
   Settings2,
+  FileText,
+  ShoppingCart,
+  Bell,
+  BellOff,
+  Edit3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1417,19 +1422,33 @@ function ReleaseManagerPanel() {
 function AnalyticsPanel() {
   const { toast } = useToast();
   const [seoTagType, setSeoTagType] = useState("og");
-  const [seoTags, setSeoTags] = useState<Array<{ id: string; type: string; name: string; content: string }>>([
-    { id: "1", type: "og", name: "og:title", content: "Brew & Board Coffee - B2B Catering" },
-    { id: "2", type: "og", name: "og:description", content: "Premium coffee and breakfast catering for Nashville businesses" },
-    { id: "3", type: "og", name: "og:image", content: "https://brewandboard.coffee/og-image.png" },
-    { id: "4", type: "twitter", name: "twitter:card", content: "summary_large_image" },
-    { id: "5", type: "twitter", name: "twitter:site", content: "@brewandboard" },
-    { id: "6", type: "meta", name: "description", content: "Nashville's premier B2B coffee and catering service" },
-    { id: "7", type: "meta", name: "keywords", content: "coffee, catering, Nashville, B2B, meetings" },
-  ]);
+  const [seoTags, setSeoTags] = useState<Array<{ id: string; type: string; name: string; content: string }>>([]);
   const [newTag, setNewTag] = useState({ name: "", content: "" });
-  const [timeRange, setTimeRange] = useState("week");
+  const [timeRange, setTimeRange] = useState("7days");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [regions, setRegions] = useState<Array<{ id: string; name: string }>>([]);
+  const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [editTagContent, setEditTagContent] = useState("");
+  const [alerts, setAlerts] = useState<Array<{ id: string; metric: string; operator: string; threshold: number; enabled: boolean; name: string }>>([]);
+  const [newAlert, setNewAlert] = useState({ metric: "bounceRate", operator: "gt", threshold: 50, name: "" });
+  const [businessMetrics, setBusinessMetrics] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Mock analytics data - would be fetched from API in production
+  // Fetch SEO tags, regions, alerts, and business metrics on mount
+  useEffect(() => {
+    fetch("/api/seo/tags").then(r => r.json()).then(setSeoTags).catch(() => {});
+    fetch("/api/analytics/regions").then(r => r.json()).then(setRegions).catch(() => {});
+    fetch("/api/analytics/alerts").then(r => r.json()).then(setAlerts).catch(() => {});
+  }, []);
+
+  // Fetch business metrics when range or region changes
+  useEffect(() => {
+    const params = new URLSearchParams({ range: timeRange });
+    if (selectedRegion !== "all") params.append("regionId", selectedRegion);
+    fetch(`/api/analytics/business?${params}`).then(r => r.json()).then(setBusinessMetrics).catch(() => {});
+  }, [timeRange, selectedRegion]);
+
+  // Traffic demo data (would come from analytics provider)
   const weeklyData = [
     { name: "Mon", visitors: 245, pageViews: 892, bounceRate: 42 },
     { name: "Tue", visitors: 312, pageViews: 1045, bounceRate: 38 },
@@ -1463,25 +1482,150 @@ function AnalyticsPanel() {
     { source: "Other", visits: 423, percentage: 6 },
   ];
 
-  const currentData = timeRange === "week" ? weeklyData : monthlyData;
+  const currentData = timeRange === "7days" ? weeklyData : monthlyData;
   const totalVisitors = currentData.reduce((sum, d) => sum + d.visitors, 0);
   const totalPageViews = currentData.reduce((sum, d) => sum + d.pageViews, 0);
   const avgBounceRate = Math.round(currentData.reduce((sum, d) => sum + d.bounceRate, 0) / currentData.length);
 
-  const addSeoTag = () => {
+  const addSeoTag = async () => {
     if (!newTag.name || !newTag.content) {
       toast({ title: "Missing fields", description: "Please enter both tag name and content", variant: "destructive" });
       return;
     }
-    const id = String(Date.now());
-    setSeoTags(prev => [...prev, { id, type: seoTagType, name: newTag.name, content: newTag.content }]);
-    setNewTag({ name: "", content: "" });
-    toast({ title: "Tag added", description: `Added ${newTag.name}` });
+    try {
+      const res = await fetch("/api/seo/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: seoTagType, name: newTag.name, content: newTag.content })
+      });
+      const tag = await res.json();
+      setSeoTags(prev => [...prev, tag]);
+      setNewTag({ name: "", content: "" });
+      toast({ title: "Tag added", description: `Added ${newTag.name}` });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to add tag", variant: "destructive" });
+    }
   };
 
-  const removeSeoTag = (id: string) => {
-    setSeoTags(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Tag removed" });
+  const updateSeoTag = async (id: string) => {
+    try {
+      await fetch(`/api/seo/tags/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editTagContent })
+      });
+      setSeoTags(prev => prev.map(t => t.id === id ? { ...t, content: editTagContent } : t));
+      setEditingTag(null);
+      toast({ title: "Tag updated" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to update tag", variant: "destructive" });
+    }
+  };
+
+  const removeSeoTag = async (id: string) => {
+    try {
+      await fetch(`/api/seo/tags/${id}`, { method: "DELETE" });
+      setSeoTags(prev => prev.filter(t => t.id !== id));
+      toast({ title: "Tag removed" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to remove tag", variant: "destructive" });
+    }
+  };
+
+  const addAlert = async () => {
+    if (!newAlert.name) {
+      toast({ title: "Missing name", description: "Please enter an alert name", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await fetch("/api/analytics/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAlert)
+      });
+      const alert = await res.json();
+      setAlerts(prev => [...prev, alert]);
+      setNewAlert({ metric: "bounceRate", operator: "gt", threshold: 50, name: "" });
+      toast({ title: "Alert created" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to create alert", variant: "destructive" });
+    }
+  };
+
+  const toggleAlert = async (id: string, enabled: boolean) => {
+    try {
+      await fetch(`/api/analytics/alerts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !enabled })
+      });
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, enabled: !enabled } : a));
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to toggle alert", variant: "destructive" });
+    }
+  };
+
+  const deleteAlert = async (id: string) => {
+    try {
+      await fetch(`/api/analytics/alerts/${id}`, { method: "DELETE" });
+      setAlerts(prev => prev.filter(a => a.id !== id));
+      toast({ title: "Alert deleted" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to delete alert", variant: "destructive" });
+    }
+  };
+
+  const exportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/analytics/export/csv?range=${timeRange}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `analytics-${timeRange}-${Date.now()}.csv`;
+      a.click();
+      toast({ title: "Exported", description: "CSV downloaded successfully" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to export CSV", variant: "destructive" });
+    }
+    setIsExporting(false);
+  };
+
+  const exportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text("Brew & Board Analytics Report", 20, 20);
+      doc.setFontSize(12);
+      doc.text(`Date Range: ${timeRange}`, 20, 35);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 45);
+      
+      doc.setFontSize(14);
+      doc.text("Traffic Metrics", 20, 60);
+      doc.setFontSize(11);
+      doc.text(`Total Visitors: ${totalVisitors.toLocaleString()}`, 25, 70);
+      doc.text(`Total Page Views: ${totalPageViews.toLocaleString()}`, 25, 78);
+      doc.text(`Avg Bounce Rate: ${avgBounceRate}%`, 25, 86);
+      
+      if (businessMetrics) {
+        doc.setFontSize(14);
+        doc.text("Business Metrics", 20, 100);
+        doc.setFontSize(11);
+        doc.text(`Total Orders: ${businessMetrics.totalOrders}`, 25, 110);
+        doc.text(`Total Revenue: $${businessMetrics.totalRevenue}`, 25, 118);
+        doc.text(`Conversion Rate: ${businessMetrics.conversionRate}%`, 25, 126);
+        doc.text(`Avg Order Value: $${businessMetrics.avgOrderValue}`, 25, 134);
+      }
+      
+      doc.save(`analytics-report-${timeRange}-${Date.now()}.pdf`);
+      toast({ title: "Exported", description: "PDF downloaded successfully" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to export PDF", variant: "destructive" });
+    }
+    setIsExporting(false);
   };
 
   const filteredTags = seoTags.filter(t => t.type === seoTagType);
@@ -1490,7 +1634,7 @@ function AnalyticsPanel() {
     <Card className="premium-card border-0 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-indigo-500/5" />
       <CardHeader className="relative pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 font-serif text-2xl">
               <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
@@ -1499,17 +1643,113 @@ function AnalyticsPanel() {
               Analytics Dashboard
             </CardTitle>
             <CardDescription>
-              Track visitors, page views, SEO performance, and traffic sources
+              Track visitors, page views, SEO performance, and business metrics
             </CardDescription>
           </div>
-          <Badge className="bg-cyan-500/10 text-cyan-700 border-cyan-200">
-            <Activity className="h-3 w-3 mr-1" />
-            Live
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportCSV} 
+              disabled={isExporting}
+              data-testid="button-export-csv"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              CSV
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportPDF} 
+              disabled={isExporting}
+              data-testid="button-export-pdf"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              PDF
+            </Button>
+            <Badge className="bg-cyan-500/10 text-cyan-700 border-cyan-200">
+              <Activity className="h-3 w-3 mr-1" />
+              Live
+            </Badge>
+          </div>
+        </div>
+        
+        {/* Filters Row */}
+        <div className="flex items-center gap-4 flex-wrap mt-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm whitespace-nowrap">Date Range:</Label>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-36" data-testid="select-date-range-header">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7days">Last 7 Days</SelectItem>
+                <SelectItem value="30days">Last 30 Days</SelectItem>
+                <SelectItem value="quarter">This Quarter</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {regions.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm whitespace-nowrap">Region:</Label>
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger className="w-40" data-testid="select-region-filter">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions.map(r => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="relative space-y-6">
-        {/* Metrics Overview Grid */}
+        {/* Business Metrics from Real Data */}
+        {businessMetrics && (
+          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200" data-testid="business-metrics-section">
+            <div className="flex items-center gap-2 mb-3">
+              <ShoppingCart className="h-5 w-5 text-amber-600" />
+              <span className="font-semibold text-amber-800">Business Metrics (Real Data)</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center" data-testid="metric-total-orders">
+                <p className="text-2xl font-bold text-amber-800">{businessMetrics.totalOrders}</p>
+                <p className="text-xs text-amber-600">Total Orders</p>
+              </div>
+              <div className="text-center" data-testid="metric-total-revenue">
+                <p className="text-2xl font-bold text-emerald-700">${businessMetrics.totalRevenue}</p>
+                <p className="text-xs text-emerald-600">Revenue</p>
+              </div>
+              <div className="text-center" data-testid="metric-conversion-rate">
+                <p className="text-2xl font-bold text-blue-700">{businessMetrics.conversionRate}%</p>
+                <p className="text-xs text-blue-600">Conversion</p>
+              </div>
+              <div className="text-center" data-testid="metric-avg-order">
+                <p className="text-2xl font-bold text-violet-700">${businessMetrics.avgOrderValue}</p>
+                <p className="text-xs text-violet-600">Avg Order</p>
+              </div>
+            </div>
+            {businessMetrics.topVendors?.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-amber-200">
+                <p className="text-sm font-medium text-amber-700 mb-2">Top Vendors by Revenue:</p>
+                <div className="flex flex-wrap gap-2">
+                  {businessMetrics.topVendors.map((v: any, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-white/50" data-testid={`top-vendor-${i}`}>
+                      {v.name}: ${v.revenue.toFixed(0)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Traffic Metrics Overview Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="analytics-metrics-grid">
           <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200" data-testid="metric-unique-visitors">
             <div className="flex items-center gap-2 mb-2">
@@ -1575,12 +1815,14 @@ function AnalyticsPanel() {
               <div className="flex items-center gap-2 mb-4">
                 <Label className="text-sm">Time Range:</Label>
                 <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="w-32" data-testid="select-time-range">
+                  <SelectTrigger className="w-36" data-testid="select-time-range">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="week">This Week</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="7days">Last 7 Days</SelectItem>
+                    <SelectItem value="30days">Last 30 Days</SelectItem>
+                    <SelectItem value="quarter">This Quarter</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1684,26 +1926,58 @@ function AnalyticsPanel() {
               {/* Current Tags */}
               <div className="space-y-2 mb-4">
                 <p className="text-sm font-medium text-muted-foreground">Current {seoTagType === "og" ? "Open Graph" : seoTagType === "twitter" ? "Twitter Card" : "Meta"} Tags:</p>
-                <ScrollArea className="h-40">
+                <ScrollArea className="h-48">
                   <div className="space-y-2 pr-4">
                     {filteredTags.length === 0 ? (
                       <p className="text-sm text-muted-foreground italic">No tags of this type</p>
                     ) : (
                       filteredTags.map(tag => (
-                        <div key={tag.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-100 group" data-testid={`seo-tag-${tag.id}`}>
-                          <div className="flex-1 min-w-0">
+                        <div key={tag.id} className="p-2 rounded-lg bg-white border border-gray-100 group" data-testid={`seo-tag-${tag.id}`}>
+                          <div className="flex items-center justify-between">
                             <code className="text-xs font-mono text-emerald-700">{tag.name}</code>
-                            <p className="text-sm truncate text-muted-foreground">{tag.content}</p>
+                            <div className="flex items-center gap-1">
+                              {editingTag === tag.id ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateSeoTag(tag.id)}
+                                  className="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50"
+                                  data-testid={`button-save-tag-${tag.id}`}
+                                >
+                                  <Save className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => { setEditingTag(tag.id); setEditTagContent(tag.content); }}
+                                  className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                  data-testid={`button-edit-tag-${tag.id}`}
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeSeoTag(tag.id)}
+                                className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`button-remove-tag-${tag.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => removeSeoTag(tag.id)}
-                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`button-remove-tag-${tag.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {editingTag === tag.id ? (
+                            <Input 
+                              value={editTagContent}
+                              onChange={e => setEditTagContent(e.target.value)}
+                              className="mt-1 text-sm"
+                              data-testid={`input-edit-tag-${tag.id}`}
+                            />
+                          ) : (
+                            <p className="text-sm truncate text-muted-foreground mt-1">{tag.content}</p>
+                          )}
                         </div>
                       ))
                     )}
@@ -1806,6 +2080,127 @@ function AnalyticsPanel() {
               </div>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Metric Alerts */}
+          <AccordionItem value="alerts" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-alerts">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-alerts">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-red-600" />
+                <span className="font-semibold">Metric Alerts</span>
+                <Badge className="ml-2 bg-red-100 text-red-700 border-red-200 text-xs">{alerts.filter(a => a.enabled).length} active</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {/* Current Alerts */}
+              <div className="space-y-2 mb-4">
+                {alerts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">No alerts configured</p>
+                ) : (
+                  alerts.map(alert => (
+                    <div key={alert.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-100" data-testid={`alert-${alert.id}`}>
+                      <div className="flex items-center gap-3">
+                        {alert.enabled ? (
+                          <Bell className="h-4 w-4 text-red-500" />
+                        ) : (
+                          <BellOff className="h-4 w-4 text-gray-400" />
+                        )}
+                        <div>
+                          <p className="text-sm font-medium">{alert.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {alert.metric} {alert.operator === "gt" ? ">" : "<"} {alert.threshold}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => toggleAlert(alert.id, alert.enabled)}
+                          className={alert.enabled ? "text-red-500" : "text-gray-400"}
+                          data-testid={`button-toggle-alert-${alert.id}`}
+                        >
+                          {alert.enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => deleteAlert(alert.id)}
+                          className="text-red-500 hover:bg-red-50"
+                          data-testid={`button-delete-alert-${alert.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add New Alert */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-200">
+                <p className="text-sm font-semibold text-red-800 mb-3 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create New Alert
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <Label className="text-xs">Alert Name</Label>
+                    <Input 
+                      placeholder="High Bounce Rate"
+                      value={newAlert.name}
+                      onChange={e => setNewAlert(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1"
+                      data-testid="input-new-alert-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Metric</Label>
+                    <Select value={newAlert.metric} onValueChange={v => setNewAlert(prev => ({ ...prev, metric: v }))}>
+                      <SelectTrigger className="mt-1" data-testid="select-alert-metric">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bounceRate">Bounce Rate</SelectItem>
+                        <SelectItem value="conversionRate">Conversion Rate</SelectItem>
+                        <SelectItem value="totalOrders">Total Orders</SelectItem>
+                        <SelectItem value="avgOrderValue">Avg Order Value</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Condition</Label>
+                    <Select value={newAlert.operator} onValueChange={v => setNewAlert(prev => ({ ...prev, operator: v }))}>
+                      <SelectTrigger className="mt-1" data-testid="select-alert-operator">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gt">Greater than</SelectItem>
+                        <SelectItem value="lt">Less than</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Threshold</Label>
+                    <Input 
+                      type="number"
+                      value={newAlert.threshold}
+                      onChange={e => setNewAlert(prev => ({ ...prev, threshold: Number(e.target.value) }))}
+                      className="mt-1"
+                      data-testid="input-new-alert-threshold"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={addAlert} 
+                  className="mt-3 bg-gradient-to-r from-red-500 to-orange-600 text-white"
+                  data-testid="button-create-alert"
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Create Alert
+                </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
 
         {/* Integration Notice */}
@@ -1816,7 +2211,7 @@ function AnalyticsPanel() {
               <p className="font-semibold text-blue-800">Analytics Integration</p>
               <p className="text-sm text-blue-600 mt-1">
                 Connect Google Analytics, Plausible, or Umami for real-time tracking. 
-                Current data is simulated for demonstration.
+                Traffic data is simulated; business metrics come from real order data.
               </p>
             </div>
           </div>

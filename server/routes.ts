@@ -17,13 +17,20 @@ import {
   insertMeetingPresentationSchema,
   insertPayeeSchema,
   insertPayment1099Schema,
+  insertServiceAreaSchema,
+  insertWhiteGlovePricingTierSchema,
+  insertOneOffOrderSchema,
   MINIMUM_ORDER_LEAD_TIME_HOURS,
   MAX_CONCURRENT_ORDERS,
   CAPACITY_WINDOW_HOURS,
   HALLMARK_MINTING_FEE,
   FRANCHISE_TIERS,
   PRESENTATION_TEMPLATES,
-  TAX_THRESHOLD_1099
+  TAX_THRESHOLD_1099,
+  DELIVERY_TYPES,
+  MEETING_TYPES,
+  NASHVILLE_METRO_ZIPS,
+  MIDDLE_TN_COUNTIES
 } from "@shared/schema";
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
@@ -3635,6 +3642,332 @@ export async function registerRoutes(
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", `attachment; filename=analytics-${range}-${Date.now()}.csv`);
       res.send(csv);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // SERVICE AREAS ROUTES
+  // ========================
+
+  // Get delivery types and meeting types constants
+  app.get("/api/delivery/types", (req, res) => {
+    res.json({
+      deliveryTypes: DELIVERY_TYPES,
+      meetingTypes: MEETING_TYPES,
+      defaultZipCodes: NASHVILLE_METRO_ZIPS,
+      defaultCounties: MIDDLE_TN_COUNTIES
+    });
+  });
+
+  // Get all service areas
+  app.get("/api/service-areas", async (req, res) => {
+    try {
+      const { ownerId } = req.query;
+      const areas = await storage.getServiceAreas(ownerId as string);
+      res.json(areas);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get service area by ID
+  app.get("/api/service-areas/:id", async (req, res) => {
+    try {
+      const area = await storage.getServiceArea(req.params.id);
+      if (!area) {
+        return res.status(404).json({ error: "Service area not found" });
+      }
+      res.json(area);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Check if zip code is in a service area
+  app.get("/api/service-areas/check/:zip", async (req, res) => {
+    try {
+      const { zip } = req.params;
+      const area = await storage.getServiceAreaByZip(zip);
+      
+      if (area) {
+        // Get pricing tiers for this area
+        const pricingTiers = await storage.getWhiteGlovePricingTiers(area.id);
+        res.json({
+          inServiceArea: true,
+          area,
+          pricingTiers,
+          whiteGloveAvailable: area.whiteGloveEnabled,
+          doordashAvailable: area.doordashEnabled
+        });
+      } else {
+        // Check if it's in the default Nashville metro area
+        const isInDefaultArea = NASHVILLE_METRO_ZIPS.includes(zip as any);
+        res.json({
+          inServiceArea: isInDefaultArea,
+          area: isInDefaultArea ? {
+            name: "Nashville Metro",
+            zipCodes: [...NASHVILLE_METRO_ZIPS],
+            counties: [...MIDDLE_TN_COUNTIES],
+            whiteGloveEnabled: true,
+            doordashEnabled: true,
+            whiteGloveMinLeadTime: 24,
+            standardMinLeadTime: 2
+          } : null,
+          pricingTiers: [],
+          whiteGloveAvailable: isInDefaultArea,
+          doordashAvailable: true
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create service area
+  app.post("/api/service-areas", async (req, res) => {
+    try {
+      const validated = insertServiceAreaSchema.parse(req.body);
+      const area = await storage.createServiceArea(validated);
+      res.status(201).json(area);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update service area
+  app.put("/api/service-areas/:id", async (req, res) => {
+    try {
+      const area = await storage.updateServiceArea(req.params.id, req.body);
+      res.json(area);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete service area
+  app.delete("/api/service-areas/:id", async (req, res) => {
+    try {
+      await storage.deleteServiceArea(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // WHITE GLOVE PRICING ROUTES
+  // ========================
+
+  // Get all pricing tiers
+  app.get("/api/white-glove/pricing", async (req, res) => {
+    try {
+      const { serviceAreaId } = req.query;
+      const tiers = await storage.getWhiteGlovePricingTiers(serviceAreaId as string);
+      res.json(tiers);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get pricing for specific headcount
+  app.get("/api/white-glove/pricing/calculate", async (req, res) => {
+    try {
+      const { serviceAreaId, headcount, orderTotal } = req.query;
+      
+      if (!headcount) {
+        return res.status(400).json({ error: "headcount is required" });
+      }
+
+      const hc = parseInt(headcount as string);
+      let tier;
+      
+      if (serviceAreaId) {
+        tier = await storage.getWhiteGlovePricingTierByHeadcount(serviceAreaId as string, hc);
+      } else {
+        // Use default pricing if no service area
+        const allTiers = await storage.getWhiteGlovePricingTiers();
+        tier = allTiers.find(t => {
+          const min = t.minHeadcount || 0;
+          const max = t.maxHeadcount || 999;
+          return hc >= min && hc <= max;
+        }) || allTiers[0];
+      }
+
+      if (!tier) {
+        // Return default pricing
+        const baseSetupFee = 50;
+        const perPersonFee = hc > 10 ? 5 : 0;
+        const total = baseSetupFee + (perPersonFee * hc);
+        
+        return res.json({
+          tier: null,
+          pricing: {
+            setupFee: baseSetupFee.toFixed(2),
+            perPersonFee: perPersonFee.toFixed(2),
+            headcount: hc,
+            distanceFee: "0.00",
+            totalWhiteGloveFee: total.toFixed(2),
+            includesSetup: true,
+            includesPresentation: hc >= 10,
+            includesCleanup: false
+          }
+        });
+      }
+
+      const setupFee = (tier.setupFeeCents || 5000) / 100;
+      const perPersonFee = ((tier.perPersonFeeCents || 0) * hc) / 100;
+      const percentageFee = orderTotal 
+        ? (parseFloat(orderTotal as string) * parseFloat(tier.percentageFee || "0")) / 100 
+        : 0;
+      const totalWhiteGloveFee = setupFee + perPersonFee + percentageFee;
+
+      res.json({
+        tier,
+        pricing: {
+          setupFee: setupFee.toFixed(2),
+          perPersonFee: perPersonFee.toFixed(2),
+          percentageFee: percentageFee.toFixed(2),
+          headcount: hc,
+          distanceFee: "0.00",
+          totalWhiteGloveFee: totalWhiteGloveFee.toFixed(2),
+          includesSetup: tier.includesSetup,
+          includesPresentation: tier.includesPresentation,
+          includesCleanup: tier.includesCleanup
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create pricing tier
+  app.post("/api/white-glove/pricing", async (req, res) => {
+    try {
+      const validated = insertWhiteGlovePricingTierSchema.parse(req.body);
+      const tier = await storage.createWhiteGlovePricingTier(validated);
+      res.status(201).json(tier);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update pricing tier
+  app.put("/api/white-glove/pricing/:id", async (req, res) => {
+    try {
+      const tier = await storage.updateWhiteGlovePricingTier(req.params.id, req.body);
+      res.json(tier);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete pricing tier
+  app.delete("/api/white-glove/pricing/:id", async (req, res) => {
+    try {
+      await storage.deleteWhiteGlovePricingTier(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================
+  // ONE-OFF ORDERS ROUTES
+  // ========================
+
+  // Get one-off orders
+  app.get("/api/one-off-orders", async (req, res) => {
+    try {
+      const { userId, status, deliveryType, startDate, endDate } = req.query;
+      const orders = await storage.getOneOffOrders({
+        userId: userId as string,
+        status: status as string,
+        deliveryType: deliveryType as string,
+        startDate: startDate as string,
+        endDate: endDate as string
+      });
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get single one-off order
+  app.get("/api/one-off-orders/:id", async (req, res) => {
+    try {
+      const order = await storage.getOneOffOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create one-off order
+  app.post("/api/one-off-orders", async (req, res) => {
+    try {
+      const validated = insertOneOffOrderSchema.parse(req.body);
+      
+      // Validate lead time for white glove
+      if (validated.deliveryType === 'white_glove') {
+        const requestedDateTime = new Date(`${validated.requestedDate}T${validated.requestedTime}`);
+        const now = new Date();
+        const hoursUntilDelivery = (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursUntilDelivery < 24) {
+          return res.status(400).json({ 
+            error: "White Glove service requires at least 24 hours advance notice" 
+          });
+        }
+      }
+
+      const order = await storage.createOneOffOrder(validated);
+      res.status(201).json(order);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update one-off order
+  app.put("/api/one-off-orders/:id", async (req, res) => {
+    try {
+      const order = await storage.updateOneOffOrder(req.params.id, req.body);
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update one-off order status
+  app.post("/api/one-off-orders/:id/status", async (req, res) => {
+    try {
+      const { status, note } = req.body;
+      const order = await storage.updateOneOffOrder(req.params.id, { status });
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Cancel one-off order
+  app.post("/api/one-off-orders/:id/cancel", async (req, res) => {
+    try {
+      const order = await storage.updateOneOffOrder(req.params.id, { status: 'cancelled' });
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete one-off order
+  app.delete("/api/one-off-orders/:id", async (req, res) => {
+    try {
+      await storage.deleteOneOffOrder(req.params.id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

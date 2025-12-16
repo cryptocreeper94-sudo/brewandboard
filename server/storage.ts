@@ -2379,13 +2379,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOneOffOrder(order: InsertOneOffOrder): Promise<OneOffOrder> {
-    const [newOrder] = await db.insert(oneOffOrders).values(order).returning();
+    const [newOrder] = await db.insert(oneOffOrders).values(order as any).returning();
     return newOrder;
   }
 
   async updateOneOffOrder(id: string, order: Partial<InsertOneOffOrder>): Promise<OneOffOrder> {
     const [updated] = await db.update(oneOffOrders)
-      .set({ ...order, updatedAt: new Date() })
+      .set({ ...order, updatedAt: new Date() } as any)
       .where(eq(oneOffOrders.id, id))
       .returning();
     return updated;

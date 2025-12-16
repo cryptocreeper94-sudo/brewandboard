@@ -1518,6 +1518,16 @@ export async function registerRoutes(
     }
   });
 
+  // Create a new franchise (admin)
+  app.post("/api/franchises", async (req, res) => {
+    try {
+      const franchise = await storage.createFranchise(req.body);
+      res.status(201).json(franchise);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // ========================
   // VENDOR APPLICATION ROUTES
   // ========================

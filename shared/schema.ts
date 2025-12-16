@@ -2451,3 +2451,259 @@ export const PARTNER_API_SCOPES = [
 ] as const;
 
 export type PartnerApiScope = typeof PARTNER_API_SCOPES[number];
+
+// ========================
+// SERVICE AREAS (Configurable Delivery Zones)
+// ========================
+export const serviceAreas = pgTable(
+  "service_areas",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Owner - can be franchise, region, or main app
+    ownerId: varchar("owner_id").notNull(), // franchiseId or 'main' for primary app
+    ownerType: varchar("owner_type", { length: 20 }).notNull().default("main"), // 'main', 'franchise', 'region'
+    
+    // Area config
+    name: varchar("name", { length: 100 }).notNull(), // "Nashville Metro", "Franklin Area"
+    
+    // Geographic boundaries
+    zipCodes: text("zip_codes").array().default(sql`ARRAY[]::text[]`), // ['37201', '37203', ...]
+    counties: text("counties").array().default(sql`ARRAY[]::text[]`), // ['Davidson', 'Williamson', ...]
+    
+    // Center point for distance calculations
+    centerZip: varchar("center_zip", { length: 10 }),
+    radiusMiles: integer("radius_miles").default(25),
+    
+    // Service availability
+    whiteGloveEnabled: boolean("white_glove_enabled").default(true),
+    doordashEnabled: boolean("doordash_enabled").default(true),
+    
+    // Lead time requirements (hours)
+    whiteGloveMinLeadTime: integer("white_glove_min_lead_time").default(24),
+    standardMinLeadTime: integer("standard_min_lead_time").default(2),
+    
+    isActive: boolean("is_active").default(true),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    ownerIdx: index("idx_service_areas_owner").on(table.ownerId),
+    activeIdx: index("idx_service_areas_active").on(table.isActive),
+  })
+);
+
+export const insertServiceAreaSchema = createInsertSchema(serviceAreas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertServiceArea = z.infer<typeof insertServiceAreaSchema>;
+export type ServiceArea = typeof serviceAreas.$inferSelect;
+
+// ========================
+// WHITE GLOVE PRICING TIERS
+// ========================
+export const whiteGlovePricingTiers = pgTable(
+  "white_glove_pricing_tiers",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Owner
+    serviceAreaId: varchar("service_area_id").references(() => serviceAreas.id),
+    
+    // Tier info
+    name: varchar("name", { length: 100 }).notNull(), // "Small Meeting", "Corporate Event"
+    description: text("description"),
+    
+    // Criteria
+    minHeadcount: integer("min_headcount").default(1),
+    maxHeadcount: integer("max_headcount").default(10),
+    minOrderValue: decimal("min_order_value", { precision: 10, scale: 2 }).default("0"),
+    maxOrderValue: decimal("max_order_value", { precision: 10, scale: 2 }),
+    
+    // Pricing
+    setupFeeCents: integer("setup_fee_cents").notNull().default(5000), // $50.00 default
+    perPersonFeeCents: integer("per_person_fee_cents").default(0),
+    percentageFee: decimal("percentage_fee", { precision: 5, scale: 2 }).default("0"), // % of order total
+    
+    // Complexity multipliers
+    includesSetup: boolean("includes_setup").default(true),
+    includesPresentation: boolean("includes_presentation").default(false),
+    includesCleanup: boolean("includes_cleanup").default(false),
+    
+    // Distance pricing
+    baseDistanceMiles: integer("base_distance_miles").default(10),
+    perMileFeeCents: integer("per_mile_fee_cents").default(100), // $1/mile after base
+    
+    sortOrder: integer("sort_order").default(0),
+    isActive: boolean("is_active").default(true),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    areaIdx: index("idx_wg_pricing_area").on(table.serviceAreaId),
+  })
+);
+
+export const insertWhiteGlovePricingTierSchema = createInsertSchema(whiteGlovePricingTiers).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertWhiteGlovePricingTier = z.infer<typeof insertWhiteGlovePricingTierSchema>;
+export type WhiteGlovePricingTier = typeof whiteGlovePricingTiers.$inferSelect;
+
+// ========================
+// ONE-OFF ORDERS (Quick orders with delivery type choice)
+// ========================
+export const oneOffOrders = pgTable(
+  "one_off_orders",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Customer info
+    userId: varchar("user_id").references(() => users.id),
+    guestEmail: varchar("guest_email", { length: 255 }), // For non-registered users
+    guestName: varchar("guest_name", { length: 255 }),
+    guestPhone: varchar("guest_phone", { length: 20 }),
+    
+    // Vendor
+    vendorId: varchar("vendor_id").references(() => vendors.id),
+    vendorName: varchar("vendor_name", { length: 255 }),
+    
+    // Delivery type
+    deliveryType: varchar("delivery_type", { length: 20 }).notNull().default("doordash"),
+    // Values: 'doordash', 'white_glove'
+    
+    // Delivery details
+    deliveryAddress: text("delivery_address").notNull(),
+    deliveryCity: varchar("delivery_city", { length: 100 }),
+    deliveryState: varchar("delivery_state", { length: 50 }),
+    deliveryZip: varchar("delivery_zip", { length: 10 }),
+    deliveryInstructions: text("delivery_instructions"),
+    contactName: varchar("contact_name", { length: 255 }),
+    contactPhone: varchar("contact_phone", { length: 20 }),
+    
+    // Scheduling
+    requestedDate: date("requested_date").notNull(),
+    requestedTime: varchar("requested_time", { length: 10 }).notNull(), // HH:MM
+    
+    // Meeting details (for White Glove)
+    headcount: integer("headcount").default(1),
+    meetingType: varchar("meeting_type", { length: 50 }), // 'board_meeting', 'team_standup', 'client_presentation', etc.
+    setupRequired: boolean("setup_required").default(false),
+    presentationRequired: boolean("presentation_required").default(false),
+    
+    // Order items
+    items: jsonb("items").$type<Array<{
+      menuItemId?: string;
+      name: string;
+      quantity: number;
+      price: string;
+      notes?: string;
+    }>>().notNull(),
+    
+    // Pricing breakdown
+    subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+    salesTax: decimal("sales_tax", { precision: 10, scale: 2 }).default("0.00"),
+    deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("0.00"),
+    serviceFee: decimal("service_fee", { precision: 10, scale: 2 }).default("0.00"),
+    
+    // White Glove specific fees
+    whiteGloveSetupFee: decimal("white_glove_setup_fee", { precision: 10, scale: 2 }).default("0.00"),
+    whiteGloveDistanceFee: decimal("white_glove_distance_fee", { precision: 10, scale: 2 }).default("0.00"),
+    
+    gratuity: decimal("gratuity", { precision: 10, scale: 2 }).default("0.00"),
+    total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+    
+    // White Glove pricing tier used
+    pricingTierId: varchar("pricing_tier_id").references(() => whiteGlovePricingTiers.id),
+    
+    // Status
+    status: varchar("status", { length: 30 }).default("pending").notNull(),
+    // Values: 'pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'
+    
+    // Fulfillment
+    fulfillmentChannel: varchar("fulfillment_channel", { length: 30 }).default("pending"),
+    // Values: 'pending', 'doordash', 'white_glove_internal'
+    fulfillmentRef: varchar("fulfillment_ref", { length: 255 }), // DoorDash order ID or internal ref
+    
+    // Driver (for White Glove)
+    assignedDriverName: varchar("assigned_driver_name", { length: 255 }),
+    driverPhone: varchar("driver_phone", { length: 20 }),
+    
+    // Service area
+    serviceAreaId: varchar("service_area_id").references(() => serviceAreas.id),
+    
+    specialInstructions: text("special_instructions"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    userIdx: index("idx_one_off_orders_user").on(table.userId),
+    dateIdx: index("idx_one_off_orders_date").on(table.requestedDate),
+    statusIdx: index("idx_one_off_orders_status").on(table.status),
+    typeIdx: index("idx_one_off_orders_type").on(table.deliveryType),
+  })
+);
+
+export const insertOneOffOrderSchema = createInsertSchema(oneOffOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOneOffOrder = z.infer<typeof insertOneOffOrderSchema>;
+export type OneOffOrder = typeof oneOffOrders.$inferSelect;
+
+// Delivery type constants
+export const DELIVERY_TYPES = {
+  doordash: { 
+    label: 'Standard Delivery', 
+    description: 'Quick delivery via DoorDash',
+    icon: 'Truck',
+    minLeadHours: 2
+  },
+  white_glove: { 
+    label: 'White Glove Service', 
+    description: 'Premium delivery with meeting setup & presentation',
+    icon: 'Crown',
+    minLeadHours: 24
+  },
+} as const;
+
+// Meeting type options for White Glove
+export const MEETING_TYPES = [
+  { value: 'board_meeting', label: 'Board Meeting', headcountHint: '8-20' },
+  { value: 'team_standup', label: 'Team Standup', headcountHint: '5-15' },
+  { value: 'client_presentation', label: 'Client Presentation', headcountHint: '4-12' },
+  { value: 'training_session', label: 'Training Session', headcountHint: '10-30' },
+  { value: 'corporate_event', label: 'Corporate Event', headcountHint: '20-100' },
+  { value: 'other', label: 'Other', headcountHint: '1-50' },
+] as const;
+
+// Default Nashville Metro service area zip codes
+export const NASHVILLE_METRO_ZIPS = [
+  // Davidson County (Nashville)
+  '37201', '37203', '37204', '37205', '37206', '37207', '37208', '37209', '37210',
+  '37211', '37212', '37213', '37214', '37215', '37216', '37217', '37218', '37219',
+  '37220', '37221', '37228', '37229', '37232', '37234', '37235', '37236', '37238',
+  '37240', '37243', '37246',
+  // Williamson County (Franklin, Brentwood)
+  '37027', '37064', '37067', '37069', '37135',
+  // Rutherford County (Murfreesboro)
+  '37127', '37128', '37129', '37130', '37131', '37132', '37133',
+  // Wilson County (Mt. Juliet, Lebanon)
+  '37076', '37087', '37090', '37122', '37138',
+  // Sumner County (Hendersonville, Gallatin)
+  '37048', '37066', '37072', '37075', '37077',
+] as const;
+
+export const MIDDLE_TN_COUNTIES = [
+  'Davidson',
+  'Williamson', 
+  'Rutherford',
+  'Wilson',
+  'Sumner',
+] as const;

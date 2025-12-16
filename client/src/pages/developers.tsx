@@ -1418,6 +1418,232 @@ function ReleaseManagerPanel() {
   );
 }
 
+// Darkwave Dev Hub Browser - Search/Browse available snippets in the ecosystem
+function DarkwaveHubBrowser() {
+  const { toast } = useToast();
+  const [snippets, setSnippets] = useState<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    category: string;
+    language?: string;
+    code: string;
+    version?: string;
+    usageCount?: number;
+    createdAt?: string;
+  }>>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [selectedSnippet, setSelectedSnippet] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch all snippets on mount
+  useEffect(() => {
+    setIsLoading(true);
+    fetch("/api/ecosystem/snippets")
+      .then(r => r.json())
+      .then(data => {
+        setSnippets(Array.isArray(data) ? data : []);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setSnippets([]);
+        setIsLoading(false);
+      });
+  }, []);
+
+  // Search by name
+  const searchByName = async () => {
+    if (!searchQuery.trim()) {
+      // Reset to all snippets
+      const res = await fetch("/api/ecosystem/snippets");
+      const data = await res.json();
+      setSnippets(Array.isArray(data) ? data : []);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/ecosystem/snippets?name=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      setSnippets(Array.isArray(data) ? data : []);
+    } catch (e) {
+      toast({ title: "Search failed", variant: "destructive" });
+    }
+    setIsLoading(false);
+  };
+
+  // Get unique categories
+  const categories = Array.from(new Set(snippets.map(s => s.category))).filter(Boolean);
+
+  // Filter snippets
+  const filteredSnippets = snippets.filter(s => {
+    if (categoryFilter !== "all" && s.category !== categoryFilter) return false;
+    return true;
+  });
+
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({ title: "Copied to clipboard" });
+  };
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-indigo-500/5 to-blue-500/5" />
+      <CardHeader className="relative pb-4">
+        <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600">
+            <Database className="h-5 w-5 text-white" />
+          </div>
+          Darkwave Dev Hub Browser
+        </CardTitle>
+        <CardDescription>
+          Search and browse code snippets shared across the ecosystem
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="relative space-y-4">
+        {/* Search Bar */}
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name (e.g., analytics.md)"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && searchByName()}
+              className="pl-10"
+              data-testid="input-hub-search"
+            />
+          </div>
+          <Button onClick={searchByName} className="bg-gradient-to-r from-purple-500 to-indigo-600" data-testid="button-hub-search">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+
+        {/* Category Filter */}
+        {categories.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Category:</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48" data-testid="select-hub-category">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Results */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredSnippets.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
+            <p>No snippets found in the Dev Hub</p>
+            <p className="text-sm">Push snippets to share code across the ecosystem</p>
+          </div>
+        ) : (
+          <ScrollArea className="h-80">
+            <div className="space-y-3 pr-4">
+              {filteredSnippets.map(snippet => (
+                <div 
+                  key={snippet.id} 
+                  className="p-4 rounded-xl bg-white border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => setSelectedSnippet(selectedSnippet === snippet.id ? null : snippet.id)}
+                  data-testid={`snippet-${snippet.id}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-purple-600" />
+                        <span className="font-semibold text-purple-800">{snippet.name}</span>
+                        {snippet.version && (
+                          <Badge variant="outline" className="text-xs">{snippet.version}</Badge>
+                        )}
+                      </div>
+                      {snippet.description && (
+                        <p className="text-sm text-muted-foreground mt-1">{snippet.description}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Tags className="h-3 w-3" />
+                          {snippet.category}
+                        </span>
+                        {snippet.language && (
+                          <span className="flex items-center gap-1">
+                            <Code2 className="h-3 w-3" />
+                            {snippet.language}
+                          </span>
+                        )}
+                        {snippet.usageCount !== undefined && (
+                          <span className="flex items-center gap-1">
+                            <Download className="h-3 w-3" />
+                            {snippet.usageCount} uses
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={e => { e.stopPropagation(); copyToClipboard(snippet.code); }}
+                      data-testid={`button-copy-snippet-${snippet.id}`}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {selectedSnippet === snippet.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-muted-foreground">Code Preview:</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={e => { e.stopPropagation(); copyToClipboard(snippet.code); }}
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copy All
+                        </Button>
+                      </div>
+                      <pre className="p-3 rounded-lg bg-slate-900 text-slate-100 text-xs overflow-x-auto max-h-64">
+                        <code>{snippet.code.slice(0, 2000)}{snippet.code.length > 2000 ? "\n\n... (truncated)" : ""}</code>
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+
+        {/* Agent Retrieval Instructions */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">
+          <p className="font-semibold text-indigo-800 mb-2 flex items-center gap-2">
+            <Terminal className="h-4 w-4" />
+            Agent Retrieval Instructions
+          </p>
+          <div className="text-sm text-indigo-700 space-y-2 font-mono">
+            <p># Search by name:</p>
+            <code className="block p-2 rounded bg-white/50">GET /api/ecosystem/snippets?name=analytics.md</code>
+            <p># Get exact match:</p>
+            <code className="block p-2 rounded bg-white/50">GET /api/ecosystem/snippets/by-name/analytics.md</code>
+            <p># Browse by category:</p>
+            <code className="block p-2 rounded bg-white/50">GET /api/ecosystem/snippets?category=documentation</code>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Analytics Panel Component
 function AnalyticsPanel() {
   const { toast } = useToast();
@@ -3296,6 +3522,16 @@ export default function DevelopersPage() {
           className="mb-12"
         >
           <AppEcosystemHub />
+        </motion.div>
+
+        {/* Darkwave Dev Hub Browser */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.298 }}
+          className="mb-12"
+        >
+          <DarkwaveHubBrowser />
         </motion.div>
 
         <motion.div

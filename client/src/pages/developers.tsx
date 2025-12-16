@@ -54,6 +54,17 @@ import {
   Award,
   BarChart3,
   Star,
+  Globe,
+  MousePointer,
+  ArrowUpRight,
+  ArrowDownRight,
+  PieChart,
+  LineChart,
+  Tags,
+  Plus,
+  Trash2,
+  Save,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -62,6 +73,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, AreaChart, Area } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessCardPreview } from "@/components/BusinessCard";
 import { DocumentExportPanel } from "@/components/DocumentExport";
@@ -1398,6 +1413,419 @@ function ReleaseManagerPanel() {
   );
 }
 
+// Analytics Panel Component
+function AnalyticsPanel() {
+  const { toast } = useToast();
+  const [seoTagType, setSeoTagType] = useState("og");
+  const [seoTags, setSeoTags] = useState<Array<{ id: string; type: string; name: string; content: string }>>([
+    { id: "1", type: "og", name: "og:title", content: "Brew & Board Coffee - B2B Catering" },
+    { id: "2", type: "og", name: "og:description", content: "Premium coffee and breakfast catering for Nashville businesses" },
+    { id: "3", type: "og", name: "og:image", content: "https://brewandboard.coffee/og-image.png" },
+    { id: "4", type: "twitter", name: "twitter:card", content: "summary_large_image" },
+    { id: "5", type: "twitter", name: "twitter:site", content: "@brewandboard" },
+    { id: "6", type: "meta", name: "description", content: "Nashville's premier B2B coffee and catering service" },
+    { id: "7", type: "meta", name: "keywords", content: "coffee, catering, Nashville, B2B, meetings" },
+  ]);
+  const [newTag, setNewTag] = useState({ name: "", content: "" });
+  const [timeRange, setTimeRange] = useState("week");
+
+  // Mock analytics data - would be fetched from API in production
+  const weeklyData = [
+    { name: "Mon", visitors: 245, pageViews: 892, bounceRate: 42 },
+    { name: "Tue", visitors: 312, pageViews: 1045, bounceRate: 38 },
+    { name: "Wed", visitors: 278, pageViews: 956, bounceRate: 45 },
+    { name: "Thu", visitors: 389, pageViews: 1234, bounceRate: 35 },
+    { name: "Fri", visitors: 425, pageViews: 1456, bounceRate: 32 },
+    { name: "Sat", visitors: 198, pageViews: 567, bounceRate: 48 },
+    { name: "Sun", visitors: 156, pageViews: 423, bounceRate: 52 },
+  ];
+
+  const monthlyData = [
+    { name: "Week 1", visitors: 1890, pageViews: 6234, bounceRate: 40 },
+    { name: "Week 2", visitors: 2156, pageViews: 7845, bounceRate: 38 },
+    { name: "Week 3", visitors: 2478, pageViews: 8956, bounceRate: 35 },
+    { name: "Week 4", visitors: 2834, pageViews: 10234, bounceRate: 33 },
+  ];
+
+  const topPages = [
+    { page: "/", views: 4523, avgTime: "2:34" },
+    { page: "/vendors", views: 2891, avgTime: "3:12" },
+    { page: "/order", views: 2156, avgTime: "4:45" },
+    { page: "/portfolio", views: 1834, avgTime: "2:56" },
+    { page: "/developers", views: 945, avgTime: "5:23" },
+  ];
+
+  const referrers = [
+    { source: "Google", visits: 3245, percentage: 45 },
+    { source: "Direct", visits: 2156, percentage: 30 },
+    { source: "Twitter", visits: 892, percentage: 12 },
+    { source: "LinkedIn", visits: 534, percentage: 7 },
+    { source: "Other", visits: 423, percentage: 6 },
+  ];
+
+  const currentData = timeRange === "week" ? weeklyData : monthlyData;
+  const totalVisitors = currentData.reduce((sum, d) => sum + d.visitors, 0);
+  const totalPageViews = currentData.reduce((sum, d) => sum + d.pageViews, 0);
+  const avgBounceRate = Math.round(currentData.reduce((sum, d) => sum + d.bounceRate, 0) / currentData.length);
+
+  const addSeoTag = () => {
+    if (!newTag.name || !newTag.content) {
+      toast({ title: "Missing fields", description: "Please enter both tag name and content", variant: "destructive" });
+      return;
+    }
+    const id = String(Date.now());
+    setSeoTags(prev => [...prev, { id, type: seoTagType, name: newTag.name, content: newTag.content }]);
+    setNewTag({ name: "", content: "" });
+    toast({ title: "Tag added", description: `Added ${newTag.name}` });
+  };
+
+  const removeSeoTag = (id: string) => {
+    setSeoTags(prev => prev.filter(t => t.id !== id));
+    toast({ title: "Tag removed" });
+  };
+
+  const filteredTags = seoTags.filter(t => t.type === seoTagType);
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-indigo-500/5" />
+      <CardHeader className="relative pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 font-serif text-2xl">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              Analytics Dashboard
+            </CardTitle>
+            <CardDescription>
+              Track visitors, page views, SEO performance, and traffic sources
+            </CardDescription>
+          </div>
+          <Badge className="bg-cyan-500/10 text-cyan-700 border-cyan-200">
+            <Activity className="h-3 w-3 mr-1" />
+            Live
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="relative space-y-6">
+        {/* Metrics Overview Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="analytics-metrics-grid">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200" data-testid="metric-unique-visitors">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-4 w-4 text-cyan-600" />
+              <span className="text-xs text-cyan-700 font-medium">Unique Visitors</span>
+            </div>
+            <p className="text-2xl font-bold text-cyan-800" data-testid="value-unique-visitors">{totalVisitors.toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+              <span className="text-xs text-emerald-600">+12.5%</span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200" data-testid="metric-page-views">
+            <div className="flex items-center gap-2 mb-2">
+              <Eye className="h-4 w-4 text-indigo-600" />
+              <span className="text-xs text-indigo-700 font-medium">Page Views</span>
+            </div>
+            <p className="text-2xl font-bold text-indigo-800" data-testid="value-page-views">{totalPageViews.toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+              <span className="text-xs text-emerald-600">+8.3%</span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200" data-testid="metric-bounce-rate">
+            <div className="flex items-center gap-2 mb-2">
+              <MousePointer className="h-4 w-4 text-amber-600" />
+              <span className="text-xs text-amber-700 font-medium">Bounce Rate</span>
+            </div>
+            <p className="text-2xl font-bold text-amber-800" data-testid="value-bounce-rate">{avgBounceRate}%</p>
+            <div className="flex items-center gap-1 mt-1">
+              <ArrowDownRight className="h-3 w-3 text-emerald-500" />
+              <span className="text-xs text-emerald-600">-5.2%</span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200" data-testid="metric-avg-session">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs text-emerald-700 font-medium">Avg. Session</span>
+            </div>
+            <p className="text-2xl font-bold text-emerald-800" data-testid="value-avg-session">3:24</p>
+            <div className="flex items-center gap-1 mt-1">
+              <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+              <span className="text-xs text-emerald-600">+18s</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Accordion Sections */}
+        <Accordion type="multiple" defaultValue={["traffic", "seo"]} className="space-y-3">
+          {/* Traffic Visualization */}
+          <AccordionItem value="traffic" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-traffic">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-traffic">
+              <div className="flex items-center gap-2">
+                <LineChart className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold">Traffic Trends</span>
+                <Badge variant="outline" className="ml-2 text-xs">Visual</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Label className="text-sm">Time Range:</Label>
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-32" data-testid="select-time-range">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Visitors Chart */}
+              <div className="h-64 mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={currentData}>
+                    <defs>
+                      <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255,255,255,0.95)', 
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb'
+                      }} 
+                    />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="visitors" 
+                      stroke="#06b6d4" 
+                      fillOpacity={1} 
+                      fill="url(#colorVisitors)" 
+                      strokeWidth={2}
+                      name="Visitors"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="pageViews" 
+                      stroke="#8b5cf6" 
+                      fillOpacity={1} 
+                      fill="url(#colorPageViews)" 
+                      strokeWidth={2}
+                      name="Page Views"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bar Chart for Bounce Rate */}
+              <div className="mt-6">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Bounce Rate by Day</p>
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={currentData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255,255,255,0.95)', 
+                          borderRadius: '12px',
+                          border: '1px solid #e5e7eb'
+                        }} 
+                      />
+                      <Bar dataKey="bounceRate" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Bounce %" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* SEO Tag Management */}
+          <AccordionItem value="seo" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-seo">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-seo">
+              <div className="flex items-center gap-2">
+                <Tags className="h-5 w-5 text-emerald-600" />
+                <span className="font-semibold">SEO Tag Management</span>
+                <Badge className="ml-2 bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">{seoTags.length} tags</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {/* Tag Type Selector */}
+              <div className="flex items-center gap-4 mb-4">
+                <Label className="text-sm font-medium">Tag Type:</Label>
+                <Select value={seoTagType} onValueChange={setSeoTagType}>
+                  <SelectTrigger className="w-48" data-testid="select-seo-tag-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="og">Open Graph (og:)</SelectItem>
+                    <SelectItem value="twitter">Twitter Card</SelectItem>
+                    <SelectItem value="meta">Meta Tags</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Current Tags */}
+              <div className="space-y-2 mb-4">
+                <p className="text-sm font-medium text-muted-foreground">Current {seoTagType === "og" ? "Open Graph" : seoTagType === "twitter" ? "Twitter Card" : "Meta"} Tags:</p>
+                <ScrollArea className="h-40">
+                  <div className="space-y-2 pr-4">
+                    {filteredTags.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic">No tags of this type</p>
+                    ) : (
+                      filteredTags.map(tag => (
+                        <div key={tag.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-100 group" data-testid={`seo-tag-${tag.id}`}>
+                          <div className="flex-1 min-w-0">
+                            <code className="text-xs font-mono text-emerald-700">{tag.name}</code>
+                            <p className="text-sm truncate text-muted-foreground">{tag.content}</p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => removeSeoTag(tag.id)}
+                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            data-testid={`button-remove-tag-${tag.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Add New Tag */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+                <p className="text-sm font-semibold text-emerald-800 mb-3 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add New Tag
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Tag Name</Label>
+                    <Input 
+                      placeholder={seoTagType === "og" ? "og:site_name" : seoTagType === "twitter" ? "twitter:creator" : "robots"}
+                      value={newTag.name}
+                      onChange={e => setNewTag(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1"
+                      data-testid="input-new-tag-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Content</Label>
+                    <Input 
+                      placeholder="Tag content value"
+                      value={newTag.content}
+                      onChange={e => setNewTag(prev => ({ ...prev, content: e.target.value }))}
+                      className="mt-1"
+                      data-testid="input-new-tag-content"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={addSeoTag} 
+                  className="mt-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                  data-testid="button-add-seo-tag"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Tag
+                </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Top Pages */}
+          <AccordionItem value="pages" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-pages">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-pages">
+              <div className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-violet-600" />
+                <span className="font-semibold">Top Pages</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="space-y-2">
+                {topPages.map((page, i) => (
+                  <div key={page.page} className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-100" data-testid={`top-page-${i}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                        {i + 1}
+                      </span>
+                      <code className="text-sm font-mono text-violet-700">{page.page}</code>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-muted-foreground">{page.views.toLocaleString()} views</span>
+                      <span className="text-muted-foreground">Avg: {page.avgTime}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Traffic Sources */}
+          <AccordionItem value="referrers" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-referrers">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-referrers">
+              <div className="flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-pink-600" />
+                <span className="font-semibold">Traffic Sources</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="space-y-3">
+                {referrers.map(ref => (
+                  <div key={ref.source} className="space-y-1" data-testid={`referrer-${ref.source.toLowerCase()}`}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{ref.source}</span>
+                      <span className="text-muted-foreground">{ref.visits.toLocaleString()} ({ref.percentage}%)</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full transition-all duration-500"
+                        style={{ width: `${ref.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Integration Notice */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200">
+          <div className="flex items-start gap-3">
+            <Settings2 className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-blue-800">Analytics Integration</p>
+              <p className="text-sm text-blue-600 mt-1">
+                Connect Google Analytics, Plausible, or Umami for real-time tracking. 
+                Current data is simulated for demonstration.
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevelopersPage() {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -2055,6 +2483,16 @@ export default function DevelopersPage() {
           className="mb-8"
         >
           <ReleaseManagerPanel />
+        </motion.div>
+
+        {/* Analytics Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.097 }}
+          className="mb-8"
+        >
+          <AnalyticsPanel />
         </motion.div>
 
         <motion.div

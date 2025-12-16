@@ -28,6 +28,7 @@ import {
 import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
+import { registerPartnerApiRoutes } from "./partnerApiRoutes";
 import Parser from "rss-parser";
 import { Resend } from "resend";
 
@@ -44,6 +45,9 @@ export async function registerRoutes(
   
   // Register app ecosystem routes (Inter-app communication)
   registerAppEcosystemRoutes(app);
+  
+  // Register Partner API routes (Franchise integrations)
+  registerPartnerApiRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

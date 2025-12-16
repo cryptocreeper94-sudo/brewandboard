@@ -73,6 +73,12 @@ import {
   type InsertOrderTemplate,
   type LoyaltyAccount,
   type InsertLoyaltyAccount,
+  type PartnerApiCredential,
+  type InsertPartnerApiCredential,
+  type PartnerApiLog,
+  type InsertPartnerApiLog,
+  type FranchiseLocation,
+  type InsertFranchiseLocation,
   type LoyaltyTransaction,
   type InsertLoyaltyTransaction,
   users,
@@ -113,6 +119,9 @@ import {
   orderTemplates,
   loyaltyAccounts,
   loyaltyTransactions,
+  partnerApiCredentials,
+  partnerApiLogs,
+  franchiseLocations,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -332,6 +341,37 @@ export interface IStorage {
   updateSubscription(id: string, subscription: Partial<InsertSubscription>): Promise<Subscription>;
   incrementOrdersThisMonth(subscriptionId: string): Promise<void>;
   resetMonthlyOrders(subscriptionId: string): Promise<void>;
+  
+  // Partner API Credentials
+  getPartnerApiCredentials(franchiseId: string): Promise<PartnerApiCredential[]>;
+  getPartnerApiCredential(id: string): Promise<PartnerApiCredential | undefined>;
+  getPartnerApiCredentialByApiKey(apiKey: string): Promise<PartnerApiCredential | undefined>;
+  createPartnerApiCredential(credential: InsertPartnerApiCredential): Promise<PartnerApiCredential>;
+  updatePartnerApiCredential(id: string, credential: Partial<InsertPartnerApiCredential>): Promise<PartnerApiCredential>;
+  deletePartnerApiCredential(id: string): Promise<void>;
+  incrementPartnerApiRequestCount(id: string): Promise<void>;
+  
+  // Partner API Logs
+  getPartnerApiLogs(franchiseId: string, limit?: number): Promise<PartnerApiLog[]>;
+  createPartnerApiLog(log: InsertPartnerApiLog): Promise<PartnerApiLog>;
+  
+  // Franchise Locations
+  getFranchiseLocations(franchiseId: string): Promise<FranchiseLocation[]>;
+  getFranchiseLocation(id: string): Promise<FranchiseLocation | undefined>;
+  getFranchiseLocationByCode(code: string): Promise<FranchiseLocation | undefined>;
+  createFranchiseLocation(location: InsertFranchiseLocation): Promise<FranchiseLocation>;
+  updateFranchiseLocation(id: string, location: Partial<InsertFranchiseLocation>): Promise<FranchiseLocation>;
+  deleteFranchiseLocation(id: string): Promise<void>;
+  
+  // Franchise-scoped order queries
+  getOrdersByFranchise(franchiseId: string, options?: { status?: string; startDate?: string; endDate?: string }): Promise<ScheduledOrder[]>;
+  getFranchiseAnalytics(franchiseId: string, range?: string): Promise<{
+    totalOrders: number;
+    totalRevenue: string;
+    completedOrders: number;
+    avgOrderValue: string;
+    topVendors: Array<{ name: string; orders: number; revenue: number }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1959,6 +1999,214 @@ export class DatabaseStorage implements IStorage {
       .where(eq(scheduledOrders.userId, userId))
       .orderBy(desc(scheduledOrders.createdAt))
       .limit(limit);
+  }
+
+  // ========================
+  // PARTNER API CREDENTIALS
+  // ========================
+  async getPartnerApiCredentials(franchiseId: string): Promise<PartnerApiCredential[]> {
+    return db
+      .select()
+      .from(partnerApiCredentials)
+      .where(eq(partnerApiCredentials.franchiseId, franchiseId))
+      .orderBy(desc(partnerApiCredentials.createdAt));
+  }
+
+  async getPartnerApiCredential(id: string): Promise<PartnerApiCredential | undefined> {
+    const [credential] = await db
+      .select()
+      .from(partnerApiCredentials)
+      .where(eq(partnerApiCredentials.id, id));
+    return credential || undefined;
+  }
+
+  async getPartnerApiCredentialByApiKey(apiKey: string): Promise<PartnerApiCredential | undefined> {
+    const [credential] = await db
+      .select()
+      .from(partnerApiCredentials)
+      .where(eq(partnerApiCredentials.apiKey, apiKey));
+    return credential || undefined;
+  }
+
+  async createPartnerApiCredential(credential: InsertPartnerApiCredential): Promise<PartnerApiCredential> {
+    const [created] = await db.insert(partnerApiCredentials).values(credential).returning();
+    return created;
+  }
+
+  async updatePartnerApiCredential(id: string, credential: Partial<InsertPartnerApiCredential>): Promise<PartnerApiCredential> {
+    const [updated] = await db
+      .update(partnerApiCredentials)
+      .set({ ...credential, updatedAt: new Date() })
+      .where(eq(partnerApiCredentials.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePartnerApiCredential(id: string): Promise<void> {
+    await db.delete(partnerApiCredentials).where(eq(partnerApiCredentials.id, id));
+  }
+
+  async incrementPartnerApiRequestCount(id: string): Promise<void> {
+    await db
+      .update(partnerApiCredentials)
+      .set({
+        requestCount: sql`${partnerApiCredentials.requestCount} + 1`,
+        lastUsedAt: new Date(),
+      })
+      .where(eq(partnerApiCredentials.id, id));
+  }
+
+  // ========================
+  // PARTNER API LOGS
+  // ========================
+  async getPartnerApiLogs(franchiseId: string, limit = 100): Promise<PartnerApiLog[]> {
+    return db
+      .select()
+      .from(partnerApiLogs)
+      .where(eq(partnerApiLogs.franchiseId, franchiseId))
+      .orderBy(desc(partnerApiLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createPartnerApiLog(log: InsertPartnerApiLog): Promise<PartnerApiLog> {
+    const [created] = await db.insert(partnerApiLogs).values(log).returning();
+    return created;
+  }
+
+  // ========================
+  // FRANCHISE LOCATIONS
+  // ========================
+  async getFranchiseLocations(franchiseId: string): Promise<FranchiseLocation[]> {
+    return db
+      .select()
+      .from(franchiseLocations)
+      .where(eq(franchiseLocations.franchiseId, franchiseId))
+      .orderBy(franchiseLocations.name);
+  }
+
+  async getFranchiseLocation(id: string): Promise<FranchiseLocation | undefined> {
+    const [location] = await db
+      .select()
+      .from(franchiseLocations)
+      .where(eq(franchiseLocations.id, id));
+    return location || undefined;
+  }
+
+  async getFranchiseLocationByCode(code: string): Promise<FranchiseLocation | undefined> {
+    const [location] = await db
+      .select()
+      .from(franchiseLocations)
+      .where(eq(franchiseLocations.locationCode, code));
+    return location || undefined;
+  }
+
+  async createFranchiseLocation(location: InsertFranchiseLocation): Promise<FranchiseLocation> {
+    const [created] = await db.insert(franchiseLocations).values(location).returning();
+    return created;
+  }
+
+  async updateFranchiseLocation(id: string, location: Partial<InsertFranchiseLocation>): Promise<FranchiseLocation> {
+    const [updated] = await db
+      .update(franchiseLocations)
+      .set({ ...location, updatedAt: new Date() })
+      .where(eq(franchiseLocations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFranchiseLocation(id: string): Promise<void> {
+    await db.delete(franchiseLocations).where(eq(franchiseLocations.id, id));
+  }
+
+  // ========================
+  // FRANCHISE-SCOPED QUERIES
+  // ========================
+  async getOrdersByFranchise(
+    franchiseId: string,
+    options?: { status?: string; startDate?: string; endDate?: string }
+  ): Promise<ScheduledOrder[]> {
+    const franchise = await this.getFranchise(franchiseId);
+    if (!franchise) return [];
+
+    let query = db.select().from(scheduledOrders).$dynamic();
+    
+    const conditions: any[] = [];
+    if (options?.status) {
+      conditions.push(eq(scheduledOrders.status, options.status));
+    }
+    if (options?.startDate) {
+      conditions.push(gte(scheduledOrders.scheduledDate, options.startDate));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(scheduledOrders.scheduledDate, options.endDate));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    return query.orderBy(desc(scheduledOrders.createdAt));
+  }
+
+  async getFranchiseAnalytics(
+    franchiseId: string,
+    range = "30days"
+  ): Promise<{
+    totalOrders: number;
+    totalRevenue: string;
+    completedOrders: number;
+    avgOrderValue: string;
+    topVendors: Array<{ name: string; orders: number; revenue: number }>;
+  }> {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (range) {
+      case "7days":
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "30days":
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case "quarter":
+        startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+        break;
+      case "year":
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    const orders = await this.getOrdersByFranchise(franchiseId, {
+      startDate: startDate.toISOString().split("T")[0],
+    });
+
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total || "0"), 0);
+    const completedOrders = orders.filter((o) => o.status === "delivered").length;
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    const byVendor = orders.reduce((acc, o) => {
+      const vendor = o.vendorName || "Unknown";
+      if (!acc[vendor]) acc[vendor] = { orders: 0, revenue: 0 };
+      acc[vendor].orders++;
+      acc[vendor].revenue += parseFloat(o.total || "0");
+      return acc;
+    }, {} as Record<string, { orders: number; revenue: number }>);
+
+    const topVendors = Object.entries(byVendor)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    return {
+      totalOrders,
+      totalRevenue: totalRevenue.toFixed(2),
+      completedOrders,
+      avgOrderValue: avgOrderValue.toFixed(2),
+      topVendors,
+    };
   }
 }
 

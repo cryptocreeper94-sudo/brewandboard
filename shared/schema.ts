@@ -2278,3 +2278,176 @@ export const LOYALTY_TIERS = {
   gold: { minPoints: 2000, discount: 10, perks: ['10% discount', 'Priority support', 'Free delivery'] },
   platinum: { minPoints: 5000, discount: 15, perks: ['15% discount', 'Dedicated concierge', 'Free delivery', 'Exclusive events'] },
 } as const;
+
+// ========================
+// PARTNER API CREDENTIALS (Franchise Integration)
+// ========================
+export const partnerApiCredentials = pgTable(
+  "partner_api_credentials",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Link to franchise
+    franchiseId: varchar("franchise_id").notNull().references(() => franchises.id),
+    
+    // Credential info
+    name: varchar("name", { length: 100 }).notNull(), // "Production Key", "Development Key"
+    apiKey: varchar("api_key", { length: 64 }).notNull().unique(),
+    apiSecret: text("api_secret").notNull(), // Shown once on creation
+    
+    // Environment
+    environment: varchar("environment", { length: 20 }).default("production"), // "production" | "sandbox"
+    
+    // Scoped permissions
+    scopes: text("scopes").array().default(sql`ARRAY['orders:read']::text[]`),
+    
+    // Rate limiting
+    rateLimitPerMinute: integer("rate_limit_per_minute").default(60),
+    rateLimitPerDay: integer("rate_limit_per_day").default(10000),
+    
+    // Usage tracking
+    requestCount: integer("request_count").default(0),
+    lastUsedAt: timestamp("last_used_at"),
+    
+    // Status
+    isActive: boolean("is_active").default(true),
+    expiresAt: timestamp("expires_at"),
+    
+    // Audit
+    createdBy: varchar("created_by", { length: 100 }),
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    franchiseIdx: index("idx_partner_api_franchise").on(table.franchiseId),
+    apiKeyIdx: index("idx_partner_api_key").on(table.apiKey),
+    environmentIdx: index("idx_partner_api_env").on(table.environment),
+  })
+);
+
+export const insertPartnerApiCredentialSchema = createInsertSchema(partnerApiCredentials).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  requestCount: true,
+  lastUsedAt: true,
+});
+export type InsertPartnerApiCredential = z.infer<typeof insertPartnerApiCredentialSchema>;
+export type PartnerApiCredential = typeof partnerApiCredentials.$inferSelect;
+
+// ========================
+// PARTNER API REQUEST LOGS (Audit Trail)
+// ========================
+export const partnerApiLogs = pgTable(
+  "partner_api_logs",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    credentialId: varchar("credential_id").notNull().references(() => partnerApiCredentials.id),
+    franchiseId: varchar("franchise_id").notNull().references(() => franchises.id),
+    
+    // Request info
+    method: varchar("method", { length: 10 }).notNull(), // GET, POST, PUT, DELETE
+    endpoint: varchar("endpoint", { length: 255 }).notNull(),
+    
+    // Response
+    statusCode: integer("status_code"),
+    responseTimeMs: integer("response_time_ms"),
+    
+    // Error tracking
+    errorCode: varchar("error_code", { length: 50 }),
+    errorMessage: text("error_message"),
+    
+    // Request metadata
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    credentialIdx: index("idx_api_logs_credential").on(table.credentialId),
+    franchiseIdx: index("idx_api_logs_franchise").on(table.franchiseId),
+    endpointIdx: index("idx_api_logs_endpoint").on(table.endpoint),
+    createdAtIdx: index("idx_api_logs_created").on(table.createdAt),
+  })
+);
+
+export const insertPartnerApiLogSchema = createInsertSchema(partnerApiLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPartnerApiLog = z.infer<typeof insertPartnerApiLogSchema>;
+export type PartnerApiLog = typeof partnerApiLogs.$inferSelect;
+
+// ========================
+// FRANCHISE LOCATIONS (Multi-location support)
+// ========================
+export const franchiseLocations = pgTable(
+  "franchise_locations",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    franchiseId: varchar("franchise_id").notNull().references(() => franchises.id),
+    
+    // Location info
+    name: varchar("name", { length: 100 }).notNull(), // "Downtown Nashville", "Midtown"
+    locationCode: varchar("location_code", { length: 20 }).notNull(), // "NASH-DT-01"
+    
+    // Address
+    addressLine1: varchar("address_line1", { length: 255 }).notNull(),
+    addressLine2: varchar("address_line2", { length: 255 }),
+    city: varchar("city", { length: 100 }).notNull(),
+    state: varchar("state", { length: 50 }).notNull(),
+    zipCode: varchar("zip_code", { length: 10 }).notNull(),
+    
+    // Contact
+    phone: varchar("phone", { length: 20 }),
+    email: varchar("email", { length: 255 }),
+    managerName: varchar("manager_name", { length: 100 }),
+    
+    // Operations
+    isActive: boolean("is_active").default(true),
+    operatingHours: jsonb("operating_hours").$type<Record<string, { open: string; close: string }>>(),
+    deliveryRadius: integer("delivery_radius").default(10), // miles
+    
+    // Metrics
+    totalOrders: integer("total_orders").default(0),
+    totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).default("0"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    franchiseIdx: index("idx_locations_franchise").on(table.franchiseId),
+    codeIdx: index("idx_locations_code").on(table.locationCode),
+    cityIdx: index("idx_locations_city").on(table.city),
+  })
+);
+
+export const insertFranchiseLocationSchema = createInsertSchema(franchiseLocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalOrders: true,
+  totalRevenue: true,
+});
+export type InsertFranchiseLocation = z.infer<typeof insertFranchiseLocationSchema>;
+export type FranchiseLocation = typeof franchiseLocations.$inferSelect;
+
+// Partner API permission scopes
+export const PARTNER_API_SCOPES = [
+  'orders:read',
+  'orders:write',
+  'menus:read',
+  'menus:write',
+  'locations:read',
+  'locations:write',
+  'billing:read',
+  'analytics:read',
+  'customers:read',
+  'customers:write',
+  'drivers:read',
+  'drivers:write',
+] as const;
+
+export type PartnerApiScope = typeof PARTNER_API_SCOPES[number];

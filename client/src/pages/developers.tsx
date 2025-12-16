@@ -70,6 +70,8 @@ import {
   Bell,
   BellOff,
   Edit3,
+  EyeOff,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -2447,6 +2449,489 @@ function AnalyticsPanel() {
   );
 }
 
+// Partner API Portal Component
+function PartnerApiPortal() {
+  const { toast } = useToast();
+  const [franchises, setFranchises] = useState<Array<{
+    id: string;
+    franchiseId: string;
+    territoryName: string;
+    status: string;
+    franchiseTier: string;
+  }>>([]);
+  const [selectedFranchise, setSelectedFranchise] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<Array<{
+    id: string;
+    name: string;
+    apiKey: string;
+    environment: string;
+    scopes: string[];
+    isActive: boolean;
+    requestCount: number;
+    lastUsedAt: string | null;
+    createdAt: string;
+  }>>([]);
+  const [apiLogs, setApiLogs] = useState<Array<{
+    id: string;
+    method: string;
+    endpoint: string;
+    statusCode: number;
+    responseTimeMs: number;
+    createdAt: string;
+  }>>([]);
+  const [locations, setLocations] = useState<Array<{
+    id: string;
+    name: string;
+    locationCode: string;
+    city: string;
+    state: string;
+    isActive: boolean;
+  }>>([]);
+  const [showNewCredForm, setShowNewCredForm] = useState(false);
+  const [newCredName, setNewCredName] = useState("");
+  const [newCredEnv, setNewCredEnv] = useState("production");
+  const [newCredScopes, setNewCredScopes] = useState<string[]>(["orders:read"]);
+  const [newSecret, setNewSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const allScopes = [
+    "orders:read", "orders:write",
+    "menus:read", "menus:write",
+    "locations:read", "locations:write",
+    "billing:read", "analytics:read",
+    "customers:read", "customers:write",
+    "drivers:read", "drivers:write"
+  ];
+
+  useEffect(() => {
+    fetch("/api/franchises?status=active")
+      .then(r => r.json())
+      .then(data => {
+        setFranchises(Array.isArray(data) ? data : []);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedFranchise) return;
+    
+    Promise.all([
+      fetch(`/api/franchises/${selectedFranchise}/credentials`).then(r => r.json()),
+      fetch(`/api/franchises/${selectedFranchise}/api-logs?limit=50`).then(r => r.json()),
+      fetch(`/api/franchises/${selectedFranchise}/locations`).then(r => r.json()),
+    ]).then(([creds, logs, locs]) => {
+      setCredentials(Array.isArray(creds) ? creds : []);
+      setApiLogs(Array.isArray(logs) ? logs : []);
+      setLocations(Array.isArray(locs) ? locs : []);
+    }).catch(() => {});
+  }, [selectedFranchise]);
+
+  const createCredential = async () => {
+    if (!newCredName || !selectedFranchise) return;
+    try {
+      const res = await fetch(`/api/franchises/${selectedFranchise}/credentials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCredName,
+          environment: newCredEnv,
+          scopes: newCredScopes,
+        }),
+      });
+      const data = await res.json();
+      if (data.apiSecret) {
+        setNewSecret(data.apiSecret);
+        setCredentials(prev => [...prev, { ...data, apiSecret: "••••••••" }]);
+        setNewCredName("");
+        setShowNewCredForm(false);
+        toast({ title: "API Key Created", description: "Save the secret - it won't be shown again!" });
+      }
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to create credential", variant: "destructive" });
+    }
+  };
+
+  const toggleCredential = async (id: string, isActive: boolean) => {
+    try {
+      await fetch(`/api/franchises/${selectedFranchise}/credentials/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+      setCredentials(prev => prev.map(c => c.id === id ? { ...c, isActive: !isActive } : c));
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to update credential", variant: "destructive" });
+    }
+  };
+
+  const deleteCredential = async (id: string) => {
+    try {
+      await fetch(`/api/franchises/${selectedFranchise}/credentials/${id}`, { method: "DELETE" });
+      setCredentials(prev => prev.filter(c => c.id !== id));
+      toast({ title: "Deleted", description: "API key has been revoked" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to delete credential", variant: "destructive" });
+    }
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: `${label} copied to clipboard` });
+  };
+
+  const getStatusColor = (code: number) => {
+    if (code >= 200 && code < 300) return "text-emerald-600 bg-emerald-50";
+    if (code >= 400 && code < 500) return "text-amber-600 bg-amber-50";
+    return "text-red-600 bg-red-50";
+  };
+
+  return (
+    <Card className="premium-card border-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-blue-500/10" />
+      <CardHeader className="relative">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <motion.div
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg"
+                whileHover={{ rotate: 10, scale: 1.05 }}
+              >
+                <Key className="h-6 w-6 text-white" />
+              </motion.div>
+              <div>
+                <CardTitle className="font-serif text-2xl gradient-text">Partner API Portal</CardTitle>
+                <CardDescription>Franchise integration & API key management</CardDescription>
+              </div>
+            </div>
+          </div>
+          <Badge className="bg-purple-500/10 text-purple-700 border-purple-200">
+            <Shield className="h-3 w-3 mr-1" /> Secure API
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="relative space-y-6">
+        {/* Franchise Selector */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 border">
+          <Label className="text-sm font-medium mb-2 block">Select Franchise</Label>
+          <Select value={selectedFranchise || ""} onValueChange={setSelectedFranchise}>
+            <SelectTrigger className="w-full" data-testid="select-franchise">
+              <SelectValue placeholder="Choose a franchise to manage..." />
+            </SelectTrigger>
+            <SelectContent>
+              {franchises.map(f => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.territoryName} ({f.franchiseId}) - {f.franchiseTier}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {franchises.length === 0 && !isLoading && (
+            <p className="text-sm text-muted-foreground mt-2">No active franchises found. Create one in the Franchise section.</p>
+          )}
+        </div>
+
+        {!selectedFranchise && franchises.length > 0 && (
+          <div className="p-8 text-center rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 border border-dashed">
+            <Key className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-600 mb-2">Select a Franchise to Manage</h3>
+            <p className="text-sm text-muted-foreground">Choose a franchise from the dropdown above to view API keys, manage credentials, and access analytics.</p>
+          </div>
+        )}
+
+        {selectedFranchise && (
+          <>
+            {/* Bento Grid - API Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <motion.div
+                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200 hover-3d"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Key className="h-5 w-5 text-purple-600 mb-2" />
+                <p className="text-2xl font-bold text-purple-800">{credentials.length}</p>
+                <p className="text-xs text-purple-600">API Keys</p>
+              </motion.div>
+              <motion.div
+                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 border border-blue-200 hover-3d"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Activity className="h-5 w-5 text-blue-600 mb-2" />
+                <p className="text-2xl font-bold text-blue-800">
+                  {credentials.reduce((sum, c) => sum + (c.requestCount || 0), 0)}
+                </p>
+                <p className="text-xs text-blue-600">Total Requests</p>
+              </motion.div>
+              <motion.div
+                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 hover-3d"
+                whileHover={{ scale: 1.02 }}
+              >
+                <MapPin className="h-5 w-5 text-emerald-600 mb-2" />
+                <p className="text-2xl font-bold text-emerald-800">{locations.length}</p>
+                <p className="text-xs text-emerald-600">Locations</p>
+              </motion.div>
+              <motion.div
+                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 hover-3d"
+                whileHover={{ scale: 1.02 }}
+              >
+                <BarChart3 className="h-5 w-5 text-amber-600 mb-2" />
+                <p className="text-2xl font-bold text-amber-800">{apiLogs.length}</p>
+                <p className="text-xs text-amber-600">Recent Logs</p>
+              </motion.div>
+            </div>
+
+            {/* Secret Display Modal */}
+            {newSecret && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-amber-800">Save Your API Secret Now!</p>
+                    <p className="text-sm text-amber-700 mb-2">This secret will not be shown again.</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 p-2 rounded bg-white font-mono text-sm break-all" data-testid="text-new-secret">{newSecret}</code>
+                      <Button size="sm" variant="outline" onClick={() => copyToClipboard(newSecret, "API Secret")} data-testid="button-copy-secret">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => setNewSecret(null)}
+                      data-testid="button-dismiss-secret"
+                    >
+                      I've saved it
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <Accordion type="multiple" defaultValue={["credentials", "endpoints"]}>
+              {/* API Credentials */}
+              <AccordionItem value="credentials">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-5 w-5 text-purple-600" />
+                    <span className="font-semibold">API Credentials</span>
+                    <Badge variant="outline">{credentials.length}</Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    {credentials.map(cred => (
+                      <div key={cred.id} className="p-4 rounded-xl bg-white border shadow-sm">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{cred.name}</span>
+                              <Badge variant={cred.isActive ? "default" : "secondary"} className={cred.isActive ? "bg-emerald-500" : ""}>
+                                {cred.isActive ? "Active" : "Disabled"}
+                              </Badge>
+                              <Badge variant="outline">{cred.environment}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <code className="text-xs bg-slate-100 p-1 rounded" data-testid={`text-apikey-${cred.id}`}>{cred.apiKey}</code>
+                              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(cred.apiKey, "API Key")} data-testid={`button-copy-apikey-${cred.id}`}>
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {(cred.scopes || []).map(scope => (
+                                <Badge key={scope} variant="outline" className="text-xs">{scope}</Badge>
+                              ))}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {cred.requestCount} requests | Last used: {cred.lastUsedAt ? new Date(cred.lastUsedAt).toLocaleDateString() : "Never"}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleCredential(cred.id, cred.isActive)}
+                              data-testid={`toggle-cred-${cred.id}`}
+                            >
+                              {cred.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteCredential(cred.id)}
+                              data-testid={`delete-cred-${cred.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {showNewCredForm ? (
+                      <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Key Name</Label>
+                            <Input
+                              placeholder="e.g., Production Key"
+                              value={newCredName}
+                              onChange={e => setNewCredName(e.target.value)}
+                              data-testid="input-cred-name"
+                            />
+                          </div>
+                          <div>
+                            <Label>Environment</Label>
+                            <Select value={newCredEnv} onValueChange={setNewCredEnv}>
+                              <SelectTrigger data-testid="select-cred-env">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="production">Production</SelectItem>
+                                <SelectItem value="sandbox">Sandbox</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Permissions</Label>
+                            <div className="grid grid-cols-3 gap-2 mt-2">
+                              {allScopes.map(scope => (
+                                <label key={scope} className="flex items-center gap-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={newCredScopes.includes(scope)}
+                                    onChange={e => {
+                                      if (e.target.checked) {
+                                        setNewCredScopes(prev => [...prev, scope]);
+                                      } else {
+                                        setNewCredScopes(prev => prev.filter(s => s !== scope));
+                                      }
+                                    }}
+                                  />
+                                  {scope}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={createCredential} className="bg-purple-600" data-testid="button-create-cred">
+                              <Key className="h-4 w-4 mr-2" /> Create Key
+                            </Button>
+                            <Button variant="outline" onClick={() => setShowNewCredForm(false)}>Cancel</Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full border-dashed"
+                        onClick={() => setShowNewCredForm(true)}
+                        data-testid="button-new-credential"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Create New API Key
+                      </Button>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* API Endpoints Reference */}
+              <AccordionItem value="endpoints">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Code2 className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold">API Endpoints</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    {[
+                      { method: "GET", path: "/api/partner/v1/me", desc: "Get current franchise info", scope: "-" },
+                      { method: "GET", path: "/api/partner/v1/orders", desc: "List orders", scope: "orders:read" },
+                      { method: "POST", path: "/api/partner/v1/orders", desc: "Create order", scope: "orders:write" },
+                      { method: "GET", path: "/api/partner/v1/locations", desc: "List locations", scope: "locations:read" },
+                      { method: "GET", path: "/api/partner/v1/analytics", desc: "Get analytics", scope: "analytics:read" },
+                      { method: "GET", path: "/api/partner/v1/billing", desc: "Get billing info", scope: "billing:read" },
+                    ].map((ep, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white border">
+                        <Badge className={ep.method === "GET" ? "bg-emerald-500" : "bg-blue-500"}>{ep.method}</Badge>
+                        <code className="flex-1 text-sm">{ep.path}</code>
+                        <span className="text-sm text-muted-foreground">{ep.desc}</span>
+                        <Badge variant="outline" className="text-xs">{ep.scope}</Badge>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 p-4 rounded-xl bg-slate-900 text-slate-100">
+                    <p className="text-sm text-slate-400 mb-2">Example Request:</p>
+                    <pre className="text-xs overflow-x-auto">
+{`curl -X GET "https://yourapp.replit.app/api/partner/v1/orders" \\
+  -H "X-API-Key: bb_live_your_api_key_here" \\
+  -H "Content-Type: application/json"`}
+                    </pre>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Request Logs */}
+              <AccordionItem value="logs">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-orange-600" />
+                    <span className="font-semibold">Request Logs</span>
+                    <Badge variant="outline">{apiLogs.length}</Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ScrollArea className="h-64">
+                    <div className="space-y-2">
+                      {apiLogs.length === 0 ? (
+                        <p className="text-center py-8 text-muted-foreground">No API requests yet</p>
+                      ) : (
+                        apiLogs.map(log => (
+                          <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg bg-white border text-sm">
+                            <Badge className={log.method === "GET" ? "bg-emerald-500" : "bg-blue-500"} variant="secondary">
+                              {log.method}
+                            </Badge>
+                            <code className="flex-1 truncate">{log.endpoint}</code>
+                            <Badge className={getStatusColor(log.statusCode)}>{log.statusCode}</Badge>
+                            <span className="text-muted-foreground">{log.responseTimeMs}ms</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(log.createdAt).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </>
+        )}
+
+        {/* Quick Start Guide */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="h-5 w-5 text-indigo-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-indigo-800">Quick Start</p>
+              <ol className="text-sm text-indigo-700 mt-2 space-y-1 list-decimal list-inside">
+                <li>Select your franchise from the dropdown above</li>
+                <li>Create an API key with the scopes you need</li>
+                <li>Save your API secret immediately (it's only shown once!)</li>
+                <li>Use the X-API-Key header in all API requests</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevelopersPage() {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -3114,6 +3599,16 @@ export default function DevelopersPage() {
           className="mb-8"
         >
           <AnalyticsPanel />
+        </motion.div>
+
+        {/* Partner API Portal */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.098 }}
+          className="mb-8"
+        >
+          <PartnerApiPortal />
         </motion.div>
 
         <motion.div

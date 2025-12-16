@@ -3729,6 +3729,22 @@ export async function registerRoutes(
   app.post("/api/service-areas", async (req, res) => {
     try {
       const validated = insertServiceAreaSchema.parse(req.body);
+      
+      // Validate zip codes format (5 digits each)
+      if (validated.zipCodes && validated.zipCodes.length > 0) {
+        const invalidZips = validated.zipCodes.filter(z => !/^\d{5}$/.test(z));
+        if (invalidZips.length > 0) {
+          return res.status(400).json({ 
+            error: `Invalid zip codes: ${invalidZips.join(', ')}. Each must be 5 digits.` 
+          });
+        }
+      }
+      
+      // Validate name is not empty
+      if (!validated.name || validated.name.trim().length < 2) {
+        return res.status(400).json({ error: "Service area name must be at least 2 characters" });
+      }
+      
       const area = await storage.createServiceArea(validated);
       res.status(201).json(area);
     } catch (error: any) {
@@ -3781,6 +3797,11 @@ export async function registerRoutes(
       }
 
       const hc = parseInt(headcount as string);
+      
+      // Validate headcount is a positive integer within reasonable bounds
+      if (isNaN(hc) || hc < 1 || hc > 500) {
+        return res.status(400).json({ error: "headcount must be between 1 and 500" });
+      }
       let tier;
       
       if (serviceAreaId) {
@@ -3912,15 +3933,28 @@ export async function registerRoutes(
     try {
       const validated = insertOneOffOrderSchema.parse(req.body);
       
-      // Validate lead time for white glove
+      // Validate zip code format (5 digits)
+      if (validated.zipCode && !/^\d{5}$/.test(validated.zipCode)) {
+        return res.status(400).json({ error: "Invalid zip code format. Must be 5 digits." });
+      }
+      
+      // Validate lead time based on delivery type
+      const requestedDateTime = new Date(`${validated.requestedDate}T${validated.requestedTime}`);
+      const now = new Date();
+      const hoursUntilDelivery = (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
       if (validated.deliveryType === 'white_glove') {
-        const requestedDateTime = new Date(`${validated.requestedDate}T${validated.requestedTime}`);
-        const now = new Date();
-        const hoursUntilDelivery = (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-        
+        // White Glove requires 24-hour minimum lead time
         if (hoursUntilDelivery < 24) {
           return res.status(400).json({ 
             error: "White Glove service requires at least 24 hours advance notice" 
+          });
+        }
+      } else {
+        // Standard delivery requires 2-hour minimum lead time
+        if (hoursUntilDelivery < 2) {
+          return res.status(400).json({ 
+            error: "Orders require at least 2 hours advance notice" 
           });
         }
       }

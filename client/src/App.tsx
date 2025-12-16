@@ -34,6 +34,7 @@ import PartnerHub from "@/pages/partner";
 import OperationsPage from "@/pages/operations";
 import VendorMenuPage from "@/pages/vendor-menu";
 import OrderHistoryPage from "@/pages/order-history";
+import OneOffOrderPage from "@/pages/one-off-order";
 import { Footer } from "@/components/Footer";
 
 function Router() {
@@ -68,6 +69,7 @@ function Router() {
       <Route path="/order" component={VendorMenuPage} />
       <Route path="/order/:vendorId" component={VendorMenuPage} />
       <Route path="/order-history" component={OrderHistoryPage} />
+      <Route path="/one-off-order" component={OneOffOrderPage} />
       <Route component={NotFound} />
     </Switch>
   );

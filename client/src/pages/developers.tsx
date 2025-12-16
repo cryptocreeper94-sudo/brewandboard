@@ -89,6 +89,7 @@ import { BusinessCardPreview } from "@/components/BusinessCard";
 import { DocumentExportPanel } from "@/components/DocumentExport";
 import { AppEcosystemHub } from "@/components/AppEcosystemHub";
 import { SnippetBrowser } from "@/components/SnippetBrowser";
+import { ServiceAreaConfig } from "@/components/ServiceAreaConfig";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -4038,6 +4039,16 @@ export default function DevelopersPage() {
           className="mb-12"
         >
           <DarkwaveHubBrowser />
+        </motion.div>
+
+        {/* Service Area Configuration */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.299 }}
+          className="mb-12"
+        >
+          <ServiceAreaConfig />
         </motion.div>
 
         <motion.div

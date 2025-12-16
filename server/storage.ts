@@ -81,6 +81,12 @@ import {
   type InsertFranchiseLocation,
   type LoyaltyTransaction,
   type InsertLoyaltyTransaction,
+  type ServiceArea,
+  type InsertServiceArea,
+  type WhiteGlovePricingTier,
+  type InsertWhiteGlovePricingTier,
+  type OneOffOrder,
+  type InsertOneOffOrder,
   users,
   crmNotes,
   clients,
@@ -122,6 +128,9 @@ import {
   partnerApiCredentials,
   partnerApiLogs,
   franchiseLocations,
+  serviceAreas,
+  whiteGlovePricingTiers,
+  oneOffOrders,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -372,6 +381,29 @@ export interface IStorage {
     avgOrderValue: string;
     topVendors: Array<{ name: string; orders: number; revenue: number }>;
   }>;
+  
+  // Service Areas
+  getServiceAreas(ownerId?: string): Promise<ServiceArea[]>;
+  getServiceArea(id: string): Promise<ServiceArea | undefined>;
+  getServiceAreaByZip(zip: string): Promise<ServiceArea | undefined>;
+  createServiceArea(area: InsertServiceArea): Promise<ServiceArea>;
+  updateServiceArea(id: string, area: Partial<InsertServiceArea>): Promise<ServiceArea>;
+  deleteServiceArea(id: string): Promise<void>;
+  
+  // White Glove Pricing Tiers
+  getWhiteGlovePricingTiers(serviceAreaId?: string): Promise<WhiteGlovePricingTier[]>;
+  getWhiteGlovePricingTier(id: string): Promise<WhiteGlovePricingTier | undefined>;
+  getWhiteGlovePricingTierByHeadcount(serviceAreaId: string, headcount: number): Promise<WhiteGlovePricingTier | undefined>;
+  createWhiteGlovePricingTier(tier: InsertWhiteGlovePricingTier): Promise<WhiteGlovePricingTier>;
+  updateWhiteGlovePricingTier(id: string, tier: Partial<InsertWhiteGlovePricingTier>): Promise<WhiteGlovePricingTier>;
+  deleteWhiteGlovePricingTier(id: string): Promise<void>;
+  
+  // One-Off Orders
+  getOneOffOrders(options?: { userId?: string; status?: string; deliveryType?: string; startDate?: string; endDate?: string }): Promise<OneOffOrder[]>;
+  getOneOffOrder(id: string): Promise<OneOffOrder | undefined>;
+  createOneOffOrder(order: InsertOneOffOrder): Promise<OneOffOrder>;
+  updateOneOffOrder(id: string, order: Partial<InsertOneOffOrder>): Promise<OneOffOrder>;
+  deleteOneOffOrder(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2207,6 +2239,160 @@ export class DatabaseStorage implements IStorage {
       avgOrderValue: avgOrderValue.toFixed(2),
       topVendors,
     };
+  }
+
+  // ========================
+  // SERVICE AREAS
+  // ========================
+  async getServiceAreas(ownerId?: string): Promise<ServiceArea[]> {
+    if (ownerId) {
+      return db.select().from(serviceAreas)
+        .where(eq(serviceAreas.ownerId, ownerId))
+        .orderBy(desc(serviceAreas.createdAt));
+    }
+    return db.select().from(serviceAreas).orderBy(desc(serviceAreas.createdAt));
+  }
+
+  async getServiceArea(id: string): Promise<ServiceArea | undefined> {
+    const [area] = await db.select().from(serviceAreas).where(eq(serviceAreas.id, id));
+    return area || undefined;
+  }
+
+  async getServiceAreaByZip(zip: string): Promise<ServiceArea | undefined> {
+    const allAreas = await db.select().from(serviceAreas).where(eq(serviceAreas.isActive, true));
+    for (const area of allAreas) {
+      if (area.zipCodes && area.zipCodes.includes(zip)) {
+        return area;
+      }
+    }
+    return undefined;
+  }
+
+  async createServiceArea(area: InsertServiceArea): Promise<ServiceArea> {
+    const [newArea] = await db.insert(serviceAreas).values(area).returning();
+    return newArea;
+  }
+
+  async updateServiceArea(id: string, area: Partial<InsertServiceArea>): Promise<ServiceArea> {
+    const [updated] = await db.update(serviceAreas)
+      .set({ ...area, updatedAt: new Date() })
+      .where(eq(serviceAreas.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteServiceArea(id: string): Promise<void> {
+    await db.delete(serviceAreas).where(eq(serviceAreas.id, id));
+  }
+
+  // ========================
+  // WHITE GLOVE PRICING TIERS
+  // ========================
+  async getWhiteGlovePricingTiers(serviceAreaId?: string): Promise<WhiteGlovePricingTier[]> {
+    if (serviceAreaId) {
+      return db.select().from(whiteGlovePricingTiers)
+        .where(eq(whiteGlovePricingTiers.serviceAreaId, serviceAreaId))
+        .orderBy(whiteGlovePricingTiers.sortOrder);
+    }
+    return db.select().from(whiteGlovePricingTiers).orderBy(whiteGlovePricingTiers.sortOrder);
+  }
+
+  async getWhiteGlovePricingTier(id: string): Promise<WhiteGlovePricingTier | undefined> {
+    const [tier] = await db.select().from(whiteGlovePricingTiers).where(eq(whiteGlovePricingTiers.id, id));
+    return tier || undefined;
+  }
+
+  async getWhiteGlovePricingTierByHeadcount(serviceAreaId: string, headcount: number): Promise<WhiteGlovePricingTier | undefined> {
+    const tiers = await db.select().from(whiteGlovePricingTiers)
+      .where(and(
+        eq(whiteGlovePricingTiers.serviceAreaId, serviceAreaId),
+        eq(whiteGlovePricingTiers.isActive, true)
+      ))
+      .orderBy(whiteGlovePricingTiers.sortOrder);
+    
+    for (const tier of tiers) {
+      const min = tier.minHeadcount || 0;
+      const max = tier.maxHeadcount || 999;
+      if (headcount >= min && headcount <= max) {
+        return tier;
+      }
+    }
+    return tiers[0]; // Return first tier as fallback
+  }
+
+  async createWhiteGlovePricingTier(tier: InsertWhiteGlovePricingTier): Promise<WhiteGlovePricingTier> {
+    const [newTier] = await db.insert(whiteGlovePricingTiers).values(tier).returning();
+    return newTier;
+  }
+
+  async updateWhiteGlovePricingTier(id: string, tier: Partial<InsertWhiteGlovePricingTier>): Promise<WhiteGlovePricingTier> {
+    const [updated] = await db.update(whiteGlovePricingTiers)
+      .set(tier)
+      .where(eq(whiteGlovePricingTiers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteWhiteGlovePricingTier(id: string): Promise<void> {
+    await db.delete(whiteGlovePricingTiers).where(eq(whiteGlovePricingTiers.id, id));
+  }
+
+  // ========================
+  // ONE-OFF ORDERS
+  // ========================
+  async getOneOffOrders(options?: { 
+    userId?: string; 
+    status?: string; 
+    deliveryType?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<OneOffOrder[]> {
+    const conditions: any[] = [];
+    
+    if (options?.userId) {
+      conditions.push(eq(oneOffOrders.userId, options.userId));
+    }
+    if (options?.status) {
+      conditions.push(eq(oneOffOrders.status, options.status));
+    }
+    if (options?.deliveryType) {
+      conditions.push(eq(oneOffOrders.deliveryType, options.deliveryType));
+    }
+    if (options?.startDate) {
+      conditions.push(gte(oneOffOrders.requestedDate, options.startDate));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(oneOffOrders.requestedDate, options.endDate));
+    }
+
+    if (conditions.length > 0) {
+      return db.select().from(oneOffOrders)
+        .where(and(...conditions))
+        .orderBy(desc(oneOffOrders.createdAt));
+    }
+    return db.select().from(oneOffOrders).orderBy(desc(oneOffOrders.createdAt));
+  }
+
+  async getOneOffOrder(id: string): Promise<OneOffOrder | undefined> {
+    const [order] = await db.select().from(oneOffOrders).where(eq(oneOffOrders.id, id));
+    return order || undefined;
+  }
+
+  async createOneOffOrder(order: InsertOneOffOrder): Promise<OneOffOrder> {
+    const [newOrder] = await db.insert(oneOffOrders).values(order).returning();
+    return newOrder;
+  }
+
+  async updateOneOffOrder(id: string, order: Partial<InsertOneOffOrder>): Promise<OneOffOrder> {
+    const [updated] = await db.update(oneOffOrders)
+      .set({ ...order, updatedAt: new Date() })
+      .where(eq(oneOffOrders.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteOneOffOrder(id: string): Promise<void> {
+    await db.delete(oneOffOrders).where(eq(oneOffOrders.id, id));
   }
 }
 

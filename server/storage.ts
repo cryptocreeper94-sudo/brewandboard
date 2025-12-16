@@ -1656,7 +1656,14 @@ export class DatabaseStorage implements IStorage {
   // ========================
   // SHARED CODE SNIPPETS
   // ========================
-  async getSharedCodeSnippets(category?: string): Promise<SharedCodeSnippet[]> {
+  async getSharedCodeSnippets(category?: string, name?: string): Promise<SharedCodeSnippet[]> {
+    if (name) {
+      return await db
+        .select()
+        .from(sharedCodeSnippets)
+        .where(ilike(sharedCodeSnippets.name, `%${name}%`))
+        .orderBy(desc(sharedCodeSnippets.updatedAt));
+    }
     if (category) {
       return await db
         .select()
@@ -1665,6 +1672,14 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(sharedCodeSnippets.updatedAt));
     }
     return await db.select().from(sharedCodeSnippets).orderBy(desc(sharedCodeSnippets.updatedAt));
+  }
+
+  async getSharedCodeSnippetByName(name: string): Promise<SharedCodeSnippet | undefined> {
+    const [snippet] = await db
+      .select()
+      .from(sharedCodeSnippets)
+      .where(eq(sharedCodeSnippets.name, name));
+    return snippet || undefined;
   }
 
   async getSharedCodeSnippet(id: string): Promise<SharedCodeSnippet | undefined> {

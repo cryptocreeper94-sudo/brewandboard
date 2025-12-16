@@ -156,8 +156,22 @@ export function registerAppEcosystemRoutes(app: Express) {
   app.get('/api/ecosystem/snippets', async (req: Request, res: Response) => {
     try {
       const category = req.query.category as string | undefined;
-      const snippets = await storage.getSharedCodeSnippets(category);
+      const name = req.query.name as string | undefined;
+      const snippets = await storage.getSharedCodeSnippets(category, name);
       res.json(snippets);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get snippet by exact name
+  app.get('/api/ecosystem/snippets/by-name/:name', async (req: Request, res: Response) => {
+    try {
+      const snippet = await storage.getSharedCodeSnippetByName(req.params.name);
+      if (!snippet) {
+        return res.status(404).json({ error: 'Snippet not found' });
+      }
+      res.json(snippet);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

@@ -8,6 +8,11 @@ const app = express();
 
 // Serve attached_assets as static files (for vendor images, etc.)
 app.use('/attached_assets', express.static(path.resolve(process.cwd(), 'attached_assets')));
+
+// Serve ecosystem-registry.json for cross-app ecosystem integration
+app.get('/ecosystem-registry.json', (req, res) => {
+  res.sendFile(path.resolve(process.cwd(), 'ecosystem-registry.json'));
+});
 const httpServer = createServer(app);
 
 declare module "http" {

@@ -91,6 +91,7 @@ import { AppEcosystemHub } from "@/components/AppEcosystemHub";
 import { SnippetBrowser } from "@/components/SnippetBrowser";
 import { ServiceAreaConfig } from "@/components/ServiceAreaConfig";
 import { FranchiseAdminPanel } from "@/components/FranchiseAdminPanel";
+import { EcosystemGallery } from "@/components/EcosystemGallery";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -4032,11 +4033,21 @@ export default function DevelopersPage() {
           <SnippetBrowser />
         </motion.div>
 
-        {/* Darkwave Dev Hub Browser */}
+        {/* Ecosystem Components Gallery - Full Width Visual Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.298 }}
+          className="mb-12"
+        >
+          <EcosystemGallery />
+        </motion.div>
+
+        {/* Darkwave Dev Hub Browser - Code Snippets */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2985 }}
           className="mb-12"
         >
           <DarkwaveHubBrowser />

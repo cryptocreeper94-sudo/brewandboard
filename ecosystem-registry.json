@@ -1,0 +1,330 @@
+{
+  "name": "Darkwave Developers Hub",
+  "version": "1.0.0",
+  "description": "Shared ecosystem registry for all Darkwave Studios applications",
+  "lastUpdated": "2024-12-20T00:00:00Z",
+  "baseApp": "brew-and-board",
+  "modules": {
+    "authentication": {
+      "id": "auth-replit-social",
+      "name": "Replit Social Authentication",
+      "description": "Complete authentication system with Replit OAuth (Google, GitHub, Apple) plus PIN fallback for admins/partners",
+      "version": "2.0.0",
+      "category": "security",
+      "language": "typescript",
+      "framework": "express",
+      "files": {
+        "server": [
+          "server/authRoutes.ts",
+          "server/replit_integrations/auth/index.ts"
+        ],
+        "client": [
+          "client/src/hooks/useAuth.ts",
+          "client/src/components/AuthProvider.tsx"
+        ],
+        "shared": [
+          "shared/schema.ts (users, sessions tables)"
+        ]
+      },
+      "dependencies": [
+        "express-session",
+        "openid-client",
+        "connect-pg-simple"
+      ],
+      "features": [
+        "Google OAuth via Replit",
+        "GitHub OAuth via Replit", 
+        "Apple OAuth via Replit",
+        "PIN-based admin login",
+        "Session persistence",
+        "Role-based access control"
+      ],
+      "setupInstructions": "See ORBIT_ECOSYSTEM_HANDOFF.md for integration steps",
+      "isPublic": true,
+      "usageCount": 3
+    },
+    "blockchain-hallmarks": {
+      "id": "solana-hallmarks",
+      "name": "Solana Blockchain Hallmarks",
+      "description": "Document verification and licensing system using Solana mainnet for immutable timestamped records",
+      "version": "1.5.0",
+      "category": "blockchain",
+      "language": "typescript",
+      "framework": "express",
+      "files": {
+        "server": [
+          "server/hallmarkRoutes.ts",
+          "server/solanaService.ts"
+        ],
+        "client": [
+          "client/src/components/HallmarkVerifier.tsx"
+        ]
+      },
+      "dependencies": [
+        "@solana/web3.js",
+        "bs58"
+      ],
+      "features": [
+        "Company hallmarks for official releases",
+        "Subscriber hallmarks for personalized docs",
+        "Solana mainnet verification",
+        "Transaction signature tracking",
+        "Hallmark lookup and verification"
+      ],
+      "requiredSecrets": ["SOLANA_WALLET_PRIVATE_KEY"],
+      "isPublic": true,
+      "usageCount": 2
+    },
+    "franchise-system": {
+      "id": "multi-tenant-franchise",
+      "name": "Multi-Tenant Franchise System",
+      "description": "Complete franchise licensing with data isolation, white-label branding, and regional management",
+      "version": "1.0.0",
+      "category": "business",
+      "language": "typescript",
+      "framework": "express",
+      "files": {
+        "server": [
+          "server/routes.ts (franchise endpoints)",
+          "server/storage.ts (franchise methods)"
+        ],
+        "client": [
+          "client/src/components/FranchiseAdminPanel.tsx"
+        ],
+        "shared": [
+          "shared/schema.ts (franchises, franchiseLocations tables)"
+        ]
+      },
+      "dependencies": [
+        "drizzle-orm"
+      ],
+      "features": [
+        "Franchise CRUD operations",
+        "White-label branding (logo, colors, fonts)",
+        "Custom domain support",
+        "Data isolation by franchiseId",
+        "Service area management",
+        "Staff role management",
+        "Analytics per franchise"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    },
+    "email-notifications": {
+      "id": "resend-emails",
+      "name": "Resend Email Service",
+      "description": "Branded transactional emails using Resend API with HTML templates",
+      "version": "1.0.0",
+      "category": "communication",
+      "language": "typescript",
+      "framework": "express",
+      "files": {
+        "server": [
+          "server/routes.ts (contact, order notification endpoints)"
+        ]
+      },
+      "dependencies": [
+        "resend"
+      ],
+      "features": [
+        "Branded HTML email templates",
+        "Contact form submissions",
+        "Order confirmations",
+        "Vendor notifications"
+      ],
+      "requiredSecrets": ["RESEND_API_KEY"],
+      "isPublic": true,
+      "usageCount": 2
+    },
+    "document-scanner": {
+      "id": "ocr-scanner",
+      "name": "Universal Document Scanner",
+      "description": "OCR-powered document scanning with PDF generation and sharing",
+      "version": "1.0.0",
+      "category": "utilities",
+      "language": "typescript",
+      "framework": "react",
+      "files": {
+        "client": [
+          "client/src/pages/scan.tsx"
+        ]
+      },
+      "dependencies": [
+        "tesseract.js",
+        "jspdf"
+      ],
+      "features": [
+        "Camera capture",
+        "OCR text extraction",
+        "PDF generation",
+        "Share/download options"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    },
+    "operations-center": {
+      "id": "ops-control",
+      "name": "Operations Control Center",
+      "description": "Real-time order tracking dashboard with driver assignment and GPS timeline events",
+      "version": "1.0.0",
+      "category": "operations",
+      "language": "typescript",
+      "framework": "react",
+      "files": {
+        "server": [
+          "server/routes.ts (operations endpoints)"
+        ],
+        "client": [
+          "client/src/pages/operations.tsx"
+        ]
+      },
+      "features": [
+        "Live order board",
+        "Status workflow management",
+        "Driver assignment",
+        "GPS timeline events",
+        "30-second auto-refresh",
+        "Region filtering"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    },
+    "partner-hub": {
+      "id": "partner-portal",
+      "name": "Partner Hub Portal",
+      "description": "Partner access portal with bug reporting, welcome modals, and preview mode",
+      "version": "1.0.0",
+      "category": "business",
+      "language": "typescript",
+      "framework": "react",
+      "files": {
+        "client": [
+          "client/src/pages/partners.tsx"
+        ],
+        "shared": [
+          "shared/schema.ts (partnerAccounts, errorReports tables)"
+        ]
+      },
+      "features": [
+        "3-digit PIN access",
+        "Personalized welcome modals",
+        "Bug reporting system",
+        "Preview mode (data not saved)",
+        "Forced PIN change on first login"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    },
+    "stripe-payments": {
+      "id": "stripe-integration",
+      "name": "Stripe Payment Processing",
+      "description": "Subscription billing and one-time payments via Stripe",
+      "version": "1.0.0",
+      "category": "payments",
+      "language": "typescript",
+      "framework": "express",
+      "files": {
+        "server": [
+          "server/routes.ts (stripe endpoints)"
+        ]
+      },
+      "dependencies": [
+        "stripe"
+      ],
+      "features": [
+        "Subscription tiers",
+        "One-time payments",
+        "Webhook handling",
+        "Customer portal"
+      ],
+      "requiredSecrets": ["STRIPE_SECRET_KEY"],
+      "isPublic": true,
+      "usageCount": 2
+    },
+    "crm-portfolio": {
+      "id": "crm-system",
+      "name": "CRM Portfolio System",
+      "description": "Client relationship management with industry templates, voice notes, and freeform notes",
+      "version": "1.0.0",
+      "category": "business",
+      "language": "typescript",
+      "framework": "react",
+      "files": {
+        "client": [
+          "client/src/pages/portfolio.tsx"
+        ],
+        "shared": [
+          "shared/schema.ts (clients, portfolioNotes tables)"
+        ]
+      },
+      "features": [
+        "Industry-specific templates",
+        "Freeform notes",
+        "Voice recording",
+        "Client profiles",
+        "Meeting history"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    },
+    "version-manager": {
+      "id": "auto-version",
+      "name": "Automated Version Manager",
+      "description": "Auto-version bumping with Solana hallmark stamps on publish",
+      "version": "1.0.0",
+      "category": "devops",
+      "language": "typescript",
+      "framework": "node",
+      "files": {
+        "scripts": [
+          "scripts/bump-version.ts",
+          "scripts/build.ts"
+        ],
+        "config": [
+          "version.json"
+        ]
+      },
+      "features": [
+        "Patch/minor/major version bumps",
+        "Build hash generation",
+        "Solana mainnet stamping",
+        "Auto-publish integration"
+      ],
+      "isPublic": true,
+      "usageCount": 1
+    }
+  },
+  "connectedApps": [
+    {
+      "id": "orbit-staffing",
+      "name": "ORBIT Staffing",
+      "baseUrl": "https://orbit-staffing.replit.app",
+      "status": "active",
+      "permissions": ["read:code", "write:code", "read:data", "write:data"]
+    },
+    {
+      "id": "orbit-payroll",
+      "name": "ORBIT Payroll",
+      "baseUrl": "https://orbit-payroll.replit.app",
+      "status": "active",
+      "permissions": ["read:code", "write:code", "sync:all"]
+    },
+    {
+      "id": "orbit-crm",
+      "name": "ORBIT CRM",
+      "baseUrl": "https://orbit-crm.replit.app",
+      "status": "pending",
+      "permissions": ["read:code", "read:clients"]
+    }
+  ],
+  "categories": [
+    {"id": "security", "name": "Security & Auth", "icon": "Shield"},
+    {"id": "blockchain", "name": "Blockchain", "icon": "Link"},
+    {"id": "business", "name": "Business Tools", "icon": "Briefcase"},
+    {"id": "communication", "name": "Communication", "icon": "Mail"},
+    {"id": "utilities", "name": "Utilities", "icon": "Wrench"},
+    {"id": "operations", "name": "Operations", "icon": "Activity"},
+    {"id": "payments", "name": "Payments", "icon": "CreditCard"},
+    {"id": "devops", "name": "DevOps", "icon": "Terminal"}
+  ]
+}

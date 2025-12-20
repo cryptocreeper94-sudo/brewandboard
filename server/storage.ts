@@ -2164,9 +2164,9 @@ export class DatabaseStorage implements IStorage {
     const franchise = await this.getFranchise(franchiseId);
     if (!franchise) return [];
 
-    let query = db.select().from(scheduledOrders).$dynamic();
+    // Always filter by franchiseId for multi-tenant isolation
+    const conditions: any[] = [eq(scheduledOrders.franchiseId, franchiseId)];
     
-    const conditions: any[] = [];
     if (options?.status) {
       conditions.push(eq(scheduledOrders.status, options.status));
     }
@@ -2177,11 +2177,9 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(scheduledOrders.scheduledDate, options.endDate));
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    return query.orderBy(desc(scheduledOrders.createdAt));
+    return db.select().from(scheduledOrders)
+      .where(and(...conditions))
+      .orderBy(desc(scheduledOrders.createdAt));
   }
 
   async getFranchiseAnalytics(

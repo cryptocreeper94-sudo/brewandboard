@@ -342,6 +342,9 @@ export const scheduledOrders = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: varchar("user_id").notNull().references(() => users.id),
     
+    // Franchise association (null = HQ direct order)
+    franchiseId: varchar("franchise_id"),
+    
     // Optional links to CRM
     clientId: varchar("client_id").references(() => clients.id),
     meetingId: varchar("meeting_id").references(() => crmMeetings.id),
@@ -414,6 +417,7 @@ export const scheduledOrders = pgTable(
     dateIdx: index("idx_scheduled_orders_date").on(table.scheduledDate),
     statusIdx: index("idx_scheduled_orders_status").on(table.status),
     regionIdx: index("idx_scheduled_orders_region").on(table.regionId),
+    franchiseIdx: index("idx_scheduled_orders_franchise").on(table.franchiseId),
   })
 );
 

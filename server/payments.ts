@@ -134,10 +134,6 @@ export function registerPaymentRoutes(app: Express) {
           },
           quantity: 1
         }],
-        automatic_tax: { enabled: true },
-        shipping_address_collection: {
-          allowed_countries: ['US']
-        },
         success_url: successUrl || `${req.headers.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancelUrl || `${req.headers.origin}/schedule`,
         metadata: { userId, orderId: orderId || '', type: 'order' }

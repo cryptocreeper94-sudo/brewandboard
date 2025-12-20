@@ -3480,8 +3480,21 @@ export async function registerRoutes(
   app.get("/api/scheduled-orders", async (req, res) => {
     try {
       const { userId, status } = req.query;
-      // Return empty for active orders - no active deliveries
-      res.json([]);
+      if (userId) {
+        const orders = await storage.getScheduledOrders(userId as string);
+        if (status) {
+          const filtered = orders.filter(o => o.status === status);
+          return res.json(filtered);
+        }
+        return res.json(orders);
+      }
+      // If no userId, return all orders (admin view)
+      const allOrders = await storage.getAllScheduledOrders();
+      if (status) {
+        const filtered = allOrders.filter(o => o.status === status);
+        return res.json(filtered);
+      }
+      res.json(allOrders);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

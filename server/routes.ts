@@ -1546,6 +1546,93 @@ export async function registerRoutes(
     }
   });
 
+  // Update franchise (including branding)
+  app.patch("/api/franchises/:id", async (req, res) => {
+    try {
+      const franchise = await storage.updateFranchise(req.params.id, req.body);
+      res.json(franchise);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Get franchise staff (multi-tenant)
+  app.get("/api/franchises/:id/staff", async (req, res) => {
+    try {
+      const { role } = req.query;
+      const staff = await storage.getUsersByFranchise(req.params.id, { 
+        role: role as string | undefined 
+      });
+      res.json(staff);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise clients (multi-tenant)
+  app.get("/api/franchises/:id/clients", async (req, res) => {
+    try {
+      const clientList = await storage.getClientsByFranchise(req.params.id);
+      res.json(clientList);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise regions (multi-tenant)
+  app.get("/api/franchises/:id/regions", async (req, res) => {
+    try {
+      const regionList = await storage.getRegionsByFranchise(req.params.id);
+      res.json(regionList);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise orders - scheduled orders (multi-tenant)
+  app.get("/api/franchises/:id/orders", async (req, res) => {
+    try {
+      const { status, startDate, endDate } = req.query;
+      const orders = await storage.getOrdersByFranchise(req.params.id, {
+        status: status as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined
+      });
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise one-off orders (multi-tenant)
+  app.get("/api/franchises/:id/one-off-orders", async (req, res) => {
+    try {
+      const { status, startDate, endDate } = req.query;
+      const orders = await storage.getOneOffOrdersByFranchise(req.params.id, {
+        status: status as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined
+      });
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise analytics (multi-tenant dashboard)
+  app.get("/api/franchises/:id/analytics", async (req, res) => {
+    try {
+      const { range } = req.query;
+      const analytics = await storage.getFranchiseAnalytics(
+        req.params.id, 
+        range as string | undefined
+      );
+      res.json(analytics);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ========================
   // VENDOR APPLICATION ROUTES
   // ========================
@@ -2024,6 +2111,77 @@ export async function registerRoutes(
       
       const stats = await storage.getRegionStats(session.regionId);
       res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get my franchise info (authenticated - for regional managers linked to a franchise)
+  app.get("/api/regional/my-franchise", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (!session.regionId) {
+        return res.status(404).json({ error: "No region assigned" });
+      }
+      
+      // Get region and check if it's linked to a franchise
+      const region = await storage.getRegion(session.regionId);
+      if (!region?.franchiseId) {
+        return res.status(404).json({ error: "No franchise linked to this region" });
+      }
+      
+      const franchise = await storage.getFranchise(region.franchiseId);
+      if (!franchise) {
+        return res.status(404).json({ error: "Franchise not found" });
+      }
+      
+      // Return franchise info with branding for white-label experience
+      const f = franchise as any;
+      res.json({
+        franchise,
+        branding: {
+          logoUrl: f.logoUrl,
+          primaryColor: f.primaryColor,
+          secondaryColor: f.secondaryColor,
+          accentColor: f.accentColor,
+          fontFamily: f.fontFamily,
+          heroText: f.heroText,
+          customDomain: f.customDomain
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get franchise analytics for my region (authenticated - tenant-scoped)
+  app.get("/api/regional/my-franchise-analytics", async (req, res) => {
+    try {
+      const session = await verifyRegionalSession(req);
+      if (!session) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (!session.regionId) {
+        return res.status(404).json({ error: "No region assigned" });
+      }
+      
+      // Get region and check if it's linked to a franchise
+      const region = await storage.getRegion(session.regionId);
+      if (!region?.franchiseId) {
+        return res.status(404).json({ error: "No franchise linked to this region" });
+      }
+      
+      const { range } = req.query;
+      const analytics = await storage.getFranchiseAnalytics(
+        region.franchiseId,
+        range as string | undefined
+      );
+      res.json(analytics);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

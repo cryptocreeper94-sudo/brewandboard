@@ -372,7 +372,11 @@ export interface IStorage {
   updateFranchiseLocation(id: string, location: Partial<InsertFranchiseLocation>): Promise<FranchiseLocation>;
   deleteFranchiseLocation(id: string): Promise<void>;
   
-  // Franchise-scoped order queries
+  // Franchise-scoped queries (multi-tenant isolation)
+  getUsersByFranchise(franchiseId: string, options?: { role?: string }): Promise<User[]>;
+  getClientsByFranchise(franchiseId: string): Promise<Client[]>;
+  getRegionsByFranchise(franchiseId: string): Promise<Region[]>;
+  getOneOffOrdersByFranchise(franchiseId: string, options?: { status?: string; startDate?: string; endDate?: string }): Promise<OneOffOrder[]>;
   getOrdersByFranchise(franchiseId: string, options?: { status?: string; startDate?: string; endDate?: string }): Promise<ScheduledOrder[]>;
   getFranchiseAnalytics(franchiseId: string, range?: string): Promise<{
     totalOrders: number;
@@ -2239,6 +2243,56 @@ export class DatabaseStorage implements IStorage {
       avgOrderValue: avgOrderValue.toFixed(2),
       topVendors,
     };
+  }
+
+  async getUsersByFranchise(franchiseId: string, options?: { role?: string }): Promise<User[]> {
+    let query = db.select().from(users)
+      .where(eq(users.franchiseId, franchiseId))
+      .$dynamic();
+    
+    if (options?.role) {
+      query = query.where(
+        and(
+          eq(users.franchiseId, franchiseId),
+          eq(users.franchiseRole, options.role)
+        )
+      );
+    }
+    
+    return query;
+  }
+
+  async getClientsByFranchise(franchiseId: string): Promise<Client[]> {
+    return db.select().from(clients)
+      .where(eq(clients.franchiseId, franchiseId))
+      .orderBy(desc(clients.createdAt));
+  }
+
+  async getRegionsByFranchise(franchiseId: string): Promise<Region[]> {
+    return db.select().from(regions)
+      .where(eq(regions.franchiseId, franchiseId))
+      .orderBy(regions.name);
+  }
+
+  async getOneOffOrdersByFranchise(
+    franchiseId: string,
+    options?: { status?: string; startDate?: string; endDate?: string }
+  ): Promise<OneOffOrder[]> {
+    const conditions: any[] = [eq(oneOffOrders.franchiseId, franchiseId)];
+    
+    if (options?.status) {
+      conditions.push(eq(oneOffOrders.status, options.status));
+    }
+    if (options?.startDate) {
+      conditions.push(gte(oneOffOrders.requestedDate, options.startDate));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(oneOffOrders.requestedDate, options.endDate));
+    }
+
+    return db.select().from(oneOffOrders)
+      .where(and(...conditions))
+      .orderBy(desc(oneOffOrders.createdAt));
   }
 
   // ========================

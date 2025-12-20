@@ -90,6 +90,7 @@ import { DocumentExportPanel } from "@/components/DocumentExport";
 import { AppEcosystemHub } from "@/components/AppEcosystemHub";
 import { SnippetBrowser } from "@/components/SnippetBrowser";
 import { ServiceAreaConfig } from "@/components/ServiceAreaConfig";
+import { FranchiseAdminPanel } from "@/components/FranchiseAdminPanel";
 
 interface HallmarkStats {
   totalCompanyHallmarks: number;
@@ -4049,6 +4050,16 @@ export default function DevelopersPage() {
           className="mb-12"
         >
           <ServiceAreaConfig />
+        </motion.div>
+
+        {/* Franchise Administration */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2995 }}
+          className="mb-12"
+        >
+          <FranchiseAdminPanel />
         </motion.div>
 
         <motion.div

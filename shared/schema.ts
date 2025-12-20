@@ -16,6 +16,10 @@ export const users = pgTable("users", {
   company: text("company"),
   phone: text("phone"),
   pin: text("pin").unique(),
+  // Franchise association (null = direct B&B customer)
+  franchiseId: varchar("franchise_id"),
+  // User role within franchise
+  franchiseRole: varchar("franchise_role", { length: 30 }), // 'owner', 'manager', 'staff', 'customer'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -75,6 +79,8 @@ export const clients = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: varchar("user_id").notNull().references(() => users.id),
+    // Franchise association (null = HQ/direct customer)
+    franchiseId: varchar("franchise_id"),
 
     // Basic Info
     name: varchar("name", { length: 255 }).notNull(),
@@ -121,6 +127,7 @@ export const clients = pgTable(
     userIdx: index("idx_clients_user_id").on(table.userId),
     nameIdx: index("idx_clients_name").on(table.name),
     companyIdx: index("idx_clients_company").on(table.company),
+    franchiseIdx: index("idx_clients_franchise").on(table.franchiseId),
   })
 );
 
@@ -891,6 +898,18 @@ export const franchises = pgTable(
     totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).default("0"),
     activeVendors: integer("active_vendors").default(0),
     
+    // WHITE-LABEL BRANDING
+    brandingLogoUrl: text("branding_logo_url"),
+    brandingPrimaryColor: varchar("branding_primary_color", { length: 20 }).default("#5c4033"),
+    brandingSecondaryColor: varchar("branding_secondary_color", { length: 20 }).default("#2d1810"),
+    brandingAccentColor: varchar("branding_accent_color", { length: 20 }).default("#d4a574"),
+    brandingFontFamily: varchar("branding_font_family", { length: 100 }).default("Playfair Display"),
+    brandingHeroTitle: varchar("branding_hero_title", { length: 255 }),
+    brandingHeroSubtitle: varchar("branding_hero_subtitle", { length: 500 }),
+    brandingTagline: varchar("branding_tagline", { length: 255 }),
+    brandingCustomDomain: varchar("branding_custom_domain", { length: 255 }),
+    brandingFaviconUrl: text("branding_favicon_url"),
+    
     // DATES
     franchiseStartDate: timestamp("franchise_start_date"),
     franchiseRenewalDate: timestamp("franchise_renewal_date"),
@@ -1241,6 +1260,9 @@ export const regions = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     
+    // Franchise ownership (null = HQ-managed)
+    franchiseId: varchar("franchise_id").references(() => franchises.id),
+    
     name: varchar("name", { length: 255 }).notNull(),
     code: varchar("code", { length: 10 }).notNull().unique(), // e.g., "TN-NASH", "TX-DAL"
     
@@ -1260,6 +1282,7 @@ export const regions = pgTable(
   (table) => ({
     codeIdx: index("idx_regions_code").on(table.code),
     stateIdx: index("idx_regions_state").on(table.state),
+    franchiseIdx: index("idx_regions_franchise").on(table.franchiseId),
   })
 );
 
@@ -2567,6 +2590,9 @@ export const oneOffOrders = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     
+    // Franchise association (null = HQ direct order)
+    franchiseId: varchar("franchise_id"),
+    
     // Customer info
     userId: varchar("user_id").references(() => users.id),
     guestEmail: varchar("guest_email", { length: 255 }), // For non-registered users
@@ -2651,6 +2677,7 @@ export const oneOffOrders = pgTable(
     dateIdx: index("idx_one_off_orders_date").on(table.requestedDate),
     statusIdx: index("idx_one_off_orders_status").on(table.status),
     typeIdx: index("idx_one_off_orders_type").on(table.deliveryType),
+    franchiseIdx: index("idx_one_off_orders_franchise").on(table.franchiseId),
   })
 );
 

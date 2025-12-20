@@ -37,6 +37,7 @@ import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
 import { registerPartnerApiRoutes } from "./partnerApiRoutes";
 import { registerAuthRoutes } from "./authRoutes";
+import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
 
@@ -45,7 +46,11 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Register authentication routes (Firebase + PIN)
+  // Setup Replit Auth (MUST be before other routes)
+  await setupAuth(app);
+  registerReplitAuthRoutes(app);
+  
+  // Register additional PIN authentication routes
   registerAuthRoutes(app);
   
   // Register payment routes (Stripe + Coinbase Commerce)
@@ -370,9 +375,11 @@ export async function registerRoutes(
       const validatedData = insertUserSchema.parse(req.body);
       
       // Check if email already exists
-      const existingEmail = await storage.getUserByEmail(validatedData.email);
-      if (existingEmail) {
-        return res.status(400).json({ error: "Email already registered" });
+      if (validatedData.email) {
+        const existingEmail = await storage.getUserByEmail(validatedData.email);
+        if (existingEmail) {
+          return res.status(400).json({ error: "Email already registered" });
+        }
       }
       
       // Check if PIN already exists

@@ -4,21 +4,26 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ========================
-// USERS (Business Account Holders)
+// USERS (Business Account Holders + Replit Auth)
 // ========================
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
-  name: text("name").notNull(),
+  email: text("email").unique(),
+  name: text("name"),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   company: text("company"),
   phone: text("phone"),
   pin: text("pin").unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -2707,3 +2712,6 @@ export const MIDDLE_TN_COUNTIES = [
   'Wilson',
   'Sumner',
 ] as const;
+
+// Re-export auth models
+export * from "./models/auth";

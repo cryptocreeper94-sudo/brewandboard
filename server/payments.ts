@@ -57,8 +57,8 @@ export function registerPaymentRoutes(app: Express) {
         stripeCustomerId = existingSub.stripeCustomerId;
       } else {
         const customer = await stripe.customers.create({
-          email: user.email,
-          name: user.name,
+          email: user.email || undefined,
+          name: user.name || undefined,
           metadata: { userId: user.id }
         });
         stripeCustomerId = customer.id;
@@ -120,7 +120,7 @@ export function registerPaymentRoutes(app: Express) {
       const amountInCents = Math.round(parseFloat(amount) * 100);
 
       const session = await stripe.checkout.sessions.create({
-        customer_email: user.email,
+        customer_email: user.email || undefined,
         mode: 'payment',
         payment_method_types: ['card'],
         line_items: [{

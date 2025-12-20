@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coffee, Clock, MapPin, Star, ArrowRight, Sparkles, X, CheckCircle } from "lucide-react";
+import { Coffee, Clock, MapPin, Star, ArrowRight, Sparkles, X, CheckCircle, LogIn } from "lucide-react";
 import { COFFEE_SHOPS } from "@/lib/mock-data";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 
 import baristaImage from "@assets/generated_images/professional_barista.png";
 import latteArtImage from "@assets/generated_images/artisan_latte_art.png";
@@ -51,6 +52,7 @@ interface FeatureDetails {
 export default function LandingPage() {
   const [, setLocation] = useLocation();
   const [selectedFeature, setSelectedFeature] = useState<FeatureDetails | null>(null);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const featureDetails: Record<string, FeatureDetails> = {
     delivery: {
@@ -191,7 +193,17 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            className="flex items-center gap-2"
           >
+            <Button
+              onClick={() => setShowLoginDialog(true)}
+              variant="ghost"
+              className="text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-full px-3 md:px-4 h-9 md:h-10 text-sm"
+              data-testid="button-sign-in"
+            >
+              <LogIn className="mr-1.5 h-4 w-4" />
+              Sign In
+            </Button>
             <Button
               onClick={handleExplore}
               className="text-white rounded-full px-4 md:px-6 h-9 md:h-10 text-sm shine-effect"
@@ -783,6 +795,69 @@ export default function LandingPage() {
               </div>
             </motion.div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="max-w-md p-0 overflow-hidden border-0 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Header */}
+            <div 
+              className="relative p-6 pb-4"
+              style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 100%)' }}
+            >
+              <button
+                onClick={() => setShowLoginDialog(false)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                data-testid="button-close-login"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 100%)' }}>
+                  <Coffee className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 
+                    className="text-xl font-bold text-white"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Welcome Back
+                  </h2>
+                  <p className="text-amber-400/80 text-sm">Sign in to your account</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Login Options */}
+            <div className="p-6 bg-white">
+              <SocialLoginButtons 
+                showPinLogin={true}
+                onSuccess={() => setShowLoginDialog(false)}
+              />
+
+              <div className="mt-6 text-center">
+                <p className="text-gray-500 text-sm">
+                  New to Brew & Board?{' '}
+                  <button
+                    onClick={() => {
+                      setShowLoginDialog(false);
+                      handleExplore();
+                    }}
+                    className="text-[#5c4033] font-medium hover:underline"
+                    data-testid="link-explore-guest"
+                  >
+                    Explore as Guest
+                  </button>
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>

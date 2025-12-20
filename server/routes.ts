@@ -36,6 +36,7 @@ import { registerPaymentRoutes } from "./payments";
 import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
 import { registerPartnerApiRoutes } from "./partnerApiRoutes";
+import { registerAuthRoutes } from "./authRoutes";
 import Parser from "rss-parser";
 import { Resend } from "resend";
 
@@ -43,6 +44,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Register authentication routes (Firebase + PIN)
+  registerAuthRoutes(app);
   
   // Register payment routes (Stripe + Coinbase Commerce)
   registerPaymentRoutes(app);
@@ -3931,7 +3935,7 @@ export async function registerRoutes(
   // Create one-off order
   app.post("/api/one-off-orders", async (req, res) => {
     try {
-      const validated = insertOneOffOrderSchema.parse(req.body);
+      const validated = insertOneOffOrderSchema.parse(req.body) as any;
       
       // Validate zip code format (5 digits)
       if (validated.zipCode && !/^\d{5}$/.test(validated.zipCode)) {

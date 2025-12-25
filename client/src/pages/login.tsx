@@ -683,6 +683,10 @@ export default function LandingPage() {
               <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-partner-login">Partner</span>
             </Link>
             <span className="text-amber-600/40">•</span>
+            <Link href="/admin-view">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-admin-login">Admin</span>
+            </Link>
+            <span className="text-amber-600/40">•</span>
             <Link href="/regional">
               <span className="hover:text-amber-300 cursor-pointer transition-colors font-medium" data-testid="link-rm-login">RM</span>
             </Link>

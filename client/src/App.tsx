@@ -31,6 +31,7 @@ import VendorsPage from "@/pages/vendors";
 import MeetingPresentationsPage from "@/pages/meeting-presentations";
 import PresentationViewerPage from "@/pages/presentation-viewer";
 import PartnerHub from "@/pages/partner";
+import AdminViewPage from "@/pages/admin-view";
 import OperationsPage from "@/pages/operations";
 import VendorMenuPage from "@/pages/vendor-menu";
 import OrderHistoryPage from "@/pages/order-history";
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/meeting-presentations" component={MeetingPresentationsPage} />
       <Route path="/presentation/:link" component={PresentationViewerPage} />
       <Route path="/partner" component={PartnerHub} />
+      <Route path="/admin-view" component={AdminViewPage} />
       <Route path="/operations" component={OperationsPage} />
       <Route path="/order" component={VendorMenuPage} />
       <Route path="/order/:vendorId" component={VendorMenuPage} />

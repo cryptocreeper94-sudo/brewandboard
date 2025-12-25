@@ -76,43 +76,8 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     
-    // Ryan Admin PIN - view-only admin access
-    // Accept both initial PIN (7777) and personal PIN after change
-    const ryanPersonalPin = localStorage.getItem("ryan_personal_pin");
-    const isRyanLogin = loginPin === "7777" || (ryanPersonalPin && loginPin === ryanPersonalPin);
-    
-    if (isRyanLogin) {
-      const ryanUser = {
-        id: "ryan-admin",
-        email: "ryan@brewandboard.coffee",
-        businessName: "Brew & Board",
-        contactName: "Ryan",
-        name: "Ryan",
-        isAdmin: true,
-        isViewOnly: true,
-        needsPinChange: !localStorage.getItem("ryan_pin_changed")
-      };
-      localStorage.setItem("coffee_user", JSON.stringify(ryanUser));
-      localStorage.setItem("coffee_admin_auth", "true");
-      localStorage.setItem("user_name", "Ryan");
-      localStorage.removeItem("is_guest");
-      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-      localStorage.setItem("coffee_session_expiry", String(Date.now() + thirtyDays));
-      
-      // Check if first login - show welcome modal
-      if (!localStorage.getItem("ryan_welcomed")) {
-        localStorage.setItem("ryan_show_welcome", "true");
-      }
-      
-      toast({
-        title: "Welcome, Ryan!",
-        description: "Admin access granted. View-only mode enabled.",
-      });
-      onClose();
-      setLocation("/admin-view");
-      setIsLoading(false);
-      return;
-    }
+    // Ryan Admin PIN - DISABLED
+    // Access revoked for security reasons
     
     // Try partner login via API (handles both initial 3-digit and personal 4-digit PINs)
     try {

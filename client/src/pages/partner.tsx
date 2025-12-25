@@ -566,7 +566,7 @@ export default function PartnerHub() {
             </Button>
             
             <p className="text-xs text-gray-500 text-center">
-              Your initial PIN ({partnerName === "Sarah" ? "5555" : "444"}) will be deactivated after this.
+              Your initial PIN ({partnerName === "Sarah" ? "5555" : "4444"}) will be deactivated after this.
             </p>
           </div>
         </DialogContent>

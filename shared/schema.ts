@@ -1937,7 +1937,7 @@ export const partnerAccounts = pgTable(
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     
     name: varchar("name", { length: 100 }).notNull(), // Sarah, Sid, etc.
-    initialPin: varchar("initial_pin", { length: 3 }).notNull(), // 777, 444
+    initialPin: varchar("initial_pin", { length: 4 }).notNull(), // 4444, 5555
     personalPin: varchar("personal_pin", { length: 4 }), // Set after onboarding
     
     // Onboarding state

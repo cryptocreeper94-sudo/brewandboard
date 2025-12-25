@@ -51,7 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const DEVELOPER_PIN = "0424";
-const PARTNER_PINS = ["444", "5555"]; // Sid and Sarah
+const PARTNER_PINS = ["4444", "5555"]; // Sid and Sarah
 const REGIONAL_MANAGER_PIN = "7777";
 
 interface Hallmark {

@@ -218,7 +218,7 @@ export function LoginPopup({ isOpen, onClose, onSuccess, onSwitchToRegister }: L
       return;
     }
     // Don't allow reserved PINs
-    if (["444", "0424", "5555", "7777"].includes(onboardingForm.newPin)) {
+    if (["4444", "0424", "5555", "7777"].includes(onboardingForm.newPin)) {
       toast({ title: "Reserved PIN", description: "This PIN is reserved. Please choose a different 4-digit PIN.", variant: "destructive" });
       return;
     }

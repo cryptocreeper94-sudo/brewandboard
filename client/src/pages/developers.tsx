@@ -3444,8 +3444,8 @@ export default function DevelopersPage() {
                     <p className="text-muted-foreground text-xs">Initial PIN: 5555</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg border border-amber-200">
-                    <p className="font-medium">Sid</p>
-                    <p className="text-muted-foreground text-xs">Initial PIN: 444</p>
+                    <p className="font-medium">Sidonie</p>
+                    <p className="text-muted-foreground text-xs">Initial PIN: 4444</p>
                   </div>
                 </div>
                 <Button

@@ -168,11 +168,11 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100">
+    <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100 overflow-x-hidden">
       
       {/* Elegant Header - Mobile Optimized */}
-      <header className="pt-12 md:pt-8 pb-3 px-4 md:px-8 safe-area-top">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="pt-12 md:pt-8 pb-3 px-3 md:px-8 safe-area-top">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -198,20 +198,20 @@ export default function LandingPage() {
             <Button
               onClick={() => setShowLoginDialog(true)}
               variant="ghost"
-              className="text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-full px-3 md:px-4 h-9 md:h-10 text-sm"
+              className="text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-full px-2 md:px-4 h-8 md:h-10 text-xs md:text-sm"
               data-testid="button-sign-in"
             >
-              <LogIn className="mr-1.5 h-4 w-4" />
-              Sign In
+              <LogIn className="mr-1 md:mr-1.5 h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden md:inline">Sign In</span>
             </Button>
             <Button
               onClick={handleExplore}
-              className="text-white rounded-full px-4 md:px-6 h-9 md:h-10 text-sm shine-effect"
+              className="text-white rounded-full px-3 md:px-6 h-8 md:h-10 text-xs md:text-sm shine-effect flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #3d2418 0%, #2d1810 50%, #1a0f0a 100%)' }}
               data-testid="button-explore-header"
             >
               Enter
-              <ArrowRight className="ml-1 md:ml-2 h-4 w-4" />
+              <ArrowRight className="ml-1 h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </motion.div>
         </div>

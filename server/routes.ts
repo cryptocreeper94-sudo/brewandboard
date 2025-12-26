@@ -3084,17 +3084,17 @@ export async function registerRoutes(
         return res.json({ message: "Partners already exist", partners: existing });
       }
       
-      // Create Sarah and Sid
+      // Create Sarah and Sidonie
       const sarah = await storage.createPartnerAccount({
         name: "Sarah",
-        initialPin: "777",
+        initialPin: "5555",
         role: "partner",
         isActive: true
       });
       
-      const sid = await storage.createPartnerAccount({
-        name: "Sid",
-        initialPin: "444",
+      const sidonie = await storage.createPartnerAccount({
+        name: "Sidonie",
+        initialPin: "4444",
         role: "partner",
         isActive: true
       });
@@ -3103,7 +3103,7 @@ export async function registerRoutes(
       await storage.setSystemSetting('system_live', 'false', 'system');
       await storage.setSystemSetting('partner_access_enabled', 'true', 'system');
       
-      res.json({ message: "Partners seeded", partners: [sarah, sid] });
+      res.json({ message: "Partners seeded", partners: [sarah, sidonie] });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

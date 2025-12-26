@@ -30,7 +30,14 @@ import {
   Scan,
   ArrowRight,
   Star,
-  Zap
+  Zap,
+  DollarSign,
+  Wallet,
+  PiggyBank,
+  Receipt,
+  Settings,
+  Database,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -351,6 +358,18 @@ export default function PartnerHub() {
     { title: "AI Recommendations", desc: "Smart suggestions for meetings", icon: TrendingUp },
   ];
 
+  // Royalty tracking data for Sidonie
+  const royaltyData = {
+    totalEarned: 12847.50,
+    thisMonth: 1524.00,
+    lastMonth: 1380.25,
+    pendingPayout: 847.50,
+    nextPayoutDate: "Jan 15, 2025",
+    royaltyRate: 3.5,
+    totalOrders: 342,
+    monthlyOrders: 38,
+  };
+
   const partnerName = partnerInfo?.name || "Partner";
 
   // Welcome modal content personalized for Sarah and Sid
@@ -371,21 +390,21 @@ export default function PartnerHub() {
         overview: "This B2B platform connects Nashville businesses with local coffee shops for pre-meeting catering. Now featuring live operations management, blockchain verification on Solana, subscription tiers ($29-$199), and franchise opportunities.",
         closing: "Check out the new dashboard widgets after signing in! You're in Preview Mode so nothing saves to the live system."
       };
-    } else if (partnerName === "Sid") {
+    } else if (partnerName === "Sid" || partnerName === "Sidonie") {
       return {
-        greeting: "Hey Sid!",
-        intro: "It's Jason. Welcome to Brew & Board Coffee! v1.2.8 includes our 7-Phase UX Enhancement Suite:",
+        greeting: "Hey Sidonie!",
+        intro: "Welcome to your Partner Hub! As my partner, you have full access to everything including:",
         improvements: [
-          "Welcome Wizard - Multi-step business onboarding with preferences",
-          "Favorites & Quick Reorder - Save vendors, repeat past orders instantly",
-          "AI-Powered Recommendations - Smart suggestions for meetings",
-          "Order Status Timeline - Visual tracking with driver & ETA display",
-          "Team Management Widget - Invite members with spending limits",
-          "Loyalty Rewards - Points system with tier progression",
-          "Calendar Sync - Connect Google/Outlook for meeting-based ordering"
+          "Royalty Tracker - Track your earnings, pending payouts, and monthly stats",
+          "Operations Center - Live order board with real-time status tracking",
+          "Developer Hub - Full system access, settings, and controls",
+          "Analytics Dashboard - Complete business intelligence and metrics",
+          "Regional Management - Multi-region coordination and oversight",
+          "All Platform Features - Order scheduling, CRM, blockchain verification",
+          "Admin Controls - Full administrative capabilities"
         ],
-        overview: "B2B coffee/tea/juice catering platform with blockchain hallmark verification, subscription tiers, franchise system, Regional Manager dashboards, and comprehensive UX enhancements.",
-        closing: "Sign in to explore the new dashboard features! Preview Mode is active so nothing saves to production yet."
+        overview: "This is the B2B coffee platform we've been building together. Your Partner Hub is your central command for managing royalties, accessing all admin tools, and monitoring the business.",
+        closing: "This is your dashboard - you have full access to everything. Let me know if you need anything!"
       };
     }
     return {
@@ -688,8 +707,122 @@ export default function PartnerHub() {
             </BentoCard>
           ))}
 
-          {/* Quick Actions Carousel - 8 columns */}
-          <BentoCard span={8} variant="default" className="overflow-visible">
+          {/* Royalty Tracker - 6 columns */}
+          <BentoCard span={6} variant="glass" className="overflow-visible">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/30 to-green-600/30">
+                  <PiggyBank className="h-5 w-5 text-emerald-400" />
+                </div>
+                <h3 className="font-semibold text-white">Royalty Tracker</h3>
+              </div>
+              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                {royaltyData.royaltyRate}% Rate
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="p-3 rounded-xl bg-gradient-to-br from-emerald-900/40 to-green-800/30 border border-emerald-600/20"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet className="h-4 w-4 text-emerald-400" />
+                  <span className="text-xs text-emerald-300/70">Total Earned</span>
+                </div>
+                <p className="text-xl font-bold text-white">${royaltyData.totalEarned.toLocaleString()}</p>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="p-3 rounded-xl bg-gradient-to-br from-amber-900/40 to-orange-800/30 border border-amber-600/20"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="h-4 w-4 text-amber-400" />
+                  <span className="text-xs text-amber-300/70">Pending</span>
+                </div>
+                <p className="text-xl font-bold text-white">${royaltyData.pendingPayout.toLocaleString()}</p>
+              </motion.div>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-amber-900/20 border border-amber-700/20">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-amber-400" />
+                <span className="text-xs text-amber-200/70">Next Payout</span>
+              </div>
+              <span className="text-sm font-medium text-amber-200">{royaltyData.nextPayoutDate}</span>
+            </div>
+            <Accordion type="single" collapsible className="mt-3">
+              <AccordionItem value="details" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline text-amber-200/70 text-xs">
+                  View Monthly Details
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-200/60">This Month</span>
+                      <span className="text-emerald-400 font-medium">${royaltyData.thisMonth.toLocaleString()} ({royaltyData.monthlyOrders} orders)</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-200/60">Last Month</span>
+                      <span className="text-white">${royaltyData.lastMonth.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-200/60">All Time</span>
+                      <span className="text-white">{royaltyData.totalOrders} orders</span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </BentoCard>
+
+          {/* Admin Controls - 6 columns */}
+          <BentoCard span={6} variant="3d" className="overflow-visible">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/30 to-indigo-600/30">
+                <Settings className="h-5 w-5 text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-white">Admin Controls</h3>
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 ml-auto">
+                Full Access
+              </Badge>
+            </div>
+            <Carousel label="admin controls">
+              <Link href="/operations">
+                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-red-500 to-rose-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
+                    <Activity className="h-5 w-5" />
+                    <span className="text-xs font-medium text-center">Operations</span>
+                  </div>
+                </motion.div>
+              </Link>
+              <Link href="/developers">
+                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
+                    <Database className="h-5 w-5" />
+                    <span className="text-xs font-medium text-center">Dev Hub</span>
+                  </div>
+                </motion.div>
+              </Link>
+              <Link href="/analytics">
+                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
+                    <BarChart3 className="h-5 w-5" />
+                    <span className="text-xs font-medium text-center">Analytics</span>
+                  </div>
+                </motion.div>
+              </Link>
+              <Link href="/regional">
+                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
+                    <MapPin className="h-5 w-5" />
+                    <span className="text-xs font-medium text-center">Regions</span>
+                  </div>
+                </motion.div>
+              </Link>
+            </Carousel>
+          </BentoCard>
+
+          {/* Quick Actions Carousel - 12 columns (full width) */}
+          <BentoCard span={12} variant="default" className="overflow-visible">
             <div className="flex items-center gap-2 mb-4">
               <Play className="h-5 w-5 text-amber-400" />
               <h3 className="font-semibold text-white">Quick Actions</h3>
@@ -714,36 +847,6 @@ export default function PartnerHub() {
             </Carousel>
           </BentoCard>
 
-          {/* System Status - 4 columns */}
-          <BentoCard span={4} variant="glass">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="h-5 w-5 text-amber-400" />
-              <h3 className="font-semibold text-white">System Status</h3>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-amber-200/70 text-sm">API</span>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
-                  Online
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-amber-200/70 text-sm">Database</span>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
-                  Connected
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-amber-200/70 text-sm">Blockchain</span>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
-                  Solana
-                </Badge>
-              </div>
-            </div>
-          </BentoCard>
 
           {/* Platform Features - 6 columns */}
           <BentoCard span={6} variant="default">

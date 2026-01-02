@@ -4189,5 +4189,370 @@ export async function registerRoutes(
     }
   });
 
+  // ========================
+  // DOORDASH DRIVE INTEGRATION
+  // ========================
+
+  const doordash = await import('./doordash');
+
+  // Get DoorDash configuration status
+  app.get("/api/doordash/status", async (req, res) => {
+    try {
+      const status = doordash.getConfigStatus();
+      res.json(status);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get delivery quote
+  app.post("/api/doordash/quote", async (req, res) => {
+    try {
+      if (!doordash.isConfigured()) {
+        return res.status(400).json({ 
+          error: "DoorDash API not configured. Please add DOORDASH_DEVELOPER_ID, DOORDASH_KEY_ID, and DOORDASH_SIGNING_SECRET." 
+        });
+      }
+
+      const externalDeliveryId = doordash.generateExternalDeliveryId();
+      const quoteRequest = {
+        external_delivery_id: externalDeliveryId,
+        pickup_address: req.body.pickup_address,
+        pickup_business_name: req.body.pickup_business_name,
+        pickup_phone_number: req.body.pickup_phone_number,
+        dropoff_address: req.body.dropoff_address,
+        dropoff_phone_number: req.body.dropoff_phone_number,
+        dropoff_contact_given_name: req.body.dropoff_contact_given_name,
+        dropoff_contact_family_name: req.body.dropoff_contact_family_name,
+        order_value: req.body.order_value,
+      };
+
+      const quote = await doordash.getDeliveryQuote(quoteRequest);
+      
+      // Store quote in database
+      await storage.createDoordashQuote({
+        doordashQuoteId: quote.id,
+        pickupAddress: req.body.pickup_address,
+        pickupPhoneNumber: req.body.pickup_phone_number,
+        pickupBusinessName: req.body.pickup_business_name,
+        dropoffAddress: req.body.dropoff_address,
+        dropoffPhoneNumber: req.body.dropoff_phone_number,
+        dropoffContactName: req.body.dropoff_contact_given_name,
+        feeCents: quote.fee,
+        estimatedPickupTime: quote.pickup_time ? new Date(quote.pickup_time) : null,
+        estimatedDropoffTime: quote.dropoff_time ? new Date(quote.dropoff_time) : null,
+        expiresAt: quote.expires_at ? new Date(quote.expires_at) : null,
+        status: 'pending',
+      });
+
+      res.json({
+        ...quote,
+        external_delivery_id: externalDeliveryId,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create delivery
+  app.post("/api/doordash/deliveries", async (req, res) => {
+    try {
+      if (!doordash.isConfigured()) {
+        return res.status(400).json({ 
+          error: "DoorDash API not configured" 
+        });
+      }
+
+      const externalDeliveryId = req.body.external_delivery_id || doordash.generateExternalDeliveryId();
+      
+      const deliveryRequest = {
+        external_delivery_id: externalDeliveryId,
+        pickup_external_business_id: req.body.pickup_external_business_id,
+        pickup_external_store_id: req.body.pickup_external_store_id,
+        pickup_address: req.body.pickup_address,
+        pickup_business_name: req.body.pickup_business_name,
+        pickup_phone_number: req.body.pickup_phone_number,
+        pickup_instructions: req.body.pickup_instructions,
+        dropoff_address: req.body.dropoff_address,
+        dropoff_address_components: req.body.dropoff_address_components,
+        dropoff_phone_number: req.body.dropoff_phone_number,
+        dropoff_contact_given_name: req.body.dropoff_contact_given_name,
+        dropoff_contact_family_name: req.body.dropoff_contact_family_name,
+        dropoff_instructions: req.body.dropoff_instructions,
+        contactless_dropoff: req.body.contactless_dropoff ?? true,
+        pickup_time: req.body.pickup_time,
+        dropoff_time: req.body.dropoff_time,
+        tip: req.body.tip,
+        order_value: req.body.order_value,
+        order_contains: req.body.order_contains,
+        action_if_undeliverable: req.body.action_if_undeliverable,
+        items: req.body.items,
+      };
+
+      const delivery = await doordash.createDelivery(deliveryRequest);
+      
+      // Store delivery in database
+      await storage.createDoordashDelivery({
+        externalDeliveryId: externalDeliveryId,
+        doordashDeliveryId: delivery.id,
+        supportReference: delivery.support_reference,
+        orderId: req.body.order_id,
+        scheduledOrderId: req.body.scheduled_order_id,
+        pickupExternalBusinessId: req.body.pickup_external_business_id,
+        pickupExternalStoreId: req.body.pickup_external_store_id,
+        pickupAddress: req.body.pickup_address,
+        pickupPhoneNumber: req.body.pickup_phone_number,
+        pickupBusinessName: req.body.pickup_business_name,
+        pickupInstructions: req.body.pickup_instructions,
+        dropoffAddress: req.body.dropoff_address,
+        dropoffAddressLine1: req.body.dropoff_address_components?.street_address,
+        dropoffCity: req.body.dropoff_address_components?.city,
+        dropoffState: req.body.dropoff_address_components?.state,
+        dropoffZip: req.body.dropoff_address_components?.zip_code,
+        dropoffPhoneNumber: req.body.dropoff_phone_number,
+        dropoffContactGivenName: req.body.dropoff_contact_given_name,
+        dropoffContactFamilyName: req.body.dropoff_contact_family_name,
+        dropoffInstructions: req.body.dropoff_instructions,
+        contactlessDropoff: req.body.contactless_dropoff ?? true,
+        pickupTime: delivery.pickup_time ? new Date(delivery.pickup_time) : null,
+        dropoffTime: delivery.dropoff_time ? new Date(delivery.dropoff_time) : null,
+        tipCents: req.body.tip,
+        orderValueCents: req.body.order_value,
+        feeCents: delivery.fee,
+        status: delivery.delivery_status || 'created',
+        trackingUrl: delivery.tracking_url,
+        orderContains: req.body.order_contains,
+        actionIfUndeliverable: req.body.action_if_undeliverable,
+        items: req.body.items,
+      });
+
+      res.json({
+        ...delivery,
+        external_delivery_id: externalDeliveryId,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get delivery status
+  app.get("/api/doordash/deliveries/:externalDeliveryId", async (req, res) => {
+    try {
+      // First check local database
+      const localDelivery = await storage.getDoordashDelivery(req.params.externalDeliveryId);
+      
+      if (doordash.isConfigured()) {
+        try {
+          // Get fresh status from DoorDash
+          const ddDelivery = await doordash.getDelivery(req.params.externalDeliveryId);
+          
+          // Update local database with fresh data
+          if (localDelivery) {
+            await storage.updateDoordashDelivery(req.params.externalDeliveryId, {
+              status: ddDelivery.delivery_status,
+              dasherName: ddDelivery.dasher?.name,
+              dasherPhoneNumber: ddDelivery.dasher?.phone_number,
+              dasherPhotoUrl: ddDelivery.dasher?.profile_image_url,
+              trackingUrl: ddDelivery.tracking_url,
+              actualPickupTime: ddDelivery.actual_pickup_time ? new Date(ddDelivery.actual_pickup_time) : null,
+              actualDropoffTime: ddDelivery.actual_dropoff_time ? new Date(ddDelivery.actual_dropoff_time) : null,
+            });
+          }
+          
+          res.json(ddDelivery);
+        } catch (ddError: any) {
+          // If DoorDash API fails, return local data
+          if (localDelivery) {
+            res.json(localDelivery);
+          } else {
+            throw ddError;
+          }
+        }
+      } else if (localDelivery) {
+        res.json(localDelivery);
+      } else {
+        res.status(404).json({ error: "Delivery not found" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Cancel delivery
+  app.post("/api/doordash/deliveries/:externalDeliveryId/cancel", async (req, res) => {
+    try {
+      if (!doordash.isConfigured()) {
+        return res.status(400).json({ error: "DoorDash API not configured" });
+      }
+
+      const result = await doordash.cancelDelivery(req.params.externalDeliveryId);
+      
+      // Update local database
+      await storage.updateDoordashDelivery(req.params.externalDeliveryId, {
+        status: 'cancelled',
+        cancellationReason: req.body.reason,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Simulate delivery status (sandbox only)
+  app.post("/api/doordash/deliveries/:externalDeliveryId/simulate", async (req, res) => {
+    try {
+      if (!doordash.isConfigured()) {
+        return res.status(400).json({ error: "DoorDash API not configured" });
+      }
+
+      const { target_status } = req.body;
+      const result = await doordash.advanceDelivery(req.params.externalDeliveryId, target_status);
+      
+      // Update local database
+      await storage.updateDoordashDelivery(req.params.externalDeliveryId, {
+        status: target_status,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // DoorDash Webhook endpoint
+  app.post("/api/doordash/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['x-doordash-signature'] as string;
+      const webhookSecret = process.env.DOORDASH_WEBHOOK_SECRET;
+
+      if (webhookSecret && signature) {
+        const isValid = doordash.verifyWebhookSignature(
+          JSON.stringify(req.body),
+          signature,
+          webhookSecret
+        );
+
+        if (!isValid) {
+          return res.status(401).json({ error: "Invalid webhook signature" });
+        }
+      }
+
+      const { event_name, data } = req.body;
+      const externalDeliveryId = data?.external_delivery_id;
+
+      if (externalDeliveryId) {
+        const updateData: any = {
+          lastWebhookAt: new Date(),
+        };
+
+        // Map webhook event to status updates
+        switch (event_name) {
+          case 'DELIVERY_STATUS_CHANGED':
+            updateData.status = data.delivery_status?.toLowerCase();
+            break;
+          case 'DASHER_ASSIGNED':
+            updateData.dasherName = data.dasher?.name;
+            updateData.dasherPhoneNumber = data.dasher?.phone_number;
+            updateData.dasherPhotoUrl = data.dasher?.profile_image_url;
+            break;
+          case 'DASHER_LOCATION_UPDATE':
+            updateData.dasherLatitude = data.location?.lat;
+            updateData.dasherLongitude = data.location?.lng;
+            break;
+          case 'DELIVERY_PICKED_UP':
+            updateData.status = 'picked_up';
+            updateData.actualPickupTime = new Date();
+            break;
+          case 'DELIVERY_DELIVERED':
+            updateData.status = 'delivered';
+            updateData.actualDropoffTime = new Date();
+            break;
+          case 'DELIVERY_CANCELLED':
+            updateData.status = 'cancelled';
+            updateData.cancellationReason = data.cancellation_reason;
+            break;
+        }
+
+        // Append to webhook events log
+        const delivery = await storage.getDoordashDelivery(externalDeliveryId);
+        if (delivery) {
+          const existingEvents = (delivery.webhookEvents as any[]) || [];
+          updateData.webhookEvents = [
+            ...existingEvents,
+            {
+              eventType: event_name,
+              timestamp: new Date().toISOString(),
+              data: data,
+            }
+          ];
+        }
+
+        await storage.updateDoordashDelivery(externalDeliveryId, updateData);
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('DoorDash webhook error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // List all deliveries
+  app.get("/api/doordash/deliveries", async (req, res) => {
+    try {
+      const { status, limit = '50' } = req.query;
+      const deliveries = await storage.getDoordashDeliveries({
+        status: status as string,
+        limit: parseInt(limit as string),
+      });
+      res.json(deliveries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Store management
+  app.get("/api/doordash/stores", async (req, res) => {
+    try {
+      const stores = await storage.getDoordashStores();
+      res.json(stores);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/doordash/stores", async (req, res) => {
+    try {
+      // If DoorDash is configured, create store via API first
+      if (doordash.isConfigured()) {
+        try {
+          await doordash.createStore({
+            external_business_id: req.body.externalBusinessId,
+            external_store_id: req.body.externalStoreId,
+            name: req.body.businessName,
+            phone_number: req.body.phoneNumber,
+            address: {
+              street: req.body.addressLine1,
+              subpremise: req.body.addressLine2,
+              city: req.body.city,
+              state: req.body.state,
+              zip_code: req.body.zipCode,
+              country: req.body.country || 'US',
+            },
+          });
+        } catch (ddError: any) {
+          // Log error but continue to save locally
+          console.error('Failed to create store in DoorDash:', ddError.message);
+        }
+      }
+
+      const store = await storage.createDoordashStore(req.body);
+      res.json(store);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

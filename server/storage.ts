@@ -87,6 +87,12 @@ import {
   type InsertWhiteGlovePricingTier,
   type OneOffOrder,
   type InsertOneOffOrder,
+  type DoordashStore,
+  type InsertDoordashStore,
+  type DoordashQuote,
+  type InsertDoordashQuote,
+  type DoordashDelivery,
+  type InsertDoordashDelivery,
   users,
   crmNotes,
   clients,
@@ -131,6 +137,9 @@ import {
   serviceAreas,
   whiteGlovePricingTiers,
   oneOffOrders,
+  doordashStores,
+  doordashQuotes,
+  doordashDeliveries,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -408,6 +417,21 @@ export interface IStorage {
   createOneOffOrder(order: InsertOneOffOrder): Promise<OneOffOrder>;
   updateOneOffOrder(id: string, order: Partial<InsertOneOffOrder>): Promise<OneOffOrder>;
   deleteOneOffOrder(id: string): Promise<void>;
+  
+  // DoorDash Stores
+  getDoordashStores(): Promise<DoordashStore[]>;
+  getDoordashStore(externalStoreId: string): Promise<DoordashStore | undefined>;
+  createDoordashStore(store: InsertDoordashStore): Promise<DoordashStore>;
+  updateDoordashStore(externalStoreId: string, store: Partial<InsertDoordashStore>): Promise<DoordashStore>;
+  
+  // DoorDash Quotes
+  createDoordashQuote(quote: InsertDoordashQuote): Promise<DoordashQuote>;
+  
+  // DoorDash Deliveries
+  getDoordashDeliveries(options?: { status?: string; limit?: number }): Promise<DoordashDelivery[]>;
+  getDoordashDelivery(externalDeliveryId: string): Promise<DoordashDelivery | undefined>;
+  createDoordashDelivery(delivery: InsertDoordashDelivery): Promise<DoordashDelivery>;
+  updateDoordashDelivery(externalDeliveryId: string, delivery: Partial<InsertDoordashDelivery>): Promise<DoordashDelivery>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2445,6 +2469,79 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOneOffOrder(id: string): Promise<void> {
     await db.delete(oneOffOrders).where(eq(oneOffOrders.id, id));
+  }
+
+  // ========================
+  // DOORDASH STORES
+  // ========================
+  async getDoordashStores(): Promise<DoordashStore[]> {
+    return db.select().from(doordashStores).orderBy(desc(doordashStores.createdAt));
+  }
+
+  async getDoordashStore(externalStoreId: string): Promise<DoordashStore | undefined> {
+    const [store] = await db.select().from(doordashStores)
+      .where(eq(doordashStores.externalStoreId, externalStoreId));
+    return store || undefined;
+  }
+
+  async createDoordashStore(store: InsertDoordashStore): Promise<DoordashStore> {
+    const [newStore] = await db.insert(doordashStores).values(store as any).returning();
+    return newStore;
+  }
+
+  async updateDoordashStore(externalStoreId: string, store: Partial<InsertDoordashStore>): Promise<DoordashStore> {
+    const [updated] = await db.update(doordashStores)
+      .set({ ...store, updatedAt: new Date() } as any)
+      .where(eq(doordashStores.externalStoreId, externalStoreId))
+      .returning();
+    return updated;
+  }
+
+  // ========================
+  // DOORDASH QUOTES
+  // ========================
+  async createDoordashQuote(quote: InsertDoordashQuote): Promise<DoordashQuote> {
+    const [newQuote] = await db.insert(doordashQuotes).values(quote as any).returning();
+    return newQuote;
+  }
+
+  // ========================
+  // DOORDASH DELIVERIES
+  // ========================
+  async getDoordashDeliveries(options?: { status?: string; limit?: number }): Promise<DoordashDelivery[]> {
+    const conditions: any[] = [];
+    
+    if (options?.status) {
+      conditions.push(eq(doordashDeliveries.status, options.status));
+    }
+
+    let query = db.select().from(doordashDeliveries);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    const result = await query.orderBy(desc(doordashDeliveries.createdAt)).limit(options?.limit || 50);
+    return result;
+  }
+
+  async getDoordashDelivery(externalDeliveryId: string): Promise<DoordashDelivery | undefined> {
+    const [delivery] = await db.select().from(doordashDeliveries)
+      .where(eq(doordashDeliveries.externalDeliveryId, externalDeliveryId));
+    return delivery || undefined;
+  }
+
+  async createDoordashDelivery(delivery: InsertDoordashDelivery): Promise<DoordashDelivery> {
+    const [newDelivery] = await db.insert(doordashDeliveries).values(delivery as any).returning();
+    return newDelivery;
+  }
+
+  async updateDoordashDelivery(externalDeliveryId: string, delivery: Partial<InsertDoordashDelivery>): Promise<DoordashDelivery> {
+    const [updated] = await db.update(doordashDeliveries)
+      .set({ ...delivery, updatedAt: new Date() } as any)
+      .where(eq(doordashDeliveries.externalDeliveryId, externalDeliveryId))
+      .returning();
+    return updated;
   }
 }
 

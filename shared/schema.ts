@@ -2744,5 +2744,238 @@ export const MIDDLE_TN_COUNTIES = [
   'Sumner',
 ] as const;
 
+// ========================
+// DOORDASH DRIVE INTEGRATION
+// ========================
+
+// DoorDash Store Locations (maps to pickup_external_store_id)
+export const doordashStores = pgTable(
+  "doordash_stores",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // DoorDash identifiers
+    externalBusinessId: varchar("external_business_id", { length: 100 }).notNull(),
+    externalStoreId: varchar("external_store_id", { length: 100 }).notNull().unique(),
+    
+    // Store details
+    businessName: varchar("business_name", { length: 255 }).notNull(),
+    addressLine1: varchar("address_line1", { length: 255 }).notNull(),
+    addressLine2: varchar("address_line2", { length: 255 }),
+    city: varchar("city", { length: 100 }).notNull(),
+    state: varchar("state", { length: 50 }).notNull(),
+    zipCode: varchar("zip_code", { length: 10 }).notNull(),
+    country: varchar("country", { length: 10 }).default("US"),
+    phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
+    
+    // Store settings
+    isActive: boolean("is_active").default(true),
+    supportsAlcohol: boolean("supports_alcohol").default(false),
+    avgPrepTimeMinutes: integer("avg_prep_time_minutes").default(15),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    externalStoreIdx: index("idx_doordash_store_external").on(table.externalStoreId),
+    businessIdx: index("idx_doordash_store_business").on(table.externalBusinessId),
+  })
+);
+
+export const insertDoordashStoreSchema = createInsertSchema(doordashStores).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDoordashStore = z.infer<typeof insertDoordashStoreSchema>;
+export type DoordashStore = typeof doordashStores.$inferSelect;
+
+// DoorDash Delivery Quotes
+export const doordashQuotes = pgTable(
+  "doordash_quotes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // DoorDash quote ID
+    doordashQuoteId: varchar("doordash_quote_id", { length: 100 }),
+    
+    // Pickup details
+    pickupExternalStoreId: varchar("pickup_external_store_id", { length: 100 }),
+    pickupAddress: text("pickup_address").notNull(),
+    pickupPhoneNumber: varchar("pickup_phone_number", { length: 20 }),
+    pickupBusinessName: varchar("pickup_business_name", { length: 255 }),
+    
+    // Dropoff details
+    dropoffAddress: text("dropoff_address").notNull(),
+    dropoffCity: varchar("dropoff_city", { length: 100 }),
+    dropoffState: varchar("dropoff_state", { length: 50 }),
+    dropoffZip: varchar("dropoff_zip", { length: 10 }),
+    dropoffPhoneNumber: varchar("dropoff_phone_number", { length: 20 }),
+    dropoffContactName: varchar("dropoff_contact_name", { length: 255 }),
+    
+    // Quote response
+    feeCents: integer("fee_cents"),
+    currencyCode: varchar("currency_code", { length: 3 }).default("USD"),
+    estimatedPickupTime: timestamp("estimated_pickup_time"),
+    estimatedDropoffTime: timestamp("estimated_dropoff_time"),
+    expiresAt: timestamp("expires_at"),
+    
+    // Status
+    status: varchar("status", { length: 50 }).default("pending"), // pending, accepted, expired, error
+    errorMessage: text("error_message"),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    quoteIdIdx: index("idx_doordash_quote_id").on(table.doordashQuoteId),
+    statusIdx: index("idx_doordash_quote_status").on(table.status),
+  })
+);
+
+export const insertDoordashQuoteSchema = createInsertSchema(doordashQuotes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDoordashQuote = z.infer<typeof insertDoordashQuoteSchema>;
+export type DoordashQuote = typeof doordashQuotes.$inferSelect;
+
+// DoorDash Deliveries
+export const doordashDeliveries = pgTable(
+  "doordash_deliveries",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    
+    // Link to our order
+    orderId: varchar("order_id"),
+    scheduledOrderId: varchar("scheduled_order_id"),
+    
+    // DoorDash identifiers
+    externalDeliveryId: varchar("external_delivery_id", { length: 100 }).notNull().unique(),
+    doordashDeliveryId: varchar("doordash_delivery_id", { length: 100 }),
+    supportReference: varchar("support_reference", { length: 100 }), // For customer support
+    
+    // Pickup details
+    pickupExternalBusinessId: varchar("pickup_external_business_id", { length: 100 }),
+    pickupExternalStoreId: varchar("pickup_external_store_id", { length: 100 }),
+    pickupAddress: text("pickup_address").notNull(),
+    pickupPhoneNumber: varchar("pickup_phone_number", { length: 20 }),
+    pickupBusinessName: varchar("pickup_business_name", { length: 255 }),
+    pickupInstructions: text("pickup_instructions"),
+    
+    // Dropoff details
+    dropoffAddress: text("dropoff_address").notNull(),
+    dropoffAddressLine1: varchar("dropoff_address_line1", { length: 255 }),
+    dropoffAddressLine2: varchar("dropoff_address_line2", { length: 255 }),
+    dropoffCity: varchar("dropoff_city", { length: 100 }),
+    dropoffState: varchar("dropoff_state", { length: 50 }),
+    dropoffZip: varchar("dropoff_zip", { length: 10 }),
+    dropoffCountry: varchar("dropoff_country", { length: 10 }).default("US"),
+    dropoffPhoneNumber: varchar("dropoff_phone_number", { length: 20 }).notNull(),
+    dropoffContactGivenName: varchar("dropoff_contact_given_name", { length: 100 }).notNull(),
+    dropoffContactFamilyName: varchar("dropoff_contact_family_name", { length: 100 }),
+    dropoffInstructions: text("dropoff_instructions"),
+    contactlessDropoff: boolean("contactless_dropoff").default(true),
+    
+    // Timing
+    pickupTime: timestamp("pickup_time"),
+    dropoffTime: timestamp("dropoff_time"),
+    actualPickupTime: timestamp("actual_pickup_time"),
+    actualDropoffTime: timestamp("actual_dropoff_time"),
+    
+    // Financials (in cents)
+    tipCents: integer("tip_cents").default(0),
+    orderValueCents: integer("order_value_cents"),
+    feeCents: integer("fee_cents"),
+    currencyCode: varchar("currency_code", { length: 3 }).default("USD"),
+    
+    // Status tracking
+    status: varchar("status", { length: 50 }).default("created"),
+    // created, confirmed, enroute_to_pickup, arrived_at_pickup, picked_up, 
+    // enroute_to_dropoff, arrived_at_dropoff, delivered, cancelled, returned
+    cancellationReason: text("cancellation_reason"),
+    
+    // Dasher info
+    dasherName: varchar("dasher_name", { length: 100 }),
+    dasherPhoneNumber: varchar("dasher_phone_number", { length: 20 }),
+    dasherPhotoUrl: text("dasher_photo_url"),
+    dasherVehicle: varchar("dasher_vehicle", { length: 100 }),
+    
+    // Live tracking
+    trackingUrl: text("tracking_url"),
+    dasherLatitude: decimal("dasher_latitude", { precision: 10, scale: 7 }),
+    dasherLongitude: decimal("dasher_longitude", { precision: 10, scale: 7 }),
+    
+    // Restricted items
+    orderContains: text("order_contains").array(), // ['alcohol'] for restricted items
+    actionIfUndeliverable: varchar("action_if_undeliverable", { length: 50 }).default("return_to_pickup"),
+    
+    // Items
+    items: jsonb("items").$type<Array<{
+      name: string;
+      description?: string;
+      quantity: number;
+      externalId?: string;
+      barcode?: string;
+      priceInCents?: number;
+    }>>(),
+    
+    // Webhook events
+    lastWebhookAt: timestamp("last_webhook_at"),
+    webhookEvents: jsonb("webhook_events").$type<Array<{
+      eventType: string;
+      timestamp: string;
+      data?: Record<string, any>;
+    }>>(),
+    
+    createdAt: timestamp("created_at").default(sql`NOW()`),
+    updatedAt: timestamp("updated_at").default(sql`NOW()`),
+  },
+  (table) => ({
+    externalIdIdx: index("idx_doordash_delivery_external").on(table.externalDeliveryId),
+    doordashIdIdx: index("idx_doordash_delivery_dd").on(table.doordashDeliveryId),
+    orderIdx: index("idx_doordash_delivery_order").on(table.orderId),
+    statusIdx: index("idx_doordash_delivery_status").on(table.status),
+  })
+);
+
+export const insertDoordashDeliverySchema = createInsertSchema(doordashDeliveries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDoordashDelivery = z.infer<typeof insertDoordashDeliverySchema>;
+export type DoordashDelivery = typeof doordashDeliveries.$inferSelect;
+
+// DoorDash Delivery Status Constants
+export const DOORDASH_DELIVERY_STATUSES = [
+  'created',
+  'confirmed', 
+  'enroute_to_pickup',
+  'arrived_at_pickup',
+  'picked_up',
+  'enroute_to_dropoff',
+  'arrived_at_dropoff',
+  'delivered',
+  'cancelled',
+  'returned'
+] as const;
+
+// Restricted Items List (items DoorDash cannot deliver)
+export const DOORDASH_RESTRICTED_ITEMS = [
+  'tobacco',
+  'cannabis',
+  'illicit_drugs',
+  'weapons',
+  'explosives',
+  'ammunition',
+  'fireworks',
+  'hazardous_materials',
+  'prescription_drugs',
+  'counterfeit_goods',
+  'stolen_property',
+  'live_animals',
+  'human_remains',
+] as const;
+
 // Re-export auth models
 export * from "./models/auth";

@@ -1,0 +1,67 @@
+Integration requirements
+Drive API Production Access is Limited
+Production access to the Drive API is currently restricted, and we cannot provide a timeline for certification following development. If you have not completed development and submitted a production access request, we recommend pausing development. Contact us here to record your interest.
+
+Our mission is simple: we want to be the easiest, most reliable local delivery service available, while protecting the merchants, customers, and Dashers making it happen. We achieve this through a self-serve Portal that allows developers to leverage DoorDash’s extensive network of Dashers in their own business, where every integration is reviewed by our team to ensure that our technological and legal standards are met.
+
+Before you request production access
+In order to access our production environment and start doing live deliveries, the DoorDash team will review and approve your finished product. To ensure that this process goes smoothly, review the below checklist and these validation test scripts before requesting production access. Note that approval is not guaranteed if you check all of the below items, but it’s a great start.
+
+Ensure that:
+
+You have sufficient guardrails in place to prevent pickup or delivery of restricted items. These include tobacco, cannabis or other illicit drugs, weapons and explosives. See the full list of Restricted Items below for more detail on items that DoorDash cannot deliver.
+You’ve read and agreed to our Technology License and Terms of Use.
+You’ve used the Delivery Simulator to create test deliveries and familiarize yourself with how DoorDash operates.
+Required fields are being passed in all API calls. All required fields are noted in our guide here for restaurants and below. Please refer to this list rather than the Drive API Reference for guidance on required fields for production access—required fields described in the Drive API reference is not comprehensive.
+Key delivery details such as the DoorDash-supplied delivery/support ID and pickup time are surfaced to both the merchants and customers your UI. You can read more about our minimum UI requirements here.
+There is a clear feedback loop to the end user if DoorDash rejects the quote and/or delivery request. For example, if DoorDash returns an error in the API due to an invalid dropoff address, the end user should be prompted to correct their address before completing checkout.
+There is a clear workflow if a merchant or customer cancels an order.
+You’re ready to conduct a live demo with the DoorDash team. You’ll screenshare and take us through an end-to-end test delivery, demonstrating the full user experience.
+Technical/UI
+Our goal is to offer a delivery service that is seamless, simple, and reliable for all parties involved. Designing and building a great product is up to you, but the technical/UI guidelines below are meant to ensure that your customers have the best possible pickup and delivery experience. See our How To Get Production Access page for more detail on the demo process and how the DoorDash team will evaluate your submission for production access.
+
+Requirements
+Required / Recommended Fields for All Deliveries
+Field Name	Description	Required or Recommended?	Why is this field important?
+external_delivery_id	Unique identifier for the delivery	Required	Required to differentiate between deliveries
+pickup_external_business_id	Unique business identifier previously created via the Business + Store APIs; must be used in combination with pickup_external_store_id to select the pickup location	Required if your organization has >1 store location	Required for improved delivery quality, clearer invoices, better support experiences, and access to additional delivery capabilities like alcohol, etc.
+pickup_external_store_id	Unique store identifier previously created via the Business + Store APIs; must be used in combination with pickup_external_business_id. If this field is used, the address associated with the store ID will override the pickup_address in the request.	Required if your organization has >1 store location	Required for improved delivery quality, clearer invoices, better support experiences, and access to additional delivery capabilities like alcohol, etc.
+pickup_address	Address where order should be picked up. This address is overridden by store properties if pickup_external_store_id and pickup_external_business_id are used.	Required for single location organizations where pickup_external_store_id and pickup_external_business_id are not used	Required so the Dasher knows the where to pick up the order
+pickup_phone_number	Store phone number. Must include the country code that matches the country where the delivery is taking place. This number is overridden by store properties if pickup_external_store_id and pickup_external_business_id are used.	Required if phone number is not included when creating the store via the Business + Store APIs, or for single location organizations where pickup_external_store_id and pickup_external_business_id are not used	Required so the Dasher and/or DoorDash Support can call the restaurant if there are any issues during the delivery
+dropoff_address	Address where order should be delivered	Required	Required so the Dasher knows where to dropoff the order
+dropoff_address_components	Address where order should be delivered, broken into individual components (i.e. street address, subpremise, city, state, zip, country)	Required	Required so the Dasher knows where to dropoff the order (should be passed along with string address in order to allow for better address resolution and delivery quality)
+dropoff_contact_given_name	Customer first name	Required	Required so the Dasher knows which order to pick up at the restaurant, and so the DoorDash support team can get in contact with the customer if necessary
+dropoff_phone_number	Customer phone number, including the country code	Required	Required so the Dasher can call the customer if there are any issues with the delivery
+pickup_time OR dropoff_time (for restaurants)	The UTC date-time (in ISO-8601 format) when the order should be picked up or dropped off. Only one or the other should be included in the request, not both. Pickup_time is generally recommended for on-demand restaurant deliveries where the restaurant requires a certain amount of prep time for each order. Dropoff_time is recommended in cases where the delivery is being scheduled >1 hour in advance. If no time field is passed, DoorDash will treat the delivery as ASAP and send the first available Dasher.	Required if customer can schedule a delivery time	Required to ensure a smooth delivery experience for both the merchant and the customer
+pickup_window AND dropoff_window (for non-restaurants)	The UTC date-time (in ISO-8601 format) windows are which time blocks the order should be picked up and dropped off. Both must be included in the request. The UTC date-time (in ISO-8601 format) overrides dropoff_time and pickup_time when all four parameters of the time window (pickup_window_start_time , pickup_window_end_time , dropoff_window_start_time , dropoff_window_end_time) are provided. If no time field is passed, DoorDash will treat the delivery as ASAP and send the first available Dasher.	Required if customer can schedule a delivery time	Required to ensure a smooth delivery experience for both the merchant and the customer
+tip	Dasher tip, in cents	Recommended	Recommended for quicker Dasher assignment (note DoorDash can provide a discount on the delivery fee if tips are passed; 100% of tips collected from the customer must be passed in full to DoorDash)
+order_value	Order subtotal, excluding tax, tips, and fees	Recommended	Recommended for refunds in the event that the delivery is unsuccessful
+pickup_business_name	Name of pickup location, usually a restaurant or store. This name is overridden by store properties if pickup_external_store_id and pickup_external_business_id are used.	Recommended	Helps the Dasher find the correct pickup location and is included in SMS notifications to the customer
+pickup_instructions	Basic instructions to help the Dasher during the pickup process, e.g. "enter through side door."	Recommended	Allows for smoother pickup experience
+dropoff_instructions	Basic instructions to help the Dasher during the dropoff process, e.g. "buzz #1234." Do not include prompts for contactless deliveries in this field.	Recommended	Allows for smoother delivery experience
+contactless_dropoff	Allows the Dasher to leave the order at the customer’s door, prompting them to take a photo upon dropoff. Cannot be true for restricted item deliveries like alcohol.	Recommended	Recommended for customers to have the option of a contactless delivery in the UI and sent to DoorDash, which leads to less Never Delivered/Cancellations if the customer is unable to take the delivery at that time
+items	List of items included in the delivery	Recommended for all deliveries; required for organizations delivering restricted items	Required for all organizations delivering restricted items per DoorDash Policy; also allows for better support experiences in the case of missing/incorrect items
+Required / Recommended Fields for Restricted Item Deliveries: Alcohol
+Field Name	Description	Required or Recommended?	Why is this field important?
+items	List of items included in the delivery; must include restricted items	Required	Required for all restricted item deliveries per DoorDash Policy
+order_contains	Specifies the restricted item(s) contained in the order	Required	Required for all restricted item deliveries per DoorDash Policy
+action_if_undeliverable	Must be specified as “return_to_pickup," allowing the Dasher to return the items to the store if the delivery is unsuccessful	Required	Required for all restricted item deliveries per DoorDash Policy (note there is a return fee associated with returns)
+Legal & safety
+DoorDash is committed to the safety and security of all users who use its platform and services, including Dashers, Merchants, and Customers. Our priority is to ensure that anyone requesting or facilitating delivery through DoorDash can do so safely and confidently. We’ve listed the major points below, but note that this list is not exhaustive. If your business and/or product do not meet these requirements, the DoorDash team may reject your request for production access, or if you have already been approved for production, we reserve the right to disable your production credentials.
+
+Restricted items
+Please refer to this page for restricted items on DoorDash Drive. DoorDash restricts the sale of certain items, including but not limited to those listed to maintain a high-quality user experience in addition to complying with legal requirements. You are responsible for having sufficient guardrails in place to prevent pickup or delivery of restricted items.
+
+This list provides examples of restricted items, but is not exhaustive. DoorDash may modify this list at its discretion and reserves the right to remove or decline to list, transport, ship, deliver, or otherwise make available through its service any of the listed items or any other items that DoorDash in its sole discretion deems may be unsafe or inappropriate.
+
+Compliance with laws & regulations
+Your business, including employees, agents, representatives, subcontractors, and your product itself, must comply with all applicable laws and regulations in all markets in which it operates.
+
+Alcohol
+Your business is licensed to sell alcohol in the state(s) and/or province(s) where it operates.
+You must have a process to get your customers' consent to the processing of their personal data by DoorDash for the purpose of ID verification.
+You must have signed an alcohol addendum to your DoorDash Drive agreement.
+Previous
+Pricing & payment
+Next
+How to B

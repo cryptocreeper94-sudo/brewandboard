@@ -2975,6 +2975,202 @@ export default function DevelopersPage() {
       </div>
     );
   };
+
+  const [doordashStatus, setDoordashStatus] = useState<{configured: boolean; environment: string; developerId?: string} | null>(null);
+  const [doordashDeliveries, setDoordashDeliveries] = useState<any[]>([]);
+  const [doordashLoading, setDoordashLoading] = useState(false);
+
+  const fetchDoordashStatus = async () => {
+    try {
+      const [statusRes, deliveriesRes] = await Promise.all([
+        fetch('/api/doordash/status'),
+        fetch('/api/doordash/deliveries?limit=10'),
+      ]);
+      if (statusRes.ok) {
+        const status = await statusRes.json();
+        setDoordashStatus(status);
+      }
+      if (deliveriesRes.ok) {
+        const deliveries = await deliveriesRes.json();
+        setDoordashDeliveries(deliveries);
+      }
+    } catch (error) {
+      console.error('Failed to fetch DoorDash status:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDoordashStatus();
+  }, []);
+
+  const DoordashStatusBadge = () => {
+    if (!doordashStatus) return <Badge className="bg-gray-100 text-gray-700 border-gray-200">Loading...</Badge>;
+    if (doordashStatus.configured) {
+      return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+        {doordashStatus.environment === 'production' ? 'Live' : 'Sandbox'}
+      </Badge>;
+    }
+    return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Not Configured</Badge>;
+  };
+
+  const DoordashIntegrationPanel = () => {
+    const RESTRICTED_ITEMS = [
+      'tobacco', 'cannabis', 'illicit_drugs', 'weapons', 'explosives',
+      'ammunition', 'fireworks', 'hazardous_materials', 'prescription_drugs',
+      'counterfeit_goods', 'stolen_property', 'live_animals', 'human_remains'
+    ];
+
+    return (
+      <div className="ml-16 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-white/70 rounded-lg border">
+            <h4 className="font-medium mb-2 flex items-center gap-2">
+              <Settings2 className="h-4 w-4 text-amber-600" />
+              Configuration Status
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span>API Connected:</span>
+                <span className={doordashStatus?.configured ? 'text-emerald-600 font-medium' : 'text-red-600'}>
+                  {doordashStatus?.configured ? 'Yes' : 'No'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Environment:</span>
+                <span className="font-medium capitalize">{doordashStatus?.environment || 'N/A'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Developer ID:</span>
+                <span className="font-mono text-xs">{doordashStatus?.developerId || 'Not set'}</span>
+              </div>
+            </div>
+            {!doordashStatus?.configured && (
+              <div className="mt-3 p-2 bg-amber-50 rounded text-xs text-amber-800">
+                <strong>Required Secrets:</strong>
+                <ul className="list-disc list-inside mt-1">
+                  <li>DOORDASH_DEVELOPER_ID</li>
+                  <li>DOORDASH_KEY_ID</li>
+                  <li>DOORDASH_SIGNING_SECRET</li>
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 bg-white/70 rounded-lg border">
+            <h4 className="font-medium mb-2 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-red-600" />
+              Restricted Items Guardrails
+            </h4>
+            <p className="text-xs text-gray-600 mb-2">
+              DoorDash cannot deliver these items. Our system blocks orders containing:
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {RESTRICTED_ITEMS.slice(0, 6).map(item => (
+                <Badge key={item} variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                  {item.replace('_', ' ')}
+                </Badge>
+              ))}
+              <Badge variant="outline" className="text-xs">+{RESTRICTED_ITEMS.length - 6} more</Badge>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white/70 rounded-lg border">
+          <h4 className="font-medium mb-3 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-blue-600" />
+            Implementation Status
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>JWT Authentication</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Delivery Quote API</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Create Delivery</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Webhook Handler</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Status Tracking</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Restricted Items Filter</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Sandbox Simulator</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Circle className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-500">Production Certification</span>
+            </div>
+          </div>
+        </div>
+
+        {doordashDeliveries.length > 0 && (
+          <div className="p-4 bg-white/70 rounded-lg border">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Truck className="h-4 w-4 text-amber-600" />
+              Recent Deliveries ({doordashDeliveries.length})
+            </h4>
+            <div className="space-y-2">
+              {doordashDeliveries.slice(0, 5).map((delivery: any) => (
+                <div key={delivery.id} className="flex items-center justify-between text-sm p-2 bg-white/50 rounded">
+                  <span className="font-mono text-xs">{delivery.externalDeliveryId}</span>
+                  <Badge variant="outline" className={
+                    delivery.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
+                    delivery.status === 'cancelled' ? 'bg-red-50 text-red-700' :
+                    'bg-blue-50 text-blue-700'
+                  }>
+                    {delivery.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-4">
+          <a 
+            href="https://developer.doordash.com/en-US/docs/drive/reference/drive-api" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm"
+          >
+            API Documentation <ExternalLink className="h-3 w-3" />
+          </a>
+          <a 
+            href="https://developer.doordash.com/portal/integration/drive" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm"
+          >
+            Developer Portal <ExternalLink className="h-3 w-3" />
+          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchDoordashStatus()}
+            className="ml-auto"
+            data-testid="btn-refresh-doordash"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const [health, setHealth] = useState<SystemHealth>({
     api: 'checking',
     database: 'checking',
@@ -4153,24 +4349,14 @@ export default function DevelopersPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">DoorDash Drive API</span>
-                          <Badge className="bg-red-100 text-red-700 border-red-200">Next Up</Badge>
+                          <DoordashStatusBadge />
                         </div>
                         <p className="text-sm text-muted-foreground">Automated delivery dispatch for orders - Priority #1</p>
                       </div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-4">
-                    <div className="ml-16 space-y-3">
-                      <TaskCheckbox id="doordash-register" label="Register for DoorDash Drive developer account" />
-                      <TaskCheckbox id="doordash-credentials" label="Obtain API credentials (sandbox + production)" />
-                      <TaskCheckbox id="doordash-quote" label="Implement delivery quote endpoint" />
-                      <TaskCheckbox id="doordash-dispatch" label="Create delivery dispatch on order confirmation" />
-                      <TaskCheckbox id="doordash-webhook" label="Webhook integration for real-time tracking" />
-                      <TaskCheckbox id="doordash-eta" label="Driver ETA and status updates to customer" />
-                      <a href="https://developer.doordash.com/en-US/docs/drive/reference/drive-api" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-sm mt-2">
-                        View Documentation <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
+                    <DoordashIntegrationPanel />
                   </AccordionContent>
                 </AccordionItem>
 

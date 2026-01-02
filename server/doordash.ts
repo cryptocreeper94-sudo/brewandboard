@@ -265,3 +265,180 @@ export function getConfigStatus(): {
     developerId: process.env.DOORDASH_DEVELOPER_ID?.substring(0, 8) + '...',
   };
 }
+
+// ========================
+// GRATUITY SPLIT LOGIC
+// ========================
+
+export interface GratuitySplit {
+  customerTip: number;      // Total tip from customer (in cents)
+  driverTip: number;        // Amount passed to DoorDash driver (in cents)
+  internalTip: number;      // Amount kept by Brew & Board (in cents)
+  splitMethod: 'fixed' | 'percentage';
+}
+
+// Configuration for driver tip split
+const DRIVER_TIP_CONFIG = {
+  // Minimum tip to ensure fast pickup
+  minimumDriverTip: 500, // $5.00 in cents
+  
+  // If customer tip is above this, give driver a percentage
+  percentageThreshold: 1500, // $15.00 in cents
+  
+  // Percentage of customer tip to give driver (above threshold)
+  driverPercentage: 0.25, // 25% to driver, 75% to Brew & Board
+  
+  // Maximum driver tip cap
+  maxDriverTip: 1500, // $15.00 in cents
+};
+
+export function calculateGratuitySplit(customerTipCents: number): GratuitySplit {
+  // If no tip or very small tip, no driver tip
+  if (customerTipCents < 500) {
+    return {
+      customerTip: customerTipCents,
+      driverTip: 0,
+      internalTip: customerTipCents,
+      splitMethod: 'fixed',
+    };
+  }
+  
+  let driverTip: number;
+  let splitMethod: 'fixed' | 'percentage';
+  
+  if (customerTipCents <= DRIVER_TIP_CONFIG.percentageThreshold) {
+    // Small tip: give driver fixed $5
+    driverTip = DRIVER_TIP_CONFIG.minimumDriverTip;
+    splitMethod = 'fixed';
+  } else {
+    // Larger tip: give driver 25% (capped at $15)
+    const calculatedTip = Math.round(customerTipCents * DRIVER_TIP_CONFIG.driverPercentage);
+    driverTip = Math.min(calculatedTip, DRIVER_TIP_CONFIG.maxDriverTip);
+    splitMethod = 'percentage';
+  }
+  
+  // Ensure driver tip doesn't exceed customer tip
+  driverTip = Math.min(driverTip, customerTipCents);
+  
+  return {
+    customerTip: customerTipCents,
+    driverTip,
+    internalTip: customerTipCents - driverTip,
+    splitMethod,
+  };
+}
+
+// ========================
+// SMART DISPATCH (AUTO TIP SPLIT)
+// ========================
+
+export interface DispatchOrderRequest {
+  orderId: string;
+  
+  // Pickup location
+  vendorName: string;
+  vendorAddress: string;
+  vendorPhone: string;
+  pickupInstructions?: string;
+  
+  // Dropoff location
+  customerName: string;
+  customerAddress: string;
+  customerPhone: string;
+  dropoffInstructions?: string;
+  contactlessDropoff?: boolean;
+  
+  // Timing
+  scheduledPickupTime?: string; // ISO-8601
+  scheduledDropoffTime?: string; // ISO-8601
+  
+  // Order details
+  orderTotal: number;       // Order value in cents
+  customerTip: number;      // Customer's total tip in cents
+  
+  // Items for driver
+  items?: Array<{
+    name: string;
+    quantity: number;
+    price?: number;
+  }>;
+}
+
+export interface DispatchResult {
+  success: boolean;
+  externalDeliveryId: string;
+  gratuitySplit: GratuitySplit;
+  doordashResponse?: any;
+  error?: string;
+}
+
+export async function dispatchOrder(request: DispatchOrderRequest): Promise<DispatchResult> {
+  const externalDeliveryId = generateExternalDeliveryId();
+  
+  // Calculate gratuity split
+  const gratuitySplit = calculateGratuitySplit(request.customerTip);
+  
+  try {
+    // Create the delivery with driver tip included
+    const deliveryRequest: CreateDeliveryRequest = {
+      external_delivery_id: externalDeliveryId,
+      
+      // Pickup
+      pickup_address: request.vendorAddress,
+      pickup_business_name: request.vendorName,
+      pickup_phone_number: request.vendorPhone,
+      pickup_instructions: request.pickupInstructions || 'Brew & Board order - please check all items before pickup',
+      
+      // Dropoff
+      dropoff_address: request.customerAddress,
+      dropoff_phone_number: request.customerPhone,
+      dropoff_contact_given_name: request.customerName.split(' ')[0],
+      dropoff_contact_family_name: request.customerName.split(' ').slice(1).join(' ') || undefined,
+      dropoff_instructions: request.dropoffInstructions,
+      contactless_dropoff: request.contactlessDropoff ?? true,
+      
+      // Timing
+      pickup_time: request.scheduledPickupTime,
+      dropoff_time: request.scheduledDropoffTime,
+      
+      // Financials
+      order_value: request.orderTotal,
+      tip: gratuitySplit.driverTip, // Only driver portion goes to DoorDash
+      
+      // Items
+      items: request.items?.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      
+      // Return to vendor if undeliverable
+      action_if_undeliverable: 'return_to_pickup',
+    };
+    
+    const response = await createDelivery(deliveryRequest);
+    
+    return {
+      success: true,
+      externalDeliveryId,
+      gratuitySplit,
+      doordashResponse: response,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      externalDeliveryId,
+      gratuitySplit,
+      error: error.message,
+    };
+  }
+}
+
+// Helper to format gratuity split for display
+export function formatGratuitySplit(split: GratuitySplit): string {
+  const customerTotal = (split.customerTip / 100).toFixed(2);
+  const driverAmount = (split.driverTip / 100).toFixed(2);
+  const internalAmount = (split.internalTip / 100).toFixed(2);
+  
+  return `Customer tip: $${customerTotal} → Driver: $${driverAmount}, Brew & Board: $${internalAmount}`;
+}

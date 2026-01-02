@@ -3031,17 +3031,24 @@ export default function DevelopersPage() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span>API Connected:</span>
-                <span className={doordashStatus?.configured ? 'text-emerald-600 font-medium' : 'text-red-600'}>
+                <span 
+                  className={doordashStatus?.configured ? 'text-emerald-600 font-medium' : 'text-red-600'}
+                  data-testid="doordash-api-connected"
+                >
                   {doordashStatus?.configured ? 'Yes' : 'No'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Environment:</span>
-                <span className="font-medium capitalize">{doordashStatus?.environment || 'N/A'}</span>
+                <span className="font-medium capitalize" data-testid="doordash-environment">
+                  {doordashStatus?.environment || 'N/A'}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Developer ID:</span>
-                <span className="font-mono text-xs">{doordashStatus?.developerId || 'Not set'}</span>
+                <span className="font-mono text-xs" data-testid="doordash-developer-id">
+                  {doordashStatus?.developerId || 'Not set'}
+                </span>
               </div>
             </div>
             {!doordashStatus?.configured && (
@@ -3122,15 +3129,25 @@ export default function DevelopersPage() {
               <Truck className="h-4 w-4 text-amber-600" />
               Recent Deliveries ({doordashDeliveries.length})
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-2" data-testid="doordash-deliveries-list">
               {doordashDeliveries.slice(0, 5).map((delivery: any) => (
-                <div key={delivery.id} className="flex items-center justify-between text-sm p-2 bg-white/50 rounded">
-                  <span className="font-mono text-xs">{delivery.externalDeliveryId}</span>
-                  <Badge variant="outline" className={
-                    delivery.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
-                    delivery.status === 'cancelled' ? 'bg-red-50 text-red-700' :
-                    'bg-blue-50 text-blue-700'
-                  }>
+                <div 
+                  key={delivery.id} 
+                  className="flex items-center justify-between text-sm p-2 bg-white/50 rounded"
+                  data-testid={`doordash-delivery-row-${delivery.id}`}
+                >
+                  <span className="font-mono text-xs" data-testid={`doordash-delivery-id-${delivery.id}`}>
+                    {delivery.externalDeliveryId}
+                  </span>
+                  <Badge 
+                    variant="outline" 
+                    className={
+                      delivery.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
+                      delivery.status === 'cancelled' ? 'bg-red-50 text-red-700' :
+                      'bg-blue-50 text-blue-700'
+                    }
+                    data-testid={`doordash-delivery-status-${delivery.id}`}
+                  >
                     {delivery.status}
                   </Badge>
                 </div>

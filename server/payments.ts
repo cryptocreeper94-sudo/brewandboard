@@ -280,18 +280,117 @@ export function registerPaymentRoutes(app: Express) {
         
         // Update order status if this was an order payment
         if (metadata.type === 'order' && metadata.orderId) {
-          const { scheduledOrders, orderEvents } = await import('@shared/schema');
-          await db.update(scheduledOrders)
-            .set({ status: 'scheduled' })
-            .where(eq(scheduledOrders.id, metadata.orderId));
+          const { scheduledOrders, orderEvents, vendors, doordashDeliveries } = await import('@shared/schema');
           
-          // Create order event for payment completion
-          await db.insert(orderEvents).values({
-            orderId: metadata.orderId,
-            status: 'scheduled',
-            note: 'Payment completed - order confirmed',
-            changedBy: 'stripe_webhook'
-          });
+          // Get the full order details
+          const [order] = await db.select().from(scheduledOrders).where(eq(scheduledOrders.id, metadata.orderId));
+          
+          if (order) {
+            // Update order status to confirmed
+            await db.update(scheduledOrders)
+              .set({ status: 'confirmed' })
+              .where(eq(scheduledOrders.id, metadata.orderId));
+            
+            // Create order event for payment completion
+            await db.insert(orderEvents).values({
+              orderId: metadata.orderId,
+              status: 'confirmed',
+              note: 'Payment completed - order confirmed',
+              changedBy: 'stripe_webhook'
+            });
+            
+            // Auto-dispatch to DoorDash if configured
+            try {
+              const doordash = await import('./doordash');
+              
+              if (doordash.isConfigured()) {
+                // Get vendor details for pickup
+                let vendorAddress = 'Nashville, TN';
+                let vendorName = order.vendorName || 'Brew & Board Partner';
+                let vendorPhone = '6155551234';
+                
+                if (order.vendorId) {
+                  const [vendor] = await db.select().from(vendors).where(eq(vendors.id, order.vendorId));
+                  if (vendor) {
+                    vendorAddress = vendor.address;
+                    vendorName = vendor.name;
+                  }
+                }
+                
+                // Calculate gratuity in cents
+                const customerTipCents = Math.round(parseFloat(order.gratuity || '0') * 100);
+                const orderTotalCents = Math.round(parseFloat(order.total) * 100);
+                
+                // Dispatch the order
+                const dispatchResult = await doordash.dispatchOrder({
+                  orderId: order.id,
+                  vendorName,
+                  vendorAddress,
+                  vendorPhone,
+                  pickupInstructions: 'Brew & Board order - please verify all items',
+                  customerName: order.contactName || 'Customer',
+                  customerAddress: order.deliveryAddress,
+                  customerPhone: order.contactPhone || '',
+                  dropoffInstructions: order.deliveryInstructions || 'Leave at front desk',
+                  contactlessDropoff: true,
+                  orderTotal: orderTotalCents,
+                  customerTip: customerTipCents,
+                  items: order.items?.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: Math.round(parseFloat(item.price) * 100),
+                  })),
+                });
+                
+                if (dispatchResult.success) {
+                  // Save delivery record
+                  const customerNameParts = (order.contactName || 'Customer').split(' ');
+                  await db.insert(doordashDeliveries).values({
+                    externalDeliveryId: dispatchResult.externalDeliveryId,
+                    scheduledOrderId: order.id,
+                    status: 'created',
+                    pickupAddress: vendorAddress,
+                    pickupBusinessName: vendorName,
+                    pickupPhoneNumber: vendorPhone,
+                    dropoffAddress: order.deliveryAddress,
+                    dropoffPhoneNumber: order.contactPhone || '0000000000',
+                    dropoffContactGivenName: customerNameParts[0] || 'Customer',
+                    dropoffContactFamilyName: customerNameParts.slice(1).join(' ') || undefined,
+                    tipAmount: (dispatchResult.gratuitySplit.driverTip / 100).toFixed(2),
+                  });
+                  
+                  // Update order with delivery info and gratuity split
+                  await db.update(scheduledOrders)
+                    .set({
+                      status: 'confirmed',
+                      internalGratuity: (dispatchResult.gratuitySplit.internalTip / 100).toFixed(2),
+                      partnerGratuity: (dispatchResult.gratuitySplit.driverTip / 100).toFixed(2),
+                    })
+                    .where(eq(scheduledOrders.id, order.id));
+                  
+                  // Log dispatch event
+                  await db.insert(orderEvents).values({
+                    orderId: metadata.orderId,
+                    status: 'confirmed',
+                    note: `DoorDash delivery dispatched: ${dispatchResult.externalDeliveryId}. Driver tip: $${(dispatchResult.gratuitySplit.driverTip / 100).toFixed(2)}, Brew & Board keeps: $${(dispatchResult.gratuitySplit.internalTip / 100).toFixed(2)}`,
+                    changedBy: 'doordash_auto_dispatch'
+                  });
+                  
+                  console.log(`[DoorDash] Auto-dispatched order ${order.id}: ${dispatchResult.externalDeliveryId}`);
+                } else {
+                  console.error(`[DoorDash] Auto-dispatch failed for order ${order.id}: ${dispatchResult.error}`);
+                  await db.insert(orderEvents).values({
+                    orderId: metadata.orderId,
+                    status: 'confirmed',
+                    note: `DoorDash auto-dispatch failed: ${dispatchResult.error}. Manual dispatch required.`,
+                    changedBy: 'doordash_auto_dispatch'
+                  });
+                }
+              }
+            } catch (dispatchError: any) {
+              console.error('[DoorDash] Auto-dispatch error:', dispatchError.message);
+            }
+          }
         }
         break;
       }

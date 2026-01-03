@@ -394,6 +394,161 @@ export interface DispatchResult {
   fallbackTriggered?: boolean;
 }
 
+export interface DeliveryQuote {
+  success: boolean;
+  fee?: number;
+  currency?: string;
+  estimatedPickupTime?: string;
+  estimatedDropoffTime?: string;
+  error?: string;
+}
+
+export async function getDeliveryQuote(
+  pickupAddress: string,
+  dropoffAddress: string,
+  orderValue?: number
+): Promise<DeliveryQuote> {
+  const externalDeliveryId = generateExternalDeliveryId();
+  
+  const result = await doordashRequestWithRetry('POST', '/drive/v2/deliveries', {
+    external_delivery_id: externalDeliveryId,
+    pickup_address: pickupAddress,
+    dropoff_address: dropoffAddress,
+    order_value: orderValue || 2500,
+    pickup_phone_number: '+16155551234',
+    dropoff_phone_number: '+16155555678',
+    dropoff_contact_given_name: 'Quote',
+    simulation: true,
+  });
+  
+  if (result.success && result.data) {
+    return {
+      success: true,
+      fee: result.data.fee,
+      currency: result.data.currency || 'USD',
+      estimatedPickupTime: result.data.estimated_pickup_time,
+      estimatedDropoffTime: result.data.estimated_dropoff_time,
+    };
+  }
+  
+  return {
+    success: false,
+    error: result.error,
+  };
+}
+
+export interface DriverLocation {
+  latitude?: number;
+  longitude?: number;
+  lastUpdated?: string;
+}
+
+export async function getDriverLocation(externalDeliveryId: string): Promise<{
+  success: boolean;
+  location?: DriverLocation;
+  eta?: string;
+  status?: string;
+  error?: string;
+}> {
+  const result = await doordashRequestWithRetry('GET', `/drive/v2/deliveries/${externalDeliveryId}`);
+  
+  if (result.success && result.data) {
+    return {
+      success: true,
+      location: {
+        latitude: result.data.dasher_location?.lat,
+        longitude: result.data.dasher_location?.lng,
+        lastUpdated: result.data.dasher_location?.last_known_location_time,
+      },
+      eta: result.data.estimated_dropoff_time,
+      status: result.data.delivery_status,
+    };
+  }
+  
+  return {
+    success: false,
+    error: result.error,
+  };
+}
+
+export function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  timestamp: string
+): boolean {
+  const config = getConfig();
+  if (!config) return false;
+  
+  const signedPayload = `${timestamp}.${payload}`;
+  const expectedSignature = crypto
+    .createHmac('sha256', config.signingSecret)
+    .update(signedPayload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+export interface WebhookEvent {
+  event_type: string;
+  external_delivery_id: string;
+  delivery_id?: string;
+  delivery_status?: string;
+  dasher?: {
+    first_name?: string;
+    phone_number?: string;
+    vehicle?: string;
+  };
+  tracking_url?: string;
+  estimated_pickup_time?: string;
+  estimated_dropoff_time?: string;
+  actual_pickup_time?: string;
+  actual_dropoff_time?: string;
+  cancellation_reason?: string;
+}
+
+export function parseWebhookEvent(body: any): WebhookEvent | null {
+  if (!body || !body.event_type || !body.external_delivery_id) {
+    return null;
+  }
+  
+  return {
+    event_type: body.event_type,
+    external_delivery_id: body.external_delivery_id,
+    delivery_id: body.delivery_id,
+    delivery_status: body.delivery_status,
+    dasher: body.dasher,
+    tracking_url: body.tracking_url,
+    estimated_pickup_time: body.estimated_pickup_time,
+    estimated_dropoff_time: body.estimated_dropoff_time,
+    actual_pickup_time: body.actual_pickup_time,
+    actual_dropoff_time: body.actual_dropoff_time,
+    cancellation_reason: body.cancellation_reason,
+  };
+}
+
+export async function updateDelivery(
+  externalDeliveryId: string,
+  updates: {
+    dropoff_instructions?: string;
+    dropoff_phone_number?: string;
+    tip?: number;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const result = await doordashRequestWithRetry(
+    'PATCH',
+    `/drive/v2/deliveries/${externalDeliveryId}`,
+    updates
+  );
+  
+  return {
+    success: result.success,
+    error: result.error,
+  };
+}
+
 export async function dispatchOrder(request: DispatchOrderRequest): Promise<DispatchResult> {
   const externalDeliveryId = generateExternalDeliveryId();
   const gratuitySplit = calculateGratuitySplit(request.customerTip);

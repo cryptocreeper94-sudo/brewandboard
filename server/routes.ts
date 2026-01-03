@@ -38,6 +38,8 @@ import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
 import { registerPartnerApiRoutes } from "./partnerApiRoutes";
 import { registerAuthRoutes } from "./authRoutes";
 import { registerAdminRoutes } from "./adminRoutes";
+import { registerDoordashRoutes } from "./doordashRoutes";
+import { registerConfigRoutes } from "./configRoutes";
 import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
@@ -69,6 +71,12 @@ export async function registerRoutes(
   
   // Register Admin routes (Monitoring dashboard)
   registerAdminRoutes(app);
+  
+  // Register DoorDash routes (Delivery integration)
+  registerDoordashRoutes(app);
+  
+  // Register Config routes (Production/Sandbox toggle)
+  registerConfigRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

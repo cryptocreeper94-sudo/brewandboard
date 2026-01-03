@@ -356,7 +356,8 @@ export function registerPaymentRoutes(app: Express) {
                     dropoffPhoneNumber: order.contactPhone || '0000000000',
                     dropoffContactGivenName: customerNameParts[0] || 'Customer',
                     dropoffContactFamilyName: customerNameParts.slice(1).join(' ') || undefined,
-                    tipAmount: (dispatchResult.gratuitySplit.driverTip / 100).toFixed(2),
+                    tipCents: dispatchResult.gratuitySplit.driverTip,
+                    orderValueCents: Math.round(parseFloat(order.total) * 100),
                   });
                   
                   // Update order with delivery info and gratuity split

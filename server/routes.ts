@@ -37,9 +37,11 @@ import { registerHallmarkRoutes } from "./hallmarkRoutes";
 import { registerAppEcosystemRoutes } from "./appEcosystemRoutes";
 import { registerPartnerApiRoutes } from "./partnerApiRoutes";
 import { registerAuthRoutes } from "./authRoutes";
+import { registerAdminRoutes } from "./adminRoutes";
 import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
+import logger from "./logger";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -64,6 +66,9 @@ export async function registerRoutes(
   
   // Register Partner API routes (Franchise integrations)
   registerPartnerApiRoutes(app);
+  
+  // Register Admin routes (Monitoring dashboard)
+  registerAdminRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

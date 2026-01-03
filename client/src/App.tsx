@@ -36,7 +36,9 @@ import OperationsPage from "@/pages/operations";
 import VendorMenuPage from "@/pages/vendor-menu";
 import OrderHistoryPage from "@/pages/order-history";
 import OneOffOrderPage from "@/pages/one-off-order";
+import MonitoringPage from "@/pages/monitoring";
 import { Footer } from "@/components/Footer";
+import SupportChat from "@/components/support-chat";
 
 function Router() {
   return (
@@ -72,6 +74,7 @@ function Router() {
       <Route path="/order/:vendorId" component={VendorMenuPage} />
       <Route path="/order-history" component={OrderHistoryPage} />
       <Route path="/one-off-order" component={OneOffOrderPage} />
+      <Route path="/monitoring" component={MonitoringPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -86,6 +89,15 @@ function FooterWrapper() {
   return <Footer />;
 }
 
+function SupportChatWrapper() {
+  const [location] = useLocation();
+  const hideChatPages = ["/"];
+  
+  if (hideChatPages.includes(location)) return null;
+  
+  return <SupportChat />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -95,6 +107,7 @@ function App() {
             <Toaster />
             <Router />
             <FooterWrapper />
+            <SupportChatWrapper />
           </TooltipProvider>
         </CartProvider>
       </ThemeProvider>

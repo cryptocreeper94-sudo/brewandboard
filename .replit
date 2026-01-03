@@ -42,3 +42,9 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
+ADMIN_DEV_PIN = "0424"
+ADMIN_DAVID_PIN = "2424"

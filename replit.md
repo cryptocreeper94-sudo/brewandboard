@@ -1,7 +1,7 @@
 # Brew & Board Coffee - B2B Coffee Delivery Platform
 
 ## Overview
-Brew & Board Coffee is a B2B platform connecting Nashville businesses and meeting planners with local coffee shops and vendors for pre-meeting coffee and food board services. It aims to deliver a premium "Nashville Luxury" experience with features like custom authentication, CRM, calendar-based order scheduling, and a universal document scanner. The vision is to streamline B2B coffee and food delivery, expand vendor offerings, and provide flexible pricing models including subscriptions.
+Brew & Board Coffee is a B2B platform connecting Nashville businesses and meeting planners with local coffee shops and vendors. Its core purpose is to streamline B2B coffee and food delivery services, offering a premium "Nashville Luxury" experience. Key capabilities include custom authentication, CRM, calendar-based order scheduling, universal document scanning, and a blockchain-based hallmark system for document authenticity. The platform aims to expand vendor offerings, provide flexible pricing models including subscriptions, and support a comprehensive ecosystem for B2B transactions.
 
 ## User Preferences
 - **Design**: "Nashville Luxury" aesthetic with shimmering dark brown color scheme (#1a0f09 to #5a3620 gradient)
@@ -14,66 +14,38 @@ Brew & Board Coffee is a B2B platform connecting Nashville businesses and meetin
 - **Footer**: Dark brown gradient matching hero, includes Admin/Terms/Contact/Investor links
 - **Version Management**: Auto-bump versions and create blockchain hallmarks on publish
 
-## Agent Commands
-
-See `AGENT_COMMANDS.md` for the full pre-publish sweep command and other agent instructions.
-
-**Quick Reference:**
-- Before publishing, give any agent the "PRE-PUBLISH SWEEP" command from AGENT_COMMANDS.md
-- After sweep is complete, run: `npx tsx scripts/bump-version.ts patch --hallmark`
-
-## Version Management
-
-### Auto-Version Bump System
-The app uses an automated version bumping system located in `scripts/bump-version.ts`. 
-
-**To bump version before publishing:**
-```bash
-npx tsx scripts/bump-version.ts patch --hallmark
-```
-
-**Options:**
-- `patch` - Bump patch version (1.2.3 → 1.2.4)
-- `minor` - Bump minor version (1.2.3 → 1.3.0)
-- `major` - Bump major version (1.2.3 → 2.0.0)
-- `--hallmark` or `-h` - Create blockchain hallmark record
-
-**Files updated automatically:**
-- `version.json` - Central version tracking
-- `client/src/pages/login.tsx` - Login page version
-- `replit.md` - Documentation header
-
-**Note:** The Footer version is now dynamic and fetches from the `/api/version/tracking` endpoint automatically.
-
-**Hallmark records** are stored in `version.json` and can be verified on Solana mainnet through the Developer Hub.
-
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento grid layout on the dashboard. It employs Playfair Display for headings and a dark coffee-toned palette with shimmery cream "shine-effect" animations, emphasizing a sophisticated and user-friendly interface.
+The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento grid layout on the dashboard. It employs Playfair Display for headings and a dark coffee-toned palette with shimmery cream "shine-effect" animations, emphasizing a sophisticated and user-friendly interface. Key UI elements include a shimmering hero, compact weather widget, vendor scrolling, and a live news feed.
 
 ### Technical Implementations
-- **Authentication**: Custom PIN-based login/registration with optional 30-day persistence and a developer PIN (0424).
-- **Dashboard**: Includes a shimmering hero, weather widget, vendor scrolling, quick web search, and a live Nashville news feed.
-- **Portfolio/CRM**: Offers industry-specific note templates (painting, construction, real estate, plumbing, general) with freeform notes and voice recording.
-- **Order Scheduling**: Calendar-based system with a 2-hour minimum lead time, detailed service fee breakdowns, gratuity options, and capacity management (max 4 concurrent orders per 2-hour window).
+- **Authentication**: Custom PIN-based login with bcrypt hashing, rate limiting, and environment-variable-based admin credentials. Includes forced PIN change on first login and preview modes for partners.
+- **Dashboard**: Features a personalized experience with welcome wizards, guided tours, AI recommendations, quick reorder, favorites, and order templates.
+- **Portfolio/CRM**: Offers industry-specific note templates with freeform notes and voice recording capabilities.
+- **Order Scheduling**: Calendar-based system with minimum lead times, detailed service fee breakdowns, gratuity options, and capacity management. Includes real-time order tracking with status timelines, ETA, and driver information.
 - **Document Scanner**: Universal OCR scanner for PDF creation and sharing.
-- **Vendor Catalog**: Expanded to diverse vendors (coffee, donuts, juice, bubble tea, breakfast) with categorized badges.
-- **Pricing Model**: Concierge pricing with a 15% service fee on one-off orders, distance-based delivery fees, and subscription tiers.
-- **Blockchain Hallmark System**: Two-tier Solana-based verification for document authenticity (Company Hallmarks for official releases, Subscriber Hallmarks for personalized documents).
-- **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls, unique invite tokens, and 18% auto-gratuity for coordinated orders.
-- **Operations Control Center**: Live order board for admins and regional managers with real-time status tracking, driver assignment, GPS timeline events, and 30-second auto-refresh.
-- **Gratuity Protection System**: Split gratuity handling separating internal tips (kept by Brew & Board) from partner tips (passed to DoorDash/Uber Direct).
-- **Partner Hub**: Provides an accordion-style interface for partners to access information and manage bug reports. Features personalized welcome modals, forced PIN change on first login, and Preview Mode (data not saved until system goes live).
+- **Vendor Catalog**: Expanded to diverse vendors with categorized badges.
+- **Pricing Model**: Concierge pricing with service fees, distance-based delivery fees, and subscription tiers.
+- **Blockchain Hallmark System**: Two-tier Solana-based verification for document authenticity (Company Hallmarks for official releases, Subscriber Hallmarks for personalized documents). Integrated with an auto-version bumping system that creates blockchain hallmarks on publish.
+- **Virtual Host**: Allows meeting hosts to order for attendees at different locations with budget controls, unique invite tokens, and auto-gratuity for coordinated orders.
+- **Operations Control Center**: Live order board for admins and regional managers with real-time status tracking, driver assignment, GPS timeline events, and auto-refresh.
+- **Gratuity Protection System**: Splits gratuity handling between internal tips and partner tips for delivery integrations.
+- **Partner Hub**: Accordion-style interface for partners to access information, manage bug reports, and includes emergency kill switch and system live toggle.
 - **Meeting Presentation Builder**: Enables creation of slideshow-style presentations from templates with document attachments and shareable links.
-- **App Ecosystem Hub**: Cross-app integration system for connecting multiple Replit apps. Features include app registration with unique API keys (shown once), permission scopes (read/write code, data, clients, hallmarks), sync logging, and shared code snippets panel.
+- **App Ecosystem Hub**: Cross-app integration system for connecting multiple Replit apps with API keys, permission scopes, sync logging, and shared code snippets.
+- **1099 Compliance Portal**: Full 1099-NEC tracking, payee directory, payment ledger, and year-end filing prep.
+- **Team Management**: Supports company accounts with role-based access, spending limits, and budget controls.
+- **Loyalty Program**: Tier-based system with points, rewards, and referral codes.
+- **Calendar Integration**: Connects with Google/Outlook for meeting sync, attendee counts, and catering suggestions.
 
 ### System Design Choices
 - **Frontend**: React + TypeScript
 - **Backend**: Express + TypeScript
 - **Database**: PostgreSQL (via Neon)
-- **Payment Processing**: Stripe (subscriptions, one-time payments) and Coinbase Commerce (crypto payments).
-- **Email Notifications**: Resend for contact and order notifications, featuring branded email designs.
+- **Payment Processing**: Stripe, Coinbase Commerce
+- **Email Notifications**: Resend
+- **Architecture**: Employs a modular design with clear API routes for various functionalities (e.g., operations, partners, 1099, calendar, loyalty).
 
 ## External Dependencies
 
@@ -83,134 +55,5 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Email Service**: Resend
 - **News Feed**: WKRN
 - **Weather API**: Open-Meteo
-- **Planned Integrations**: DoorDash, Uber Direct, Google Calendar, Twilio, Google Maps
-
-## Current Version
-**v1.2.8** - December 2025 | 7-Phase UX Enhancement Suite
-
-## Recent Changes (December 2024)
-- **v1.2.8**: 7-Phase UX Enhancement Suite
-  - **Phase 1 - First-Time Experience**: Welcome Wizard, Guided Tour, Help Tooltips
-    - Multi-step business onboarding wizard with industry selection
-    - Framer Motion-powered guided tour highlighting key features
-    - Contextual help tooltips on critical UI elements
-    - Database: user_onboarding_profiles table with tour/wizard completion tracking
-  - **Phase 2 - Convenience Features**: Quick Reorder, Favorites, Templates
-    - QuickReorderPanel: One-tap repeat of past orders with save-as-template
-    - FavoritesPanel: Heart button for vendors and menu items with tabbed view
-    - OrderTemplatesPanel: Save custom order configurations for recurring meetings
-    - API: /api/favorites, /api/order-templates, /api/recent-orders
-  - **Phase 3 - Smart Features**: AI Recommendations
-    - AIRecommendations component with personalized suggestions
-    - Context-aware recommendations based on meeting size and time
-    - Visual recommendation cards with vendor matching
-  - **Phase 4 - Order Tracking**: Real-time Timeline
-    - OrderStatusTimeline with visual step-by-step progress
-    - ETA display, driver info, and live status updates
-    - Integration with scheduled orders API
-  - **Phase 5 - Team Management**: Company Accounts
-    - TeamManagementWidget for company setup and member management
-    - Role-based access: admin, manager, member
-    - Spending limits and budget controls per team member
-    - API: /api/company/:userId, /api/company/invite
-  - **Phase 6 - Loyalty Program**: Points & Rewards
-    - LoyaltyWidget with tier system (bronze/silver/gold/platinum)
-    - Referral codes with bonus points for referrer and referee
-    - Points-to-tier progress tracking with visual progress bars
-    - Database: loyalty_accounts, loyalty_transactions tables
-  - **Phase 7 - Calendar Integration**: Meeting Sync
-    - CalendarSyncWidget for Google/Outlook calendar connection
-    - Upcoming meetings with attendee counts and catering suggestions
-    - Auto-suggest toggle and configurable reminder timing
-    - API: /api/calendar/settings, /api/calendar/upcoming
-  - **Dashboard Integration**: All widgets render conditionally for signed-in users
-  - **Testing Compliance**: All interactive elements instrumented with data-testid attributes
-
-- **v1.2.7**: Operations Control Center, Gratuity System & Release Manager
-  - **Release Manager Panel**: Consolidated DevOps hub in Developer Hub
-    - Category: DevOps and Release Management
-    - Tags: release-manager, version-control, solana-blockchain, devops
-    - One-click Patch/Minor/Major release buttons with Solana stamp
-    - "Verified on Solana" link to Solscan for blockchain verification
-    - Technical Reference accordion with files, CLI, secrets
-    - Automatic on Publish: build process runs version bump + Solana stamp
-  - **Auto-Publish Integration**: script/build.ts runs autoRelease() automatically
-    - Version bump on every publish (no manual command needed)
-    - Solana mainnet stamp with transaction signature
-    - Updates version.json, login.tsx, replit.md automatically
-  - **Version Tracking Dashboard**: Developer Hub panel showing version history
-    - Current version, build number, last published date
-    - Hallmark history with copy-to-clipboard hashes
-    - Dynamic footer version (fetches from API automatically)
-  - **Auto-Version Bump System**: scripts/bump-version.ts for manual releases
-    - Automatic version increment (patch/minor/major)
-    - Build hash generation for each release
-    - Hallmark record creation with --hallmark flag
-  - **Operations Control Center** (/operations): Live order board with real-time status tracking
-    - Status workflow: scheduled → confirmed → preparing → picked_up → out_for_delivery → delivered
-    - Driver assignment with phone number tracking
-    - Timeline events with GPS coordinates for location tracking
-    - 30-second auto-refresh for live updates
-    - Filter by status, search by vendor/address/contact
-  - **Gratuity Protection System**: Split gratuity handling for delivery integrations
-    - internalGratuity: Tips kept by Brew & Board
-    - partnerGratuity: Tips passed to delivery partners (DoorDash/Uber Direct)
-    - 18% auto-gratuity for multi-site coordinated Virtual Host orders
-    - Attendees see "Add an Additional Tip" messaging (host already tips)
-  - **Virtual Host Enhancements**: Multi-site meeting coordination improvements
-    - Budget controls per attendee
-    - Unique invite tokens for each attendee
-    - Coordinated order flagging (isCoordinatedOrder)
-  - **Partner Hub Updates**: Refreshed welcome modals for Sarah and Sid
-    - Updated feature lists with Operations Center, gratuity system, Virtual Host
-    - Quick action links to /operations, /virtual-host, /scan
-    - Platform features grid with 8 core capabilities
-  - **Database Schema Updates**: 
-    - scheduledOrders: regionId, assignedDriverName, driverPhone, internalGratuity, partnerGratuity, isCoordinatedOrder, autoGratuityPercent
-    - orderEvents: changedByRole, latitude, longitude for GPS tracking
-  - **API Routes**: 
-    - GET /api/operations/orders (with region/status filtering)
-    - POST /api/operations/orders/:id/status (with audit logging)
-    - POST /api/operations/orders/:id/assign-driver
-  - **Storage Methods**: getAllScheduledOrders with proper single-filter handling
-
-- **v1.2.2**: AI Mascot & UX Improvements
-  - Happy Coffee AI mascot with auto-minimize intro flow
-  - First-time greeting with "Tap me anytime!" message, then auto-minimizes
-  - Conversation persistence in localStorage across sessions
-  - Clear chat button to reset conversation history
-  - Improved modal visibility across login and business docs pages
-  - Stamped on Solana mainnet (BB-0000000023, tx: HG8dSZS36MbXkR79YsrtcY6XMYPM9X2K3Zh4y8xwq6v3FfCAgUDxbuLZ52yDoPaeQsg8mn7drHbdN5Pi2xpWFLo)
-
-- **v1.2.1**: Partner Hub Enhancements & Premium UI
-  - Premium Bento grid UI for Partner Hub with keyboard-accessible carousels
-  - Partner Control Panel in Developer Hub with Emergency Kill Switch and System Live Toggle
-  - Personalized Welcome Modals for Sarah (PIN 777) and Sid (PIN 444) with system overview
-  - Forced PIN Change on first login (3-digit initial → 4-digit personal PIN)
-  - Preview Mode for partners (data not saved until system goes live)
-  - Footer: Dev/Partner/RM login links with dark coffee gradient, version stamp v1.2.1
-  - CSS: Bento grid system, glass morphism, 3D hover effects, sparkle animations
-  - Database: system_settings, partner_accounts tables with onboarding tracking
-  - API: /api/partners/login, /api/partners/:id/complete-onboarding, /api/system/settings
-  - Stamped on Solana mainnet (BB-0000000022, tx: dDq9T63pRBWKDxmsPv7ZgF...)
-
-- **v1.2.0**: 1099 Compliance Portal
-  - Full 1099-NEC tracking system in Developer Hub
-  - Payee Directory: Add contractors, referral partners, franchise owners, delivery drivers with masked tax IDs
-  - Payment Ledger: Record commissions, referrals, contractor payments with category tracking
-  - Year-End Filing: Automatic $600 threshold tracking, W-9 status monitoring, 1099-NEC generation prep
-  - Database: payees, payments1099, filings1099 tables with secure tax ID storage (last 4 digits only)
-  - API: Full CRUD for /api/1099/payees, /api/1099/payments, /api/1099/summary/:year, /api/1099/filings/:year
-
-- **v1.1.9**: Partner Hub & Error Reporting System
-  - New Partner Hub with accordion-style navigation for mobile-friendly experience
-  - 3-digit PIN access for partners (Sarah = 777)
-  - Comprehensive bug reporting system accessible from hamburger menu
-  - Error reports dashboard in Partner Hub with status/severity filters
-  - Database schema: error_reports table with full issue tracking
-  - Stamped on Solana mainnet (BB-0000000021)
-
-- **v1.1.8**: Meeting Presentation Builder
-  - Slideshow-style presentation builder with 3 templates
-  - Attach scanned documents, add attendees, generate shareable links
-  - Stamped on Solana mainnet (BB-0000000020)
+- **Planned Integrations**: DoorDash (enhanced with circuit breaker + retry logic), Uber Direct, Google Calendar, Twilio, Google Maps
+- **Security**: bcrypt PIN hashing, rate limiting, server-side order pricing validation, environment-sourced admin credentials

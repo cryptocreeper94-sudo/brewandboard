@@ -48,3 +48,10 @@ integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:2.0.
 [userenv.shared]
 ADMIN_DEV_PIN = "0424"
 ADMIN_DAVID_PIN = "2424"
+VITE_FIREBASE_API_KEY = "AIzaSyByHm_Zwo9NGZ3DyHtZ5_wCtHlLXcat23Q"
+VITE_FIREBASE_AUTH_DOMAIN = "darkwave-auth.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID = "darkwave-auth"
+VITE_FIREBASE_STORAGE_BUCKET = "darkwave-auth.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "41307406912"
+VITE_FIREBASE_APP_ID = "1:41307406912:web:9a674f22472924b52a55a5"
+VITE_FIREBASE_MEASUREMENT_ID = "G-3YHVG8K6L8"

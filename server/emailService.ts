@@ -279,6 +279,71 @@ export async function sendOrderCancellation(data: OrderCancellationData): Promis
   }
 }
 
+export async function sendPasswordResetEmail(email: string, resetUrl: string, customerName: string): Promise<boolean> {
+  if (!resend) {
+    logger.warn('system', 'Email service not configured - RESEND_API_KEY missing');
+    return false;
+  }
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #fef3c7; color: #1a0f09; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1a0f09, #5a3620); color: #fef3c7; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { background: white; padding: 30px; border: 1px solid #d4a574; }
+        .button { display: inline-block; background: linear-gradient(135deg, #5c4033, #2d1810); color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .footer { background: #1a0f09; color: #fef3c7; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>☕ Brew & Board Coffee</h1>
+          <p>Password Reset</p>
+        </div>
+        <div class="content">
+          <p>Hi ${customerName},</p>
+          <p>We received a request to reset your password. Click the button below to create a new password:</p>
+          
+          <div style="text-align: center;">
+            <a href="${resetUrl}" class="button" style="color: white;">Reset My Password</a>
+          </div>
+          
+          <p style="color: #666; font-size: 14px;">This link will expire in 1 hour for security reasons.</p>
+          <p style="color: #666; font-size: 14px;">If you didn't request this reset, you can safely ignore this email. Your password will not be changed.</p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #999; font-size: 12px;">If the button doesn't work, copy and paste this link into your browser:<br>${resetUrl}</p>
+        </div>
+        <div class="footer">
+          <p>Brew & Board Coffee | Nashville, TN</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Reset Your Password - Brew & Board Coffee',
+      html,
+    });
+    
+    logger.info('system', `Password reset email sent to ${email}`);
+    return true;
+  } catch (error: any) {
+    logger.error('system', `Failed to send password reset email`, error, { email });
+    return false;
+  }
+}
+
 export function isConfigured(): boolean {
   return resend !== null;
 }

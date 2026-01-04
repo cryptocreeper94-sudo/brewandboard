@@ -9,6 +9,7 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").unique(),
+  passwordHash: text("password_hash"),
   name: text("name"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -16,12 +17,25 @@ export const users = pgTable("users", {
   company: text("company"),
   phone: text("phone"),
   pin: text("pin").unique(),
+  emailVerified: boolean("email_verified").default(false),
   // Franchise association (null = direct B&B customer)
   franchiseId: varchar("franchise_id"),
   // User role within franchise
   franchiseRole: varchar("franchise_role", { length: 30 }), // 'owner', 'manager', 'staff', 'customer'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ========================
+// PASSWORD RESET TOKENS
+// ========================
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

@@ -140,6 +140,7 @@ import {
   doordashStores,
   doordashQuotes,
   doordashDeliveries,
+  passwordResetTokens,
   TAX_THRESHOLD_1099
 } from "@shared/schema";
 import { db } from "./db";
@@ -151,6 +152,12 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByPin(pin: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserPassword(userId: string, passwordHash: string): Promise<void>;
+  
+  // Password Reset Tokens
+  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
+  getPasswordResetToken(token: string): Promise<{ userId: string; expiresAt: Date; usedAt: Date | null } | undefined>;
+  markPasswordResetTokenUsed(token: string): Promise<void>;
   
   // CRM Notes (Portfolio)
   getNotes(userId: string): Promise<CrmNote[]>;
@@ -456,6 +463,27 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId));
+  }
+
+  // ========================
+  // PASSWORD RESET TOKENS
+  // ========================
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    await db.insert(passwordResetTokens).values({ userId, token, expiresAt });
+  }
+
+  async getPasswordResetToken(token: string): Promise<{ userId: string; expiresAt: Date; usedAt: Date | null } | undefined> {
+    const [result] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    if (!result) return undefined;
+    return { userId: result.userId, expiresAt: result.expiresAt, usedAt: result.usedAt };
+  }
+
+  async markPasswordResetTokenUsed(token: string): Promise<void> {
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.token, token));
   }
 
   // ========================

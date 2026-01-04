@@ -37,6 +37,7 @@ import VendorMenuPage from "@/pages/vendor-menu";
 import OrderHistoryPage from "@/pages/order-history";
 import OneOffOrderPage from "@/pages/one-off-order";
 import MonitoringPage from "@/pages/monitoring";
+import ResetPasswordPage from "@/pages/reset-password";
 import { Footer } from "@/components/Footer";
 import SupportChat from "@/components/support-chat";
 
@@ -75,6 +76,7 @@ function Router() {
       <Route path="/order-history" component={OrderHistoryPage} />
       <Route path="/one-off-order" component={OneOffOrderPage} />
       <Route path="/monitoring" component={MonitoringPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route component={NotFound} />
     </Switch>
   );

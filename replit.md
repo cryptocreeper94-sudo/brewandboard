@@ -20,7 +20,10 @@ Brew & Board Coffee is a B2B platform connecting Nashville businesses and meetin
 The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento grid layout on the dashboard. It employs Playfair Display for headings and a dark coffee-toned palette with shimmery cream "shine-effect" animations, emphasizing a sophisticated and user-friendly interface. Key UI elements include a shimmering hero, compact weather widget, vendor scrolling, and a live news feed.
 
 ### Technical Implementations
-- **Authentication**: Custom PIN-based login with bcrypt hashing, rate limiting, and environment-variable-based admin credentials. Includes forced PIN change on first login and preview modes for partners.
+- **Authentication**: Dual authentication system:
+  - **Email/Password**: Native auth with bcrypt password hashing, registration, login, and password reset via email (tokens expire in 1 hour)
+  - **PIN-based**: For admin/partner/beta tester access with rate limiting and environment-sourced credentials
+  - Firebase has been removed - no third-party auth providers
 - **Dashboard**: Features a personalized experience with welcome wizards, guided tours, AI recommendations, quick reorder, favorites, and order templates.
 - **Portfolio/CRM**: Offers industry-specific note templates with freeform notes and voice recording capabilities.
 - **Order Scheduling**: Calendar-based system with minimum lead times, detailed service fee breakdowns, gratuity options, and capacity management. Includes real-time order tracking with status timelines, ETA, and driver information.

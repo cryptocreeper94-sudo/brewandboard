@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from 'express';
 import { storage } from './storage';
 import { checkRateLimit, resetRateLimit, verifyPin, verifyPinSync } from './security';
+import { verifyFirebaseToken, isFirebaseConfigured } from './firebaseAdmin';
 import logger from './logger';
 
 function getAdminCredentials(): Map<string, { name: string; email: string; isDeveloper?: boolean; isAdmin?: boolean }> {
@@ -32,13 +33,71 @@ export function registerAuthRoutes(app: Express) {
   app.get('/api/auth/config', (req, res) => {
     res.json({
       replitAuth: true,
+      firebase: isFirebaseConfigured(),
       providers: {
         google: true,
         apple: true,
         github: true,
-        pin: true
+        pin: true,
+        email: isFirebaseConfigured()
       }
     });
+  });
+
+  app.post('/api/auth/firebase', async (req: Request, res: Response) => {
+    try {
+      const { idToken } = req.body;
+      
+      if (!idToken) {
+        return res.status(400).json({ error: 'ID token is required' });
+      }
+      
+      const decodedToken = await verifyFirebaseToken(idToken);
+      
+      if (!decodedToken) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+      
+      let user = await storage.getUserByEmail(decodedToken.email || '');
+      
+      if (!user && decodedToken.email) {
+        user = await storage.createUser({
+          email: decodedToken.email,
+          name: decodedToken.name || decodedToken.email.split('@')[0],
+          company: 'New Customer'
+        });
+        logger.auth('info', `New Firebase user created: ${decodedToken.email}`, user.id);
+      }
+      
+      if (user) {
+        logger.auth('info', `Firebase login: ${user.email}`, user.id);
+        return res.json({
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            company: user.company,
+            provider: 'firebase'
+          }
+        });
+      }
+      
+      logger.auth('info', `Firebase login (no DB user): ${decodedToken.email}`, decodedToken.uid);
+      res.json({
+        success: true,
+        user: {
+          id: `firebase-${decodedToken.uid}`,
+          name: decodedToken.name || 'User',
+          email: decodedToken.email || '',
+          company: 'New Customer',
+          provider: 'firebase'
+        }
+      });
+    } catch (error: any) {
+      logger.error('auth', 'Firebase auth error', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
   });
 
   app.post('/api/auth/pin', async (req: Request, res: Response) => {

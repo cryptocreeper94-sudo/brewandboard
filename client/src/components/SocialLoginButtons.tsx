@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogIn, Fingerprint, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Fingerprint, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 interface SocialLoginButtonsProps {
   onSuccess?: (user: any) => void;
@@ -26,10 +26,6 @@ export function SocialLoginButtons({ onSuccess, showPinLogin = false }: SocialLo
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
-
-  const handleReplitLogin = () => {
-    window.location.href = "/api/login";
-  };
 
   const handleEmailAuth = async () => {
     if (!email || !password) {
@@ -316,38 +312,18 @@ export function SocialLoginButtons({ onSuccess, showPinLogin = false }: SocialLo
   return (
     <div className="space-y-4">
       <Button
-        onClick={handleReplitLogin}
-        disabled={isLoading !== null}
+        onClick={() => setAuthView('email')}
         className="w-full h-12 text-white rounded-lg font-medium flex items-center justify-center gap-3"
         style={{ background: 'linear-gradient(135deg, #5c4033 0%, #3d2418 50%, #2d1810 100%)' }}
-        data-testid="button-login-replit"
+        data-testid="button-show-email-login"
       >
-        <LogIn className="w-5 h-5" />
-        Sign in with Google, Apple, or GitHub
+        <Mail className="w-5 h-5" />
+        Continue with Email
       </Button>
 
       <p className="text-center text-gray-500 text-xs">
-        Secure login via Replit with biometric support
+        Secure login with password protection
       </p>
-
-      <div className="relative my-4">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or</span>
-        </div>
-      </div>
-
-      <Button
-        onClick={() => setAuthView('email')}
-        variant="outline"
-        className="w-full h-12 border-gray-300 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2"
-        data-testid="button-show-email-login"
-      >
-        <Mail className="w-4 h-4" />
-        Continue with Email
-      </Button>
 
       {showPinLogin && (
         <>

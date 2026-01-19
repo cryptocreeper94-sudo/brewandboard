@@ -1,9 +1,9 @@
 import Twilio from 'twilio';
 import logger from './logger';
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const fromPhone = process.env.TWILIO_PHONE_NUMBER;
+const accountSid = process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_TOKEN;
+const fromPhone = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || process.env.TWILIO_NUMBER;
 
 const client = accountSid && authToken ? Twilio(accountSid, authToken) : null;
 

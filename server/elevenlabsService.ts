@@ -1,6 +1,6 @@
 import logger from './logger';
 
-const apiKey = process.env.ELEVENLABS_API_KEY;
+const apiKey = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_LABS_API_KEY || process.env.XI_API_KEY;
 const defaultVoiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
 
 export function isElevenLabsConfigured(): boolean {

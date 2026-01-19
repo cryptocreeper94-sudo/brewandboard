@@ -40,6 +40,7 @@ import { registerAuthRoutes } from "./authRoutes";
 import { registerAdminRoutes } from "./adminRoutes";
 import { registerDoordashRoutes } from "./doordashRoutes";
 import { registerConfigRoutes } from "./configRoutes";
+import { registerCommunicationRoutes } from "./communicationRoutes";
 import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
@@ -77,6 +78,9 @@ export async function registerRoutes(
   
   // Register Config routes (Production/Sandbox toggle)
   registerConfigRoutes(app);
+  
+  // Register Communication routes (Twilio SMS/Voice + ElevenLabs TTS)
+  registerCommunicationRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

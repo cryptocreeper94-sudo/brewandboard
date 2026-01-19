@@ -58,6 +58,7 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Email Service**: Resend
 - **News Feed**: WKRN
 - **Weather API**: Open-Meteo
-- **SMS/Voice**: Twilio (integrated)
+- **SMS/Voice**: Twilio (integrated - credentials configured externally)
+- **Text-to-Speech**: ElevenLabs (integrated)
 - **Planned Integrations**: DoorDash (enhanced with circuit breaker + retry logic), Uber Direct, Google Calendar, Google Maps
 - **Security**: bcrypt PIN hashing, rate limiting, server-side order pricing validation, environment-sourced admin credentials

@@ -235,7 +235,11 @@ export function registerPaymentRoutes(app: Express) {
     
     try {
       if (endpointSecret) {
-        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+        const rawBody = req.rawBody as Buffer;
+        if (!rawBody) {
+          return res.status(400).json({ error: 'Missing raw body for signature verification' });
+        }
+        event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
       } else {
         event = req.body as Stripe.Event;
       }

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
 type DeliveryType = "doordash" | "white_glove";
@@ -51,6 +52,7 @@ export default function OneOffOrderPage() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState("");
   
   const [whiteGlovePricing, setWhiteGlovePricing] = useState<WhiteGlovePricing | null>(null);
@@ -565,6 +567,22 @@ export default function OneOffOrderPage() {
                         data-testid="input-contact-email"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-[#1a0f09]/30 border border-[#5c4033]/30">
+                    <Checkbox
+                      id="sms-consent"
+                      checked={smsConsent}
+                      onCheckedChange={(checked) => setSmsConsent(checked === true)}
+                      className="border-[#c4a47c] data-[state=checked]:bg-[#c4a47c] data-[state=checked]:text-[#1a0f09] mt-1"
+                      data-testid="checkbox-sms-consent"
+                    />
+                    <label 
+                      htmlFor="sms-consent" 
+                      className="text-sm text-[#a0896c] leading-relaxed cursor-pointer"
+                    >
+                      I consent to receive SMS messages from Brew & Board Coffee regarding my order status and delivery updates. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help.
+                    </label>
                   </div>
 
                   <div>

@@ -53,7 +53,7 @@ export default function SmsConsentScreenshot() {
 
           <div className="text-center pt-4 border-t border-[#5c4033]/30">
             <p className="text-xs text-[#a0896c]">
-              brewandboardcoffee.replit.app
+              brewandboard.coffee
             </p>
           </div>
         </CardContent>

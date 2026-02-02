@@ -51,7 +51,11 @@ export default function SmsConsentScreenshot() {
             </label>
           </div>
 
-          <div className="text-center pt-4 border-t border-[#5c4033]/30">
+          <div className="text-center pt-4 border-t border-[#5c4033]/30 space-y-2">
+            <div className="flex justify-center gap-4 text-xs">
+              <a href="/privacy" className="text-[#c4a47c] hover:underline">Privacy Policy</a>
+              <a href="/terms" className="text-[#c4a47c] hover:underline">Terms & Conditions</a>
+            </div>
             <p className="text-xs text-[#a0896c]">
               brewandboard.coffee
             </p>

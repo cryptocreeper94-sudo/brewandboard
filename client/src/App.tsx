@@ -39,6 +39,7 @@ import OneOffOrderPage from "@/pages/one-off-order";
 import MonitoringPage from "@/pages/monitoring";
 import ResetPasswordPage from "@/pages/reset-password";
 import SmsConsentScreenshot from "@/pages/sms-consent-screenshot";
+import PrivacyPage from "@/pages/privacy";
 import { Footer } from "@/components/Footer";
 import SupportChat from "@/components/support-chat";
 
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/monitoring" component={MonitoringPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/sms-consent" component={SmsConsentScreenshot} />
+      <Route path="/privacy" component={PrivacyPage} />
       <Route component={NotFound} />
     </Switch>
   );

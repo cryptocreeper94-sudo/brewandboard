@@ -50,6 +50,10 @@ export function Footer() {
             <Link href="/terms">
               <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-terms">Terms</span>
             </Link>
+            <span className="mx-0.5">•</span>
+            <Link href="/privacy">
+              <span className="hover:text-amber-300 cursor-pointer transition-colors" data-testid="link-privacy">Privacy</span>
+            </Link>
           </div>
           
           {/* Portal Login Links - Second Row */}

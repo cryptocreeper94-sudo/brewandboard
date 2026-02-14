@@ -40,6 +40,7 @@ import MonitoringPage from "@/pages/monitoring";
 import ResetPasswordPage from "@/pages/reset-password";
 import SmsConsentScreenshot from "@/pages/sms-consent-screenshot";
 import PrivacyPage from "@/pages/privacy";
+import CommandCenterPage from "@/pages/command-center";
 import { Footer } from "@/components/Footer";
 import SupportChat from "@/components/support-chat";
 
@@ -81,6 +82,7 @@ function Router() {
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/sms-consent" component={SmsConsentScreenshot} />
       <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/command-center" component={CommandCenterPage} />
       <Route component={NotFound} />
     </Switch>
   );

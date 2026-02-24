@@ -60,5 +60,6 @@ The platform features a premium "Nashville Luxury" aesthetic, utilizing a Bento 
 - **Weather API**: Open-Meteo
 - **SMS/Voice**: Twilio (integrated - credentials configured externally)
 - **Text-to-Speech**: ElevenLabs (integrated)
+- **Trust Layer / Orbit Staffing**: Ecosystem integration for bookkeeping, HR, commission tracking, and 1099 compliance via orbitstaffing.io API (registered app ID: brew-and-board-coffee). Routes: server/trustLayerRoutes.ts, service: server/trustLayerService.ts
 - **Planned Integrations**: DoorDash (enhanced with circuit breaker + retry logic), Uber Direct, Google Calendar, Google Maps
 - **Security**: bcrypt PIN hashing, rate limiting, server-side order pricing validation, environment-sourced admin credentials

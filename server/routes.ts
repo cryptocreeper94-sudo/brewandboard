@@ -41,6 +41,7 @@ import { registerAdminRoutes } from "./adminRoutes";
 import { registerDoordashRoutes } from "./doordashRoutes";
 import { registerConfigRoutes } from "./configRoutes";
 import { registerCommunicationRoutes } from "./communicationRoutes";
+import { registerTrustLayerRoutes } from "./trustLayerRoutes";
 import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
@@ -81,6 +82,9 @@ export async function registerRoutes(
   
   // Register Communication routes (Twilio SMS/Voice + ElevenLabs TTS)
   registerCommunicationRoutes(app);
+  
+  // Register Trust Layer routes (Orbit Staffing ecosystem - bookkeeping/HR)
+  registerTrustLayerRoutes(app);
   
   // ========================
   // HEALTH CHECK ROUTES

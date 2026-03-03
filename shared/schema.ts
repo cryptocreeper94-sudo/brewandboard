@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, integer, decimal, boolean, timestamp, date, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, decimal, boolean, timestamp, date, jsonb, index, serial } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   franchiseId: varchar("franchise_id"),
   // User role within franchise
   franchiseRole: varchar("franchise_role", { length: 30 }), // 'owner', 'manager', 'staff', 'customer'
+  uniqueHash: varchar("unique_hash", { length: 64 }).unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -723,6 +724,19 @@ export const hallmarks = pgTable(
     
     // FLEXIBLE METADATA (version info, document details, etc)
     metadata: jsonb("metadata").$type<Record<string, any>>(),
+
+    // TRUST LAYER ECOSYSTEM FIELDS (BB-00000001 format)
+    thId: text("th_id").unique(),
+    appId: text("app_id"),
+    appName: text("app_name"),
+    productName: text("product_name"),
+    releaseType: text("release_type"),
+    dataHash: text("data_hash"),
+    txHash: text("tx_hash"),
+    blockHeight: text("block_height"),
+    qrCodeSvg: text("qr_code_svg"),
+    verificationUrl: text("verification_url"),
+    hallmarkSequenceId: integer("hallmark_sequence_id"),
   },
   (table) => ({
     serialIdx: index("idx_hallmarks_serial").on(table.serialNumber),
@@ -2990,6 +3004,111 @@ export const DOORDASH_RESTRICTED_ITEMS = [
   'live_animals',
   'human_remains',
 ] as const;
+
+// ========================
+// TRUST STAMPS (Ecosystem Audit Trail)
+// ========================
+export const trustStamps = pgTable(
+  "trust_stamps",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id").references(() => users.id),
+    category: text("category").notNull(),
+    data: jsonb("data").$type<Record<string, any>>(),
+    dataHash: text("data_hash").notNull(),
+    txHash: text("tx_hash"),
+    blockHeight: text("block_height"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("idx_trust_stamps_user").on(table.userId),
+    categoryIdx: index("idx_trust_stamps_category").on(table.category),
+  })
+);
+
+export const insertTrustStampSchema = createInsertSchema(trustStamps).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertTrustStamp = z.infer<typeof insertTrustStampSchema>;
+export type TrustStamp = typeof trustStamps.$inferSelect;
+
+// ========================
+// HALLMARK COUNTER (Atomic Sequence Generator)
+// ========================
+export const hallmarkCounter = pgTable("hallmark_counter", {
+  id: text("id").primaryKey(),
+  currentSequence: text("current_sequence").notNull().default("0"),
+});
+
+// ========================
+// AFFILIATE REFERRALS (Ecosystem-Wide Referral Tracking)
+// ========================
+export const affiliateReferrals = pgTable(
+  "affiliate_referrals",
+  {
+    id: serial("id").primaryKey(),
+    referrerId: varchar("referrer_id").notNull().references(() => users.id),
+    referredUserId: varchar("referred_user_id").references(() => users.id),
+    referralHash: text("referral_hash").notNull(),
+    platform: text("platform").notNull().default("brewandboard"),
+    status: text("status").notNull().default("pending"),
+    convertedAt: timestamp("converted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    referrerIdx: index("idx_affiliate_referrals_referrer").on(table.referrerId),
+    hashIdx: index("idx_affiliate_referrals_hash").on(table.referralHash),
+    statusIdx: index("idx_affiliate_referrals_status").on(table.status),
+  })
+);
+
+export const insertAffiliateReferralSchema = createInsertSchema(affiliateReferrals).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAffiliateReferral = z.infer<typeof insertAffiliateReferralSchema>;
+export type AffiliateReferral = typeof affiliateReferrals.$inferSelect;
+
+// ========================
+// AFFILIATE COMMISSIONS (SIG-Based Earnings)
+// ========================
+export const affiliateCommissions = pgTable(
+  "affiliate_commissions",
+  {
+    id: serial("id").primaryKey(),
+    referrerId: varchar("referrer_id").notNull().references(() => users.id),
+    referralId: integer("referral_id").references(() => affiliateReferrals.id),
+    amount: text("amount").notNull(),
+    currency: text("currency").default("SIG"),
+    tier: text("tier").default("base"),
+    status: text("status").default("pending"),
+    paidAt: timestamp("paid_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    referrerIdx: index("idx_affiliate_commissions_referrer").on(table.referrerId),
+    statusIdx: index("idx_affiliate_commissions_status").on(table.status),
+  })
+);
+
+export const insertAffiliateCommissionSchema = createInsertSchema(affiliateCommissions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAffiliateCommission = z.infer<typeof insertAffiliateCommissionSchema>;
+export type AffiliateCommission = typeof affiliateCommissions.$inferSelect;
+
+// Affiliate Commission Tiers
+export const AFFILIATE_TIERS = {
+  base: { minReferrals: 0, rate: 0.10, label: "Base" },
+  silver: { minReferrals: 5, rate: 0.125, label: "Silver" },
+  gold: { minReferrals: 15, rate: 0.15, label: "Gold" },
+  platinum: { minReferrals: 30, rate: 0.175, label: "Platinum" },
+  diamond: { minReferrals: 50, rate: 0.20, label: "Diamond" },
+} as const;
+
+export const AFFILIATE_MIN_PAYOUT = 10;
 
 // Re-export auth models
 export * from "./models/auth";

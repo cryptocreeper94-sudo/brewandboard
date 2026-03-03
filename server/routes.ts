@@ -1,6 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { 
   insertUserSchema, 
   insertCrmNoteSchema, 
@@ -42,6 +46,8 @@ import { registerDoordashRoutes } from "./doordashRoutes";
 import { registerConfigRoutes } from "./configRoutes";
 import { registerCommunicationRoutes } from "./communicationRoutes";
 import { registerTrustLayerRoutes } from "./trustLayerRoutes";
+import { registerAffiliateRoutes } from "./affiliateRoutes";
+import { seedGenesisHallmark, createTrustStamp } from "./hallmarkService";
 import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
@@ -85,6 +91,14 @@ export async function registerRoutes(
   
   // Register Trust Layer routes (Orbit Staffing ecosystem - bookkeeping/HR)
   registerTrustLayerRoutes(app);
+  
+  // Register Affiliate routes (Ecosystem referral program)
+  registerAffiliateRoutes(app);
+  
+  // Seed genesis hallmark on boot (BB-00000001)
+  seedGenesisHallmark().catch((err: any) => {
+    console.error("[HALLMARK] Genesis seeding failed:", err.message);
+  });
   
   // ========================
   // HEALTH CHECK ROUTES
@@ -412,6 +426,19 @@ export async function registerRoutes(
       }
       
       const user = await storage.createUser(validatedData);
+
+      if (!user.uniqueHash) {
+        const hash = crypto.randomBytes(16).toString("hex");
+        await db.update(users).set({ uniqueHash: hash }).where(eq(users.id, user.id));
+        (user as any).uniqueHash = hash;
+      }
+
+      createTrustStamp({
+        userId: user.id,
+        category: "auth-register",
+        stampData: { email: validatedData.email, username: validatedData.name },
+      }).catch(() => {});
+
       res.json(user);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -430,7 +457,13 @@ export async function registerRoutes(
       if (!user) {
         return res.status(401).json({ error: "Invalid PIN" });
       }
-      
+
+      createTrustStamp({
+        userId: user.id,
+        category: "auth-login",
+        stampData: { ip: req.ip, device: req.headers["user-agent"] },
+      }).catch(() => {});
+
       res.json(user);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

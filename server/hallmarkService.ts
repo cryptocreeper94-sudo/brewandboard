@@ -4,6 +4,8 @@ import {
   hallmarkEvents, 
   userHallmarkProfiles,
   appVersions,
+  trustStamps,
+  hallmarkCounter,
   type Hallmark,
   type InsertHallmark,
   type HallmarkEvent,
@@ -11,8 +13,9 @@ import {
   type AppVersion,
   HALLMARK_LIMITS
 } from "@shared/schema";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, sql } from "drizzle-orm";
 import { generateContentHash, anchorHashToBlockchain, verifyTransactionOnChain, isBlockchainConfigured } from "./solanaService";
+import crypto from "crypto";
 
 // Company hallmark counter - starts at 1, goes to 10 billion
 let companyHallmarkCounter: number | null = null;
@@ -584,4 +587,212 @@ export async function getAllUserProfiles(): Promise<UserHallmarkProfile[]> {
   return await db.select()
     .from(userHallmarkProfiles)
     .orderBy(desc(userHallmarkProfiles.createdAt));
+}
+
+// ========================
+// TRUST LAYER ECOSYSTEM FUNCTIONS
+// ========================
+
+const BB_PREFIX = "BB";
+const BB_COUNTER_ID = "bb-master";
+
+async function getNextEcosystemSequence(): Promise<{ sequence: number; thId: string }> {
+  const result = await db
+    .insert(hallmarkCounter)
+    .values({ id: BB_COUNTER_ID, currentSequence: "1" })
+    .onConflictDoUpdate({
+      target: hallmarkCounter.id,
+      set: {
+        currentSequence: sql`(CAST(${hallmarkCounter.currentSequence} AS INTEGER) + 1)::TEXT`,
+      },
+    })
+    .returning();
+
+  const sequence = parseInt(result[0].currentSequence);
+  const thId = `${BB_PREFIX}-${sequence.toString().padStart(8, "0")}`;
+  return { sequence, thId };
+}
+
+function hashPayload(payload: Record<string, any>): string {
+  const str = JSON.stringify(payload);
+  return crypto.createHash("sha256").update(str).digest("hex");
+}
+
+function simulateBlockchain(): { txHash: string; blockHeight: string } {
+  const txHash = "0x" + crypto.randomBytes(32).toString("hex");
+  const blockHeight = Math.floor(1000000 + Math.random() * 9000000).toString();
+  return { txHash, blockHeight };
+}
+
+export async function generateEcosystemHallmark(data: {
+  appId: string;
+  appName: string;
+  productName: string;
+  releaseType: string;
+  userId?: string;
+  metadata?: Record<string, any>;
+}): Promise<Hallmark> {
+  const { sequence, thId } = await getNextEcosystemSequence();
+  const timestamp = new Date().toISOString();
+
+  const payload = {
+    thId,
+    userId: data.userId || null,
+    appId: data.appId,
+    appName: data.appName,
+    productName: data.productName,
+    releaseType: data.releaseType,
+    timestamp,
+  };
+
+  const dataHash = hashPayload(payload);
+  const { txHash, blockHeight } = simulateBlockchain();
+  const verificationUrl = `https://brewandboard.coffee/api/hallmark/${thId}/verify`;
+
+  const [hallmark] = await db
+    .insert(hallmarks)
+    .values({
+      serialNumber: thId,
+      prefix: BB_PREFIX,
+      assetType: data.releaseType,
+      assetName: data.productName,
+      userId: data.userId || null,
+      isCompanyHallmark: !data.userId,
+      issuedBy: "Brew & Board Coffee",
+      contentHash: dataHash,
+      metadata: data.metadata || {},
+      status: "active",
+      thId,
+      appId: data.appId,
+      appName: data.appName,
+      productName: data.productName,
+      releaseType: data.releaseType,
+      dataHash,
+      txHash,
+      blockHeight,
+      verificationUrl,
+      hallmarkSequenceId: sequence,
+    })
+    .returning();
+
+  await db.insert(hallmarkEvents).values({
+    hallmarkId: hallmark.id,
+    eventType: "issued",
+    eventData: { thId, releaseType: data.releaseType, ecosystem: true },
+  });
+
+  return hallmark;
+}
+
+export async function seedGenesisHallmark(): Promise<Hallmark | null> {
+  const genesisId = `${BB_PREFIX}-00000001`;
+  const existing = await getHallmarkBySerial(genesisId);
+
+  if (existing) {
+    console.log(`[HALLMARK] Genesis hallmark ${genesisId} already exists.`);
+    return existing;
+  }
+
+  await db
+    .insert(hallmarkCounter)
+    .values({ id: BB_COUNTER_ID, currentSequence: "0" })
+    .onConflictDoUpdate({
+      target: hallmarkCounter.id,
+      set: { currentSequence: "0" },
+    });
+
+  const hallmark = await generateEcosystemHallmark({
+    appId: "brew-and-board-coffee-genesis",
+    appName: "Brew & Board Coffee",
+    productName: "Genesis Block",
+    releaseType: "genesis",
+    metadata: {
+      ecosystem: "Trust Layer",
+      version: "1.0.0",
+      domain: "brewandboard.coffee",
+      operator: "DarkWave Studios LLC",
+      chain: "Trust Layer Blockchain",
+      consensus: "Proof of Trust",
+      launchDate: "2026-08-23T00:00:00.000Z",
+      nativeAsset: "SIG",
+      utilityToken: "Shells",
+      parentApp: "Trust Layer Hub",
+      parentGenesis: "TH-00000001",
+    },
+  });
+
+  console.log(`[HALLMARK] Genesis hallmark ${genesisId} created successfully.`);
+  return hallmark;
+}
+
+export async function getGenesisHallmark(): Promise<Hallmark | null> {
+  return getHallmarkBySerial(`${BB_PREFIX}-00000001`);
+}
+
+export async function verifyEcosystemHallmark(thId: string): Promise<{
+  verified: boolean;
+  hallmark?: any;
+  error?: string;
+}> {
+  const [hallmark] = await db
+    .select()
+    .from(hallmarks)
+    .where(eq(hallmarks.thId, thId));
+
+  if (!hallmark) {
+    return { verified: false, error: "Hallmark not found" };
+  }
+
+  return {
+    verified: true,
+    hallmark: {
+      thId: hallmark.thId,
+      appName: hallmark.appName || "Brew & Board Coffee",
+      productName: hallmark.productName || hallmark.assetName,
+      releaseType: hallmark.releaseType || hallmark.assetType,
+      dataHash: hallmark.dataHash || hallmark.contentHash,
+      txHash: hallmark.txHash,
+      blockHeight: hallmark.blockHeight,
+      createdAt: hallmark.issuedAt,
+    },
+  };
+}
+
+// ========================
+// TRUST STAMPS
+// ========================
+
+export async function createTrustStamp(data: {
+  userId?: string;
+  category: string;
+  stampData: Record<string, any>;
+}): Promise<void> {
+  const payload = {
+    ...data.stampData,
+    appContext: "brewandboard",
+    timestamp: new Date().toISOString(),
+  };
+  const dataHash = hashPayload(payload);
+  const { txHash, blockHeight } = simulateBlockchain();
+
+  await db.insert(trustStamps).values({
+    userId: data.userId || null,
+    category: data.category,
+    data: payload,
+    dataHash,
+    txHash,
+    blockHeight,
+  });
+}
+
+export async function getUserTrustStamps(
+  userId: string,
+  limit = 50
+): Promise<any[]> {
+  return db
+    .select()
+    .from(trustStamps)
+    .where(eq(trustStamps.userId, userId))
+    .orderBy(desc(trustStamps.createdAt))
+    .limit(limit);
 }

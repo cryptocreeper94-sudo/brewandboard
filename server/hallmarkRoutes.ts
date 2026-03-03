@@ -324,6 +324,43 @@ export function registerHallmarkRoutes(app: Express) {
     }
   });
   
+  app.get('/api/hallmark/app', async (req: Request, res: Response) => {
+    try {
+      const hallmark = await hallmarkService.getGenesisHallmark();
+      if (!hallmark) {
+        return res.status(404).json({ error: "App hallmark not found" });
+      }
+      res.json(hallmark);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/hallmark/genesis', async (req: Request, res: Response) => {
+    try {
+      const hallmark = await hallmarkService.getGenesisHallmark();
+      if (!hallmark) {
+        return res.status(404).json({ error: "Genesis hallmark not found" });
+      }
+      res.json(hallmark);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/hallmark/:id/verify', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await hallmarkService.verifyEcosystemHallmark(id);
+      if (!result.verified) {
+        return res.status(404).json(result);
+      }
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/hallmark/:code', async (req: Request, res: Response) => {
     try {
       const hallmark = await hallmarkService.getHallmarkBySerial(req.params.code);
@@ -424,16 +461,6 @@ export function registerHallmarkRoutes(app: Express) {
       });
     } catch (error: any) {
       res.status(500).json({ success: false, error: error.message });
-    }
-  });
-  
-  // Get the primary app hallmark (BB-0000000001)
-  app.get('/api/hallmark/app', async (req: Request, res: Response) => {
-    try {
-      const hallmark = await hallmarkService.getHallmarkBySerial('BB-0000000001');
-      res.json(hallmark);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
     }
   });
   

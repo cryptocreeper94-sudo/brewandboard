@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
-import { Facebook, Twitter } from "lucide-react";
+import { Facebook, Twitter, Shield } from "lucide-react";
 
 export function Footer() {
   const [version, setVersion] = useState<string>("...");
@@ -104,6 +104,14 @@ export function Footer() {
             <span className="text-amber-300/40 text-[9px]" data-testid="text-social-tenant-label">Tenants</span>
             <span className="text-amber-300/30 text-[9px] italic">Coming Soon</span>
           </div>
+          
+          <Link href="/my-hallmarks">
+            <div className="flex items-center gap-1 cursor-pointer hover:text-amber-300 transition-colors group" data-testid="link-genesis-hallmark">
+              <Shield className="size-3 text-amber-500 group-hover:text-amber-300" />
+              <span className="text-[9px] font-medium">Genesis Hallmark</span>
+              <span className="text-[9px] font-mono text-amber-500 group-hover:text-amber-300">BB-00000001</span>
+            </div>
+          </Link>
           
           <div className="flex items-center gap-1">
             <span>Powered by</span>

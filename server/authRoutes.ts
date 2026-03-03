@@ -2,6 +2,10 @@ import type { Express, Request, Response } from 'express';
 import { storage } from './storage';
 import { checkRateLimit, resetRateLimit, verifyPin, hashPin } from './security';
 import { sendPasswordResetEmail } from './emailService';
+import { createTrustStamp } from './hallmarkService';
+import { db } from './db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 import logger from './logger';
 import crypto from 'crypto';
 
@@ -87,6 +91,15 @@ export function registerAuthRoutes(app: Express) {
       
       resetRateLimit(rateLimitKey);
       logger.auth('info', `New user registered: ${email}`, user.id);
+
+      const uniqueHash = crypto.randomBytes(16).toString("hex");
+      await db.update(users).set({ uniqueHash }).where(eq(users.id, user.id));
+
+      createTrustStamp({
+        userId: user.id,
+        category: "auth-register",
+        stampData: { email, username: name || email.split("@")[0] },
+      }).catch(() => {});
       
       res.json({
         success: true,
@@ -138,6 +151,12 @@ export function registerAuthRoutes(app: Express) {
       
       resetRateLimit(rateLimitKey);
       logger.auth('info', `User login: ${email}`, user.id);
+
+      createTrustStamp({
+        userId: user.id,
+        category: "auth-login",
+        stampData: { ip: req.ip, device: req.headers["user-agent"] },
+      }).catch(() => {});
       
       res.json({
         success: true,

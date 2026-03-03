@@ -738,3 +738,79 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ========================================
+   SHIMMER & TRANSITION EFFECTS
+   ======================================== */
+
+/* Shimmer bar for progress indicators */
+.shimmer-bar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.shimmer-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 200, 100, 0.25),
+    transparent
+  );
+  animation: shimmer-sweep 2.5s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Stat card shimmer overlay */
+.stat-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 200, 100, 0.08),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: stat-shine 5s ease-in-out infinite;
+}
+
+@keyframes stat-shine {
+  0%, 70% { left: -100%; }
+  100% { left: 250%; }
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: page-fade-up 0.4s ease-out forwards;
+}
+
+@keyframes page-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

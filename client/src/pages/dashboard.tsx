@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Coffee, 
@@ -69,6 +69,7 @@ import { SettingsMenu } from "@/components/SettingsMenu";
 import { ItemCustomizationModal } from "@/components/ItemCustomizationModal";
 import { TeamChat } from "@/components/TeamChat";
 import { MascotButton } from "@/components/MascotButton";
+import { PageSpinner, StatsSkeleton, CardSkeleton, staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 import {
   Dialog,
   DialogContent,
@@ -935,13 +936,11 @@ const { itemCount } = useCart();
             <h3 className="font-serif text-lg">Quick Actions</h3>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }}>
             {quickActions.map((action, index) => (
               <Link key={action.id} href={action.href}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.1 + index * 0.08, type: "spring", stiffness: 100 }}
+                  variants={staggerItem}
                   whileHover={{ scale: 1.03, y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   className={`relative h-[100px] md:h-[130px] bg-gradient-to-br ${action.gradient} text-white rounded-xl md:rounded-2xl p-3 md:p-4 flex flex-col justify-between cursor-pointer shadow-lg ${action.shadowColor} hover:shadow-2xl transition-all overflow-hidden`}
@@ -975,21 +974,22 @@ const { itemCount } = useCart();
                 </motion.div>
               </Link>
             ))}
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Phase 2: Convenience Panels for signed-in users */}
         {userId && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-3 gap-4"
             data-tour="convenience-panels"
           >
-            <QuickReorderPanel userId={userId} />
-            <FavoritesPanel userId={userId} />
-            <OrderTemplatesPanel userId={userId} />
+            <motion.div variants={staggerItem}><QuickReorderPanel userId={userId} /></motion.div>
+            <motion.div variants={staggerItem}><FavoritesPanel userId={userId} /></motion.div>
+            <motion.div variants={staggerItem}><OrderTemplatesPanel userId={userId} /></motion.div>
           </motion.div>
         )}
 
@@ -999,16 +999,17 @@ const { itemCount } = useCart();
         {/* Phase 4-6: Active Orders, Loyalty & Team Management for signed-in users */}
         {userId && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
             data-tour="tracking-loyalty"
           >
-            <OrderStatusTimeline userId={userId} />
-            <LoyaltyWidget userId={userId} />
-            <TeamManagementWidget userId={userId} />
-            <CalendarSyncWidget userId={userId} />
+            <motion.div variants={staggerItem}><OrderStatusTimeline userId={userId} /></motion.div>
+            <motion.div variants={staggerItem}><LoyaltyWidget userId={userId} /></motion.div>
+            <motion.div variants={staggerItem}><TeamManagementWidget userId={userId} /></motion.div>
+            <motion.div variants={staggerItem}><CalendarSyncWidget userId={userId} /></motion.div>
           </motion.div>
         )}
 
@@ -1144,10 +1145,7 @@ const { itemCount } = useCart();
           {newsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-card border rounded-xl p-4 animate-pulse">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
+                <CardSkeleton key={i} />
               ))}
             </div>
           ) : newsError ? (
@@ -1164,40 +1162,41 @@ const { itemCount } = useCart();
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-3" variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }}>
               {newsItems.slice(0, 6).map((item, index) => (
-                <a
-                  key={index}
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-card border rounded-xl p-4 hover:border-[#5c4033]/50 hover:shadow-md transition-all"
-                  data-testid={`news-item-${index}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-[#5c4033] transition-colors">
-                        {item.title}
-                      </h4>
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-                          {item.description}
+                <motion.div key={`news-wrapper-${index}`} variants={staggerItem}>
+                  <a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-card border rounded-xl p-4 hover:border-[#5c4033]/50 hover:shadow-md transition-all block"
+                    data-testid={`news-item-${index}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-[#5c4033] transition-colors">
+                          {item.title}
+                        </h4>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground/70 mt-2">
+                          {new Date(item.pubDate).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })}
                         </p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground/70 mt-2">
-                        {new Date(item.pubDate).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit'
-                        })}
-                      </p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-[#5c4033] transition-colors flex-shrink-0" />
                     </div>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-[#5c4033] transition-colors flex-shrink-0" />
-                  </div>
-                </a>
+                  </a>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </main>
@@ -1223,7 +1222,7 @@ const { itemCount } = useCart();
                   <div className="text-5xl font-serif font-bold text-foreground">
                     {weather?.current.temperature ?? '--'}°F
                   </div>
-                  <p className="text-muted-foreground mt-1">{weather?.current.condition ?? 'Loading...'}</p>
+                  <p className="text-muted-foreground mt-1">{weather?.current.condition ?? <span className="inline-block h-4 w-20 animate-pulse bg-muted rounded" />}</p>
                 </div>
                 <div className="text-right">
                   {weather ? getWeatherIcon(weather.current.icon, "h-16 w-16") : <Cloud className="h-16 w-16 text-gray-400" />}
@@ -1232,28 +1231,28 @@ const { itemCount } = useCart();
               </div>
               
               <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-stone-200/50 dark:border-[#3d2418]/30">
-                <div className="text-center">
+                <div className="text-center stat-shimmer">
                   <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                     <Droplets className="h-3 w-3" />
                     <p className="text-xs">Humidity</p>
                   </div>
                   <p className="font-semibold">{weather?.current.humidity ?? '--'}%</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center stat-shimmer">
                   <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                     <Wind className="h-3 w-3" />
                     <p className="text-xs">Wind</p>
                   </div>
                   <p className="font-semibold">{weather?.current.windSpeed ?? '--'} mph</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center stat-shimmer">
                   <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                     <CloudRain className="h-3 w-3" />
                     <p className="text-xs">Precip</p>
                   </div>
                   <p className="font-semibold">{weather?.current.precipitation ?? 0}"</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center stat-shimmer">
                   <p className="text-xs text-muted-foreground mb-1">Updated</p>
                   <p className="font-semibold text-xs">
                     {weather?.lastUpdated ? new Date(weather.lastUpdated).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--'}

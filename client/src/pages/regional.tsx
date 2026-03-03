@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { staggerContainer, staggerItem, PageSpinner, StatsSkeleton, TableSkeleton } from "@/components/ui/loading-skeletons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import QRCode from "react-qr-code";
@@ -590,28 +591,34 @@ export default function RegionalDashboard() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-white/10 rounded-lg">
+                <motion.div
+                  className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                >
+                  <motion.div variants={staggerItem} className="text-center p-3 bg-white/10 rounded-lg stat-shimmer">
                     <Users className="h-5 w-5 mx-auto mb-1" />
                     <p className="text-2xl font-bold">{stats?.totalClients || 0}</p>
                     <p className="text-xs text-amber-200">Clients</p>
-                  </div>
-                  <div className="text-center p-3 bg-white/10 rounded-lg">
+                  </motion.div>
+                  <motion.div variants={staggerItem} className="text-center p-3 bg-white/10 rounded-lg stat-shimmer">
                     <Package className="h-5 w-5 mx-auto mb-1" />
                     <p className="text-2xl font-bold">{stats?.totalOrders || 0}</p>
                     <p className="text-xs text-amber-200">Orders</p>
-                  </div>
-                  <div className="text-center p-3 bg-white/10 rounded-lg">
+                  </motion.div>
+                  <motion.div variants={staggerItem} className="text-center p-3 bg-white/10 rounded-lg stat-shimmer">
                     <DollarSign className="h-5 w-5 mx-auto mb-1" />
                     <p className="text-2xl font-bold">${stats?.totalRevenue || "0"}</p>
                     <p className="text-xs text-amber-200">Revenue</p>
-                  </div>
-                  <div className="text-center p-3 bg-white/10 rounded-lg">
+                  </motion.div>
+                  <motion.div variants={staggerItem} className="text-center p-3 bg-white/10 rounded-lg stat-shimmer">
                     <Target className="h-5 w-5 mx-auto mb-1" />
                     <p className="text-2xl font-bold">${manager?.salesTarget || "0"}</p>
                     <p className="text-xs text-amber-200">Target</p>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               </div>
             </CardContent>
           </Card>
@@ -634,7 +641,13 @@ export default function RegionalDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+            >
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -729,7 +742,7 @@ export default function RegionalDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="crm" className="mt-6">
@@ -983,40 +996,46 @@ export default function RegionalDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                variants={staggerContainer}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
+              >
+                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="h-5 w-5 text-emerald-600" />
                     <span className="font-semibold text-emerald-800">Current Stage</span>
                   </div>
                   <p className="text-2xl font-bold text-emerald-700">MVP</p>
                   <p className="text-sm text-emerald-600">Pre-Revenue</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                </motion.div>
+                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold text-blue-800">Est. Valuation</span>
                   </div>
                   <p className="text-2xl font-bold text-blue-700">$500K - $2M</p>
                   <p className="text-sm text-blue-600">MVP Stage</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200">
+                </motion.div>
+                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
                     <Building2 className="h-5 w-5 text-purple-600" />
                     <span className="font-semibold text-purple-800">Market Size</span>
                   </div>
                   <p className="text-2xl font-bold text-purple-700">$60B</p>
                   <p className="text-sm text-purple-600">Corporate Catering</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+                </motion.div>
+                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="h-5 w-5 text-amber-600" />
                     <span className="font-semibold text-amber-800">Growth Rate</span>
                   </div>
                   <p className="text-2xl font-bold text-amber-700">50%</p>
                   <p className="text-sm text-amber-600">Faster than industry</p>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               <div className="border rounded-xl bg-white/50 backdrop-blur p-4">
                 <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">

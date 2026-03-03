@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 
 export default function ContactPage() {
   const { toast } = useToast();
@@ -75,11 +76,16 @@ export default function ContactPage() {
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 py-8">
-        <div className="space-y-6">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="space-y-6"
+        >
           {/* Hero */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={staggerItem}
             className="text-center"
           >
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/20 flex items-center justify-center">
@@ -95,9 +101,7 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={staggerItem}
           >
             <Card className="bg-amber-900/20 border-amber-700/30">
               <CardHeader>
@@ -220,9 +224,7 @@ export default function ContactPage() {
 
           {/* Direct Email */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            variants={staggerItem}
           >
             <Card className="bg-amber-900/20 border-amber-700/30">
               <CardContent className="pt-6 text-center">
@@ -242,7 +244,7 @@ export default function ContactPage() {
               </CardContent>
             </Card>
           </motion.div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );

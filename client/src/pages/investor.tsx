@@ -75,29 +75,33 @@ export default function InvestorPage() {
 
           {/* Key Metrics */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
             className="grid grid-cols-2 md:grid-cols-4 gap-4"
           >
             {highlights.map((item, index) => (
-              <Card key={index} className="bg-amber-900/20 border-amber-700/30 text-center">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <item.icon className="h-6 w-6 text-amber-400" />
-                  </div>
-                  <p className="text-xs text-amber-300/60 mb-1">{item.label}</p>
-                  <p className="font-semibold text-amber-100 text-sm">{item.value}</p>
-                </CardContent>
-              </Card>
+              <motion.div key={index} variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}>
+                <Card className="bg-amber-900/20 border-amber-700/30 text-center stat-shimmer">
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <item.icon className="h-6 w-6 text-amber-400" />
+                    </div>
+                    <p className="text-xs text-amber-300/60 mb-1">{item.label}</p>
+                    <p className="font-semibold text-amber-100 text-sm">{item.value}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </motion.div>
 
           {/* Investment Opportunity */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
             <Card className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 border-amber-600/30">
               <CardHeader>
@@ -148,8 +152,9 @@ export default function InvestorPage() {
           {/* Franchise Opportunity */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
             <Card className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 border-amber-600/30">
               <CardHeader>
@@ -203,8 +208,9 @@ export default function InvestorPage() {
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
             <Card className="bg-amber-500/10 border-amber-500/30">
               <CardContent className="pt-6 text-center">

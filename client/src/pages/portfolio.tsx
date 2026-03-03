@@ -75,6 +75,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import QRCode from "react-qr-code";
 import { jsPDF } from "jspdf";
+import { staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 
 interface BusinessCard {
   id: string;
@@ -680,11 +681,16 @@ export default function PortfolioPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6"
+        >
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={staggerItem}
             className="md:col-span-2 lg:col-span-1 lg:row-span-2"
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -795,9 +801,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={staggerItem}
             className="lg:col-span-2"
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -867,9 +871,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            variants={staggerItem}
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-4">
@@ -903,9 +905,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            variants={staggerItem}
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-4">
@@ -949,9 +949,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            variants={staggerItem}
             className="lg:col-span-1"
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -995,9 +993,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
+            variants={staggerItem}
             className="lg:col-span-1"
           >
             <div className="h-full bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -1047,9 +1043,7 @@ export default function PortfolioPage() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            variants={staggerItem}
             className="md:col-span-2 lg:col-span-2"
           >
             <div className="bg-gradient-to-br from-[#1a0f09]/80 to-[#2d1810]/60 border border-amber-900/30 rounded-2xl p-5 backdrop-blur-sm">
@@ -1124,7 +1118,7 @@ export default function PortfolioPage() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
       
       <Dialog open={isCardEditorOpen} onOpenChange={setIsCardEditorOpen}>

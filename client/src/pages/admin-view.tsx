@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { staggerContainer, staggerItem, PageSpinner } from "@/components/ui/loading-skeletons";
 import {
   Dialog,
   DialogContent,
@@ -428,7 +429,13 @@ export default function AdminView() {
         </motion.div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <motion.div
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
           {[
             { label: "Active Orders", value: "12", icon: Package, color: "text-amber-400" },
             { label: "Vendors", value: "37+", icon: Store, color: "text-emerald-400" },
@@ -437,9 +444,7 @@ export default function AdminView() {
           ].map((stat, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * i }}
+              variants={staggerItem}
               className="bg-slate-900/50 border border-amber-900/30 rounded-xl p-4"
             >
               <stat.icon className={`h-5 w-5 ${stat.color} mb-2`} />
@@ -447,17 +452,21 @@ export default function AdminView() {
               <p className="text-xs text-gray-400">{stat.label}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Admin Tools Grid */}
         <h3 className="text-lg font-semibold text-amber-100 mb-4">Platform Tools</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
           {adminTools.map((tool, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i }}
+              variants={staggerItem}
             >
               <Link href={tool.href}>
                 <div className="bg-slate-900/50 border border-amber-900/30 rounded-xl p-5 hover:border-amber-500/50 transition-all cursor-pointer group">
@@ -474,7 +483,7 @@ export default function AdminView() {
               </Link>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* System Overview */}
         <div className="mt-8 bg-gradient-to-r from-amber-900/20 to-orange-900/20 border border-amber-500/20 rounded-xl p-6">
@@ -482,17 +491,23 @@ export default function AdminView() {
             <Zap className="h-5 w-5 text-amber-400" />
             System Capabilities
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
             {systemCapabilities.map((cap, i) => (
-              <div key={i} className="flex items-center gap-3">
+              <motion.div key={i} variants={staggerItem} className="flex items-center gap-3">
                 <cap.icon className="h-5 w-5 text-amber-400" />
                 <div>
                   <p className="text-white text-sm font-medium">{cap.title}</p>
                   <p className="text-gray-500 text-xs">{cap.desc}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </main>
     </div>

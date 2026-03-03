@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageSpinner, TableSkeleton, ListSkeleton, staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import {
   ChevronLeft,
@@ -457,11 +458,7 @@ export default function OrderHistoryPage() {
       <div className="max-w-4xl mx-auto px-4 md:px-8 mt-6">
 
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-muted animate-pulse rounded-xl" />
-            ))}
-          </div>
+          <TableSkeleton rows={6} />
         ) : filteredOrders.length === 0 ? (
           <div className="premium-card p-8 text-center rounded-xl">
             <Coffee className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
@@ -482,7 +479,13 @@ export default function OrderHistoryPage() {
             </Link>
           </div>
         ) : (
+          <AnimatePresence mode="wait">
           <Accordion type="single" collapsible className="space-y-4">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+            >
             {filteredOrders.map((order, index) => {
               const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.scheduled;
               const StatusIcon = statusConfig.icon;
@@ -490,9 +493,7 @@ export default function OrderHistoryPage() {
               return (
                 <motion.div
                   key={order.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  variants={staggerItem}
                 >
                   <AccordionItem 
                     value={order.id}
@@ -620,7 +621,9 @@ export default function OrderHistoryPage() {
                 </motion.div>
               );
             })}
+            </motion.div>
           </Accordion>
+          </AnimatePresence>
         )}
 
         <div className="mt-6 text-center text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { PageSpinner, CardSkeleton, CarouselSkeleton, staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 import { 
   ArrowLeft, 
   Store, 
@@ -157,13 +158,11 @@ export default function VendorsPage() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {benefits.map((item, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              variants={staggerItem}
             >
               <Card className="bg-gradient-to-br from-amber-900/40 to-amber-950/40 border-amber-700/30 text-center">
                 <CardContent className="pt-6">
@@ -174,15 +173,13 @@ export default function VendorsPage() {
               </Card>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid md:grid-cols-2 gap-6 mb-12">
           {whyJoin.map((item, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
+              variants={staggerItem}
             >
               <Card className="bg-gradient-to-br from-amber-900/30 to-amber-950/30 border-amber-700/20 h-full">
                 <CardContent className="p-6 flex items-start gap-4">
@@ -197,7 +194,7 @@ export default function VendorsPage() {
               </Card>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {formSubmitted ? (
           <motion.div

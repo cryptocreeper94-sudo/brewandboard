@@ -31,6 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { FRANCHISE_TIERS } from "@shared/schema";
+import { staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 
 const highlights = [
   { icon: MapPin, label: "Territory Ownership", value: "Exclusive Markets" },
@@ -167,13 +168,15 @@ export default function FranchisePage() {
 
           {/* Key Metrics */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
             className="grid grid-cols-2 md:grid-cols-4 gap-4"
           >
             {highlights.map((item, index) => (
-              <Card key={index} className="bg-amber-900/20 border-amber-700/30 text-center">
+              <motion.div key={index} variants={staggerItem}>
+              <Card className="bg-amber-900/20 border-amber-700/30 text-center">
                 <CardContent className="pt-6">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/20 flex items-center justify-center">
                     <item.icon className="h-6 w-6 text-amber-400" />
@@ -182,21 +185,25 @@ export default function FranchisePage() {
                   <p className="font-semibold text-amber-100 text-sm">{item.value}</p>
                 </CardContent>
               </Card>
+              </motion.div>
             ))}
           </motion.div>
 
           {/* Why Franchise Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
+          <div>
             <h3 className="font-serif text-2xl font-bold text-amber-100 text-center mb-6">
               Why Franchise With Us?
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
               {whyFranchise.map((item, index) => (
-                <Card key={index} className="bg-amber-900/20 border-amber-700/30">
+                <motion.div key={index} variants={staggerItem}>
+                <Card className="bg-amber-900/20 border-amber-700/30">
                   <CardContent className="pt-6">
                     <div className="w-10 h-10 mb-3 rounded-lg bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center">
                       <item.icon className="h-5 w-5 text-white" />
@@ -205,15 +212,17 @@ export default function FranchisePage() {
                     <p className="text-sm text-amber-200/60">{item.description}</p>
                   </CardContent>
                 </Card>
+                </motion.div>
               ))}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* Two-Tier Hallmark System Explainer */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
             <Card className="bg-gradient-to-br from-amber-900/40 to-amber-800/20 border-amber-600/30">
               <CardHeader>
@@ -285,21 +294,21 @@ export default function FranchisePage() {
           </motion.div>
 
           {/* Franchise Tiers */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
+          <div>
             <h3 className="font-serif text-2xl font-bold text-amber-100 text-center mb-6">
               Franchise Tiers
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            >
               {tiers.map((tier, index) => (
                 <motion.div
                   key={tier.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  variants={staggerItem}
                 >
                   <Card 
                     className={`relative overflow-hidden transition-all cursor-pointer ${
@@ -368,14 +377,15 @@ export default function FranchisePage() {
                   </Card>
                 </motion.div>
               ))}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* Application Form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
             id="apply"
           >
             <Card className="bg-amber-900/20 border-amber-700/30">
@@ -621,15 +631,17 @@ export default function FranchisePage() {
           </motion.div>
 
           {/* FAQ Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
+          <div>
             <h3 className="font-serif text-2xl font-bold text-amber-100 text-center mb-6">
               Frequently Asked Questions
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
               {[
                 {
                   q: "What's included in the franchise fee?",
@@ -648,15 +660,17 @@ export default function FranchisePage() {
                   a: "The Hallmark system is our blockchain-based verification system. As a franchise owner, you can mint verified documents and certificates with your custom prefix (e.g., BB-ATLANTA)."
                 }
               ].map((faq, index) => (
-                <Card key={index} className="bg-amber-900/20 border-amber-700/30">
+                <motion.div key={index} variants={staggerItem}>
+                <Card className="bg-amber-900/20 border-amber-700/30">
                   <CardContent className="pt-6">
                     <h4 className="font-semibold text-amber-100 mb-2">{faq.q}</h4>
                     <p className="text-sm text-amber-200/70">{faq.a}</p>
                   </CardContent>
                 </Card>
+                </motion.div>
               ))}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </main>
     </div>

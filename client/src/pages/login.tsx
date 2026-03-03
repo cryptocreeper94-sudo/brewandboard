@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
+import { staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 
 import baristaImage from "@assets/generated_images/professional_barista.png";
 import latteArtImage from "@assets/generated_images/artisan_latte_art.png";
@@ -222,13 +223,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Main Bento Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4 lg:gap-6">
+          <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4 lg:gap-6">
             
             {/* Hero Card - Large */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ duration: 0.5 }}
               className="col-span-2 md:col-span-8 lg:col-span-8 md:row-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[280px] md:min-h-[420px] lg:min-h-[480px] group hover-3d"
               style={{ background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1810 100%)' }}
             >
@@ -290,6 +292,7 @@ export default function LandingPage() {
 
             {/* 2-Hour Promise Card */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -316,6 +319,7 @@ export default function LandingPage() {
 
             {/* Barista Image Card */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -342,6 +346,7 @@ export default function LandingPage() {
 
             {/* Feature Cards Row - Horizontal Scroll on Mobile, Grid on Desktop */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
@@ -429,9 +434,10 @@ export default function LandingPage() {
               </div>
 
               {/* Desktop/Tablet: 4-column Grid */}
-              <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
+              <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
                 {/* Artisan Craft */}
-                <div 
+                <motion.div 
+                  variants={staggerItem}
                   className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
                   onClick={() => setSelectedFeature(featureDetails.artisan)}
                   data-testid="card-artisan"
@@ -448,10 +454,11 @@ export default function LandingPage() {
                     </p>
                     <p className="text-stone-300 text-xs mt-1 h-8">Handcrafted with passion</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Meeting Ready */}
-                <div 
+                <motion.div 
+                  variants={staggerItem}
                   className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
                   onClick={() => setSelectedFeature(featureDetails.meeting)}
                   data-testid="card-meeting"
@@ -468,10 +475,11 @@ export default function LandingPage() {
                     </p>
                     <p className="text-stone-300 text-xs mt-1 h-8">Impress your clients</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* White Glove */}
-                <div 
+                <motion.div 
+                  variants={staggerItem}
                   className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
                   onClick={() => setSelectedFeature(featureDetails.whiteglove)}
                   data-testid="card-whiteglove"
@@ -488,10 +496,11 @@ export default function LandingPage() {
                     </p>
                     <p className="text-stone-300 text-xs mt-1 h-8">Premium concierge service</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Local Roasters */}
-                <div 
+                <motion.div 
+                  variants={staggerItem}
                   className="relative rounded-3xl overflow-hidden h-[200px] group hover-3d flex flex-col justify-end cursor-pointer"
                   onClick={() => setSelectedFeature(featureDetails.local)}
                   data-testid="card-local"
@@ -508,12 +517,13 @@ export default function LandingPage() {
                     </p>
                     <p className="text-stone-300 text-xs mt-1 h-8">Nashville's finest beans</p>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </motion.div>
 
             {/* Vendors Section Header */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
@@ -536,6 +546,7 @@ export default function LandingPage() {
 
             {/* Vendor Cards - Horizontal Scroll */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -620,6 +631,7 @@ export default function LandingPage() {
 
             {/* Bottom CTA */}
             <motion.div
+              variants={staggerItem}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
@@ -663,7 +675,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-          </div>
+          </motion.div>
         </div>
       </main>
 

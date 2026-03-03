@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageSpinner, TableSkeleton, ListSkeleton, staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
@@ -423,7 +424,7 @@ export default function OperationsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stat-shimmer">
               <Card className="bg-white/10 border-white/20 text-white">
                 <CardContent className="p-3 text-center">
                   <p className="text-2xl font-bold">{activeOrders.length}</p>
@@ -501,10 +502,7 @@ export default function OperationsPage() {
 
           <TabsContent value="active">
             {isLoading ? (
-              <div className="text-center py-12">
-                <Coffee className="h-12 w-12 mx-auto text-amber-600 animate-pulse mb-4" />
-                <p className="text-muted-foreground">Loading orders...</p>
-              </div>
+              <PageSpinner message="Loading operations..." />
             ) : filteredOrders.length === 0 ? (
               <Card className="text-center py-12">
                 <CardContent>
@@ -514,13 +512,20 @@ export default function OperationsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+              >
                 <AnimatePresence mode="popLayout">
                   {filteredOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
+                    <motion.div key={order.id} variants={staggerItem}>
+                      <OrderCard order={order} />
+                    </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             )}
           </TabsContent>
 
@@ -534,13 +539,20 @@ export default function OperationsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+              >
                 <AnimatePresence mode="popLayout">
                   {filteredOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
+                    <motion.div key={order.id} variants={staggerItem}>
+                      <OrderCard order={order} />
+                    </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             )}
           </TabsContent>
         </Tabs>

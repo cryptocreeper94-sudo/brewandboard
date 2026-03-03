@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { staggerContainer, staggerItem, PageSpinner, CardSkeleton } from "@/components/ui/loading-skeletons";
 import QRCode from "react-qr-code";
 
 interface Hallmark {
@@ -312,10 +313,7 @@ export default function MyHallmarksPage() {
           transition={{ delay: 0.2 }}
         >
           {isLoading ? (
-            <div className="text-center py-12">
-              <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-muted-foreground" />
-              <p className="text-muted-foreground">Loading your hallmarks...</p>
-            </div>
+            <PageSpinner message="Loading hallmarks..." />
           ) : filteredHallmarks.length === 0 ? (
             <Card className="premium-card border-0">
               <CardContent className="p-12 text-center">
@@ -339,13 +337,17 @@ export default function MyHallmarksPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <motion.div
+              className="grid gap-4"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+            >
               {filteredHallmarks.map((hallmark, index) => (
                 <motion.div
                   key={hallmark.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  variants={staggerItem}
                 >
                   <Card 
                     className="premium-card border-0 cursor-pointer hover:shadow-lg transition-all"
@@ -388,7 +390,7 @@ export default function MyHallmarksPage() {
                   </Card>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </motion.div>
 

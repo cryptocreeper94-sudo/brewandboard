@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { staggerContainer, staggerItem, PageSpinner, StatsSkeleton, ListSkeleton } from "@/components/ui/loading-skeletons";
 import {
   ChevronLeft,
   Code2,
@@ -1059,9 +1060,7 @@ function VersionTrackingPanel() {
       </CardHeader>
       <CardContent className="relative pt-0">
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
+          <StatsSkeleton count={3} />
         ) : versionData ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

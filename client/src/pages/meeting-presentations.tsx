@@ -36,6 +36,7 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { staggerContainer, staggerItem, PageSpinner } from "@/components/ui/loading-skeletons";
 
 interface MeetingPresentation {
   id: string;
@@ -305,17 +306,19 @@ export default function MeetingPresentationsPage() {
             </Button>
           </motion.div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <AnimatePresence>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          >
               {presentations.map((pres, i) => {
                 const style = getTemplateStyle(pres.templateType);
                 return (
                   <motion.div
                     key={pres.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.05 }}
+                    variants={staggerItem}
                     className={`bg-gradient-to-br ${style.gradient} rounded-2xl p-5 border border-white/10`}
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -386,8 +389,7 @@ export default function MeetingPresentationsPage() {
                   </motion.div>
                 );
               })}
-            </AnimatePresence>
-          </div>
+          </motion.div>
         )}
       </div>
       

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageSpinner, StatsSkeleton, ListSkeleton, staggerContainer, staggerItem } from "@/components/ui/loading-skeletons";
 import { 
   ShoppingCart, 
   Store, 
@@ -694,6 +695,7 @@ export default function PartnerHub() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * index }}
+                className="stat-shimmer"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className={`p-2 rounded-lg bg-gradient-to-br from-amber-900/50 to-amber-800/30`}>
@@ -859,13 +861,11 @@ export default function PartnerHub() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-4">
-                  <div className="grid grid-cols-2 gap-3">
+                  <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-2 gap-3">
                     {platformFeatures.map((feature, i) => (
                       <motion.div
                         key={feature.title}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 * i }}
+                        variants={staggerItem}
                         className="p-3 rounded-lg bg-amber-900/30 border border-amber-700/20"
                       >
                         <feature.icon className="h-4 w-4 text-amber-400 mb-2" />
@@ -873,7 +873,7 @@ export default function PartnerHub() {
                         <p className="text-xs text-amber-200/60">{feature.desc}</p>
                       </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -896,7 +896,7 @@ export default function PartnerHub() {
                 </AccordionTrigger>
                 <AccordionContent className="pt-4">
                   {loadingReports ? (
-                    <div className="text-center py-4 text-amber-200/60">Loading reports...</div>
+                    <ListSkeleton rows={3} />
                   ) : errorReports.length === 0 ? (
                     <div className="text-center py-4">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />

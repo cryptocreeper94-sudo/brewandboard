@@ -1,0 +1,43 @@
+# Trust Layer Ecosystem — Full Affiliate & Identifier Registry
+# All 33 apps connected via hallmark blockchain hash format
+# Genesis parent chain: Every app references parentGenesis: "TH-00000001"
+# Affiliate ID: {uniqueHash} is the same per user across all apps
+# Commission Tiers: Base 10% | Silver 12.5% | Gold 15% | Platinum 17.5% | Diamond 20%
+# Payouts: SIG (native asset), minimum 10 SIG per request
+# Format: [PREFIX]-[8-DIGIT-PADDED] (e.g., TH-00000001)
+
+#   | App Name                          | Prefix | Genesis Mark  | Referral Link                                    | Domain
+----|-----------------------------------|--------|---------------|--------------------------------------------------|-------------------------------
+1   | Trust Layer Hub                   | TH     | TH-00000001   | https://trusthub.tlid.io/ref/{uniqueHash}        | trusthub.tlid.io
+2   | Trust Layer (L1)                  | TL     | TL-00000001   | https://dwtl.io/ref/{uniqueHash}                 | dwtl.io
+3   | TrustHome                         | TR     | TR-00000001   | https://trusthome.tlid.io/ref/{uniqueHash}       | trusthome.tlid.io
+4   | TrustVault                        | TV     | TV-00000001   | https://trustvault.tlid.io/ref/{uniqueHash}      | trustvault.tlid.io
+5   | TLID.io                           | TI     | TI-00000001   | https://tlid.io/ref/{uniqueHash}                 | tlid.io
+6   | THE VOID                          | VO     | VO-00000001   | https://thevoid.tlid.io/ref/{uniqueHash}         | thevoid.tlid.io
+7   | Signal Chat                       | SC     | SC-00000001   | https://signalchat.tlid.io/ref/{uniqueHash}      | signalchat.tlid.io
+8   | DarkWave Studio                   | DS     | DS-00000001   | https://darkwavestudio.tlid.io/ref/{uniqueHash}  | darkwavestudio.tlid.io
+9   | Guardian Shield                   | GS     | GS-00000001   | https://guardianshield.tlid.io/ref/{uniqueHash}  | guardianshield.tlid.io
+10  | Guardian Scanner                  | GN     | GN-00000001   | https://guardianscanner.tlid.io/ref/{uniqueHash} | guardianscanner.tlid.io
+11  | Guardian Screener                 | GR     | GR-00000001   | https://guardianscreener.tlid.io/ref/{uniqueHash}| guardianscreener.tlid.io
+12  | TradeWorks AI                     | TW     | TW-00000001   | https://tradeworks.tlid.io/ref/{uniqueHash}      | tradeworks.tlid.io
+13  | StrikeAgent                       | SA     | SA-00000001   | https://strikeagent.tlid.io/ref/{uniqueHash}     | strikeagent.tlid.io
+14  | Pulse                             | PU     | PU-00000001   | https://pulse.tlid.io/ref/{uniqueHash}           | pulse.tlid.io
+15  | Chronicles                        | CH     | CH-00000001   | https://chronicles.tlid.io/ref/{uniqueHash}      | chronicles.tlid.io
+16  | The Arcade                        | AR     | AR-00000001   | https://thearcade.tlid.io/ref/{uniqueHash}       | thearcade.tlid.io
+17  | Bomber                            | BO     | BO-00000001   | https://bomber.tlid.io/ref/{uniqueHash}          | bomber.tlid.io
+18  | Trust Golf                        | TG     | TG-00000001   | https://trustgolf.tlid.io/ref/{uniqueHash}       | trustgolf.tlid.io
+19  | ORBIT Staffing OS                 | OR     | OR-00000001   | https://orbit.tlid.io/ref/{uniqueHash}           | orbit.tlid.io
+20  | Orby Commander                    | OC     | OC-00000001   | https://orby.tlid.io/ref/{uniqueHash}            | orby.tlid.io
+21  | GarageBot                         | GB     | GB-00000001   | https://garagebot.tlid.io/ref/{uniqueHash}       | garagebot.tlid.io
+22  | Lot Ops Pro                       | LO     | LO-00000001   | https://lotops.tlid.io/ref/{uniqueHash}          | lotops.tlid.io
+23  | TORQUE                            | TQ     | TQ-00000001   | https://torque.tlid.io/ref/{uniqueHash}          | torque.tlid.io
+24  | TL Driver Connect                 | DC     | DC-00000001   | https://driverconnect.tlid.io/ref/{uniqueHash}   | driverconnect.tlid.io
+25  | VedaSolus                         | VS     | VS-00000001   | https://vedasolus.tlid.io/ref/{uniqueHash}       | vedasolus.tlid.io
+26  | Verdara                           | VD     | VD-00000001   | https://verdara.tlid.io/ref/{uniqueHash}         | verdara.tlid.io
+27  | Arbora                            | AB     | AB-00000001   | https://arbora.tlid.io/ref/{uniqueHash}          | arbora.tlid.io
+28  | PaintPros                         | PP     | PP-00000001   | https://paintpros.tlid.io/ref/{uniqueHash}       | paintpros.tlid.io
+29  | Nashville Painting Professionals  | NP     | NP-00000001   | https://nashvillepainting.tlid.io/ref/{uniqueHash}| nashvillepainting.tlid.io
+30  | Trust Book                        | TB     | TB-00000001   | https://trustbook.tlid.io/ref/{uniqueHash}       | trustbook.tlid.io
+31  | DarkWave Academy                  | DA     | DA-00000001   | https://darkwaveacademy.tlid.io/ref/{uniqueHash} | darkwaveacademy.tlid.io
+32  | Happy Eats                        | HE     | HE-00000001   | https://happyeats.tlid.io/ref/{uniqueHash}       | happyeats.tlid.io
+33  | Brew & Board Coffee               | BB     | BB-00000001   | https://brewandboard.tlid.io/ref/{uniqueHash}    | brewandboard.tlid.io

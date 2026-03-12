@@ -1,9 +1,3 @@
-databases:
-  - name: brewandboard-db
-    plan: free
-    databaseName: brewandboard
-    user: brewandboard
-
 services:
   - type: web
     name: brewandboard
@@ -19,9 +13,7 @@ services:
       - key: APP_DOMAIN
         value: brewandboard.coffee
       - key: DATABASE_URL
-        fromDatabase:
-          name: brewandboard-db
-          property: connectionString
+        sync: false
       - key: ADMIN_DEV_PIN
         value: "0424"
       - key: OPENAI_API_KEY

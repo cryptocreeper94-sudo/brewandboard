@@ -1,0 +1,54 @@
+databases:
+  - name: brewandboard-db
+    plan: free
+    databaseName: brewandboard
+    user: brewandboard
+
+services:
+  - type: web
+    name: brewandboard
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: APP_DOMAIN
+        value: brewandboard.coffee
+      - key: DATABASE_URL
+        fromDatabase:
+          name: brewandboard-db
+          property: connectionString
+      - key: ADMIN_DEV_PIN
+        value: "0424"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SOLANA_WALLET_PRIVATE_KEY
+        sync: false
+      - key: HELIUS_API_KEY
+        sync: false
+      - key: GITHUB_PAT
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: COINBASE_COMMERCE_API_KEY
+        sync: false
+      - key: COINBASE_COMMERCE_WEBHOOK_SECRET
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false

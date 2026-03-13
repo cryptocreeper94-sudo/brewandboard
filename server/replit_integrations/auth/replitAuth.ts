@@ -10,6 +10,10 @@ import { authStorage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
+    if (!process.env.REPL_ID) {
+      console.log("[auth] REPL_ID not set, skipping Replit OIDC discovery (running on Render)");
+      return null;
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
@@ -67,6 +71,14 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   const config = await getOidcConfig();
+
+  if (!config) {
+    console.log("[auth] Replit OIDC not available, auth routes will use session-only mode");
+    app.get("/api/login", (_req, res) => res.redirect("/"));
+    app.get("/api/callback", (_req, res) => res.redirect("/"));
+    app.get("/api/logout", (req, res) => { req.logout(() => res.redirect("/")); });
+    return;
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,

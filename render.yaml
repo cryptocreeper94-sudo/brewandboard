@@ -2,6 +2,7 @@ services:
   - type: web
     name: brewandboard
     runtime: node
+    region: ohio
     plan: free
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start

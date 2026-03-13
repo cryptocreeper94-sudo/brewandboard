@@ -205,9 +205,7 @@ export function registerAuthRoutes(app: Express) {
         
         await storage.createPasswordResetToken(user.id, token, expiresAt);
         
-        const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-          ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-          : 'http://localhost:5000';
+        const baseUrl = process.env.APP_DOMAIN ? `https://${process.env.APP_DOMAIN}` : 'http://localhost:5000';
         const resetUrl = `${baseUrl}/reset-password?token=${token}`;
         
         try {

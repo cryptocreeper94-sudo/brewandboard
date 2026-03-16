@@ -561,7 +561,7 @@ export function AppEcosystemHub() {
             <div>
               <label className="text-sm font-medium">Base URL</label>
               <Input
-                placeholder="https://your-app.replit.app"
+                placeholder="https://brewandboard.coffee"
                 value={newApp.baseUrl}
                 onChange={e => setNewApp({ ...newApp, baseUrl: e.target.value })}
                 data-testid="input-app-url"

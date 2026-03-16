@@ -209,7 +209,7 @@ const order = await fetch('/api/scheduled-orders', {
 
 # Fetch clients
 response = requests.get(
-    'https://your-app.replit.app/api/clients',
+    'https://brewandboard.coffee/api/clients',
     params={'userId': 'your-user-id'}
 )
 clients = response.json()
@@ -225,14 +225,14 @@ order_data = {
     'totalAmount': 22.50
 }
 response = requests.post(
-    'https://your-app.replit.app/api/scheduled-orders',
+    'https://brewandboard.coffee/api/scheduled-orders',
     json=order_data
 )`,
   curl: `# Fetch clients
-curl -X GET "https://your-app.replit.app/api/clients?userId=your-user-id"
+curl -X GET "https://brewandboard.coffee/api/clients?userId=your-user-id"
 
 # Create a new order
-curl -X POST "https://your-app.replit.app/api/scheduled-orders" \\
+curl -X POST "https://brewandboard.coffee/api/scheduled-orders" \\
   -H "Content-Type: application/json" \\
   -d '{
     "userId": "your-user-id",
@@ -2870,7 +2870,7 @@ function PartnerApiPortal() {
                   <div className="mt-4 p-4 rounded-xl bg-slate-900 text-slate-100">
                     <p className="text-sm text-slate-400 mb-2">Example Request:</p>
                     <pre className="text-xs overflow-x-auto">
-{`curl -X GET "https://yourapp.replit.app/api/partner/v1/orders" \\
+{`curl -X GET "https://brewandboard.coffee/api/partner/v1/orders" \\
   -H "X-API-Key: bb_live_your_api_key_here" \\
   -H "Content-Type: application/json"`}
                     </pre>

@@ -1,10 +1,23 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Facebook, Twitter, Shield } from "lucide-react";
 
 export function Footer() {
   const [version, setVersion] = useState<string>("...");
+  const dwscClickRef = useRef({ count: 0, timer: null as any });
+  const handleDWSCClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dwscClickRef.current.count++;
+    if (dwscClickRef.current.count === 3) {
+      dwscClickRef.current.count = 0;
+      clearTimeout(dwscClickRef.current.timer);
+      window.open('https://dwsc.io/#portal', '_blank');
+    } else {
+      clearTimeout(dwscClickRef.current.timer);
+      dwscClickRef.current.timer = setTimeout(() => { dwscClickRef.current.count = 0; }, 800);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/version/tracking')
@@ -124,8 +137,13 @@ export function Footer() {
             >
               Darkwave Studios, LLC
             </a>
-            <span className="mx-0.5">·</span>
-            <span className="text-amber-400/60 font-medium" data-testid="footer-version">{version}</span>
+            <span onClick={handleDWSCClick} className="mx-0.5 cursor-default select-none">·</span>
+            <span
+              onClick={handleDWSCClick}
+              className="text-amber-400/60 font-medium cursor-default select-none"
+              data-testid="footer-version"
+              title="◈ DWSC"
+            >{version}</span>
           </div>
         </div>
       </div>

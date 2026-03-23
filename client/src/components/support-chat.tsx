@@ -28,6 +28,15 @@ const QUICK_RESPONSES = [
 ];
 
 const AUTO_RESPONSES: Record<string, string> = {
+  // ═══ CRISIS DETECTION — TOP PRIORITY ═══
+  'suicide': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'self-harm': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'kill myself': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'hurt myself': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'want to die': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'end my life': "Your safety matters. Please reach out to the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7. If you are in immediate danger, call 911. You are not alone.",
+  'hurt someone': "If there is immediate danger, please call 911. For non-emergency support, reach the 988 Suicide & Crisis Lifeline by calling or texting 988, available 24/7.",
+  // Standard support responses
   'track': "I can help you track your order! Please provide your order number or check the 'My Orders' section in your account for real-time tracking.",
   'refund': "For refund requests, please go to My Orders, select the order, and click 'Request Cancellation'. Our refund policy: 100% refund if cancelled 2+ hours before delivery, 50% if 1-2 hours, no refund within 1 hour of delivery.",
   'address': "To change your delivery address, please cancel your current order and place a new one with the correct address. Orders in progress cannot have their address modified for food safety reasons.",

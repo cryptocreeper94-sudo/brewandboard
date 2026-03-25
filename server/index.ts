@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import path from "path";
+import { registerTrustLayerSSO } from './trustLayerSSO';
 
 const app = express();
 
@@ -70,6 +71,8 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+  // Trust Layer SSO consumer endpoints
+  registerTrustLayerSSO(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -105,3 +108,4 @@ app.use((req, res, next) => {
     },
   );
 })();
+

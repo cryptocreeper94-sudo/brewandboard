@@ -77,6 +77,64 @@
   --ring: 25 30% 20%;
 
   --radius: 0.5rem;
+
+  /* Theme-aware surface colors */
+  --glass-bg: rgba(16, 16, 26, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-hover: rgba(255, 255, 255, 0.04);
+  --surface-overlay: rgba(0, 0, 0, 0.4);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-dim: rgba(255, 255, 255, 0.4);
+  --nav-bg: rgba(6, 6, 10, 0.9);
+  --badge-bg: rgba(255, 255, 255, 0.1);
+  --badge-text: rgba(255, 255, 255, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*  LIGHT MODE                                            */
+/* ═══════════════════════════════════════════════════════ */
+.light {
+  --background: 0 0% 98%;
+  --foreground: 240 10% 10%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 10%;
+
+  --primary: 180 70% 38%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 270 50% 50%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 220 14% 93%;
+  --muted-foreground: 220 10% 42%;
+
+  --accent: 180 70% 38%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 220 13% 87%;
+  --input: 220 13% 87%;
+  --ring: 180 70% 38%;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.03);
+  --surface-overlay: rgba(255, 255, 255, 0.6);
+  --text-primary: #111827;
+  --text-secondary: rgba(17, 24, 39, 0.75);
+  --text-muted: rgba(17, 24, 39, 0.55);
+  --text-dim: rgba(17, 24, 39, 0.4);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --badge-bg: rgba(0, 0, 0, 0.06);
+  --badge-text: rgba(17, 24, 39, 0.6);
 }
 
 .dark {

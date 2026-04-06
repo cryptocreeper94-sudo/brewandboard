@@ -44,10 +44,12 @@ import CommandCenterPage from "@/pages/command-center";
 import AffiliatePage from "@/pages/affiliate";
 import { Footer } from "@/components/Footer";
 import SupportChat from "@/components/support-chat";
+import { FloatingThemeToggle } from "@/components/theme-toggle";
 
 function Router() {
   return (
     <Switch>
+      <FloatingThemeToggle />
       <Route path="/" component={LoginPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/portfolio" component={PortfolioPage} />

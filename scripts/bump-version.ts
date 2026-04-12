@@ -159,7 +159,7 @@ async function main() {
   
   const filesToUpdate = [
     'client/src/pages/login.tsx',
-    'replit.md'
+    'README.md'
   ];
   
   console.log('📝 Updating version references:');
@@ -197,17 +197,17 @@ async function main() {
   fs.writeFileSync(versionFilePath, JSON.stringify(versionData, null, 2));
   console.log('\n✅ version.json updated');
   
-  const replitMdPath = path.resolve(process.cwd(), 'replit.md');
-  if (fs.existsSync(replitMdPath)) {
-    let replitMd = fs.readFileSync(replitMdPath, 'utf-8');
+  const readmePath = path.resolve(process.cwd(), 'README.md');
+  if (fs.existsSync(readmePath)) {
+    let readmeContent = fs.readFileSync(readmePath, 'utf-8');
     
     const versionLinePattern = /\*\*v[\d.]+\*\* - \w+ \d{4} \|/;
     const newVersionLine = `**v${newVersion}** - ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} |`;
     
-    if (versionLinePattern.test(replitMd)) {
-      replitMd = replitMd.replace(versionLinePattern, newVersionLine);
-      fs.writeFileSync(replitMdPath, replitMd);
-      console.log('📄 replit.md version header updated');
+    if (versionLinePattern.test(readmeContent)) {
+      readmeContent = readmeContent.replace(versionLinePattern, newVersionLine);
+      fs.writeFileSync(readmePath, readmeContent);
+      console.log('📄 README.md version header updated');
     }
   }
   

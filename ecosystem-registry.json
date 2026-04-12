@@ -6,9 +6,9 @@
   "baseApp": "brew-and-board",
   "modules": {
     "authentication": {
-      "id": "auth-replit-social",
-      "name": "Replit Social Authentication",
-      "description": "Complete authentication system with Replit OAuth (Google, GitHub, Apple) plus PIN fallback for admins/partners",
+      "id": "auth-render-social",
+      "name": "render Social Authentication",
+      "description": "Complete authentication system with render OAuth (Google, GitHub, Apple) plus PIN fallback for admins/partners",
       "version": "2.0.0",
       "category": "security",
       "language": "typescript",
@@ -16,7 +16,7 @@
       "files": {
         "server": [
           "server/authRoutes.ts",
-          "server/replit_integrations/auth/index.ts"
+          "server/render_integrations/auth/index.ts"
         ],
         "client": [
           "client/src/hooks/useAuth.ts",
@@ -32,9 +32,9 @@
         "connect-pg-simple"
       ],
       "features": [
-        "Google OAuth via Replit",
-        "GitHub OAuth via Replit", 
-        "Apple OAuth via Replit",
+        "Google OAuth via render",
+        "GitHub OAuth via render", 
+        "Apple OAuth via render",
         "PIN-based admin login",
         "Session persistence",
         "Role-based access control"
@@ -298,21 +298,21 @@
     {
       "id": "orbit-staffing",
       "name": "ORBIT Staffing",
-      "baseUrl": "https://orbit-staffing.replit.app",
+      "baseUrl": "https://orbit-staffing.onrender.com",
       "status": "active",
       "permissions": ["read:code", "write:code", "read:data", "write:data"]
     },
     {
       "id": "orbit-payroll",
       "name": "ORBIT Payroll",
-      "baseUrl": "https://orbit-payroll.replit.app",
+      "baseUrl": "https://orbit-payroll.onrender.com",
       "status": "active",
       "permissions": ["read:code", "write:code", "sync:all"]
     },
     {
       "id": "orbit-crm",
       "name": "ORBIT CRM",
-      "baseUrl": "https://orbit-crm.replit.app",
+      "baseUrl": "https://orbit-crm.onrender.com",
       "status": "pending",
       "permissions": ["read:code", "read:clients"]
     }

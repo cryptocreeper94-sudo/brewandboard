@@ -96,7 +96,7 @@ async function autoRelease() {
   console.log(`🏛️ Hallmark: BB-${String(versionData.buildNumber).padStart(10, '0')}`);
   
   // Update file references
-  const filesToUpdate = ['client/src/pages/login.tsx', 'replit.md'];
+  const filesToUpdate = ['client/src/pages/login.tsx', 'README.md'];
   for (const file of filesToUpdate) {
     const fullPath = resolve(process.cwd(), file);
     if (existsSync(fullPath)) {

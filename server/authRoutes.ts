@@ -37,7 +37,7 @@ export function registerAuthRoutes(app: Express) {
   
   app.get('/api/auth/config', (req, res) => {
     res.json({
-      replitAuth: true,
+      trustlayerauth: true,
       providers: {
         google: true,
         apple: true,

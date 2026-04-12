@@ -48,7 +48,7 @@ import { registerCommunicationRoutes } from "./communicationRoutes";
 import { registerTrustLayerRoutes } from "./trustLayerRoutes";
 import { registerAffiliateRoutes } from "./affiliateRoutes";
 import { seedGenesisHallmark, createTrustStamp } from "./hallmarkService";
-import { setupAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes as registerrenderAuthRoutes } from "./integrations/auth";
 import Parser from "rss-parser";
 import { Resend } from "resend";
 import logger from "./logger";
@@ -58,9 +58,9 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Setup Replit Auth (MUST be before other routes)
+  // Setup Trust Layer Auth (MUST be before other routes)
   await setupAuth(app);
-  registerReplitAuthRoutes(app);
+  registerrenderAuthRoutes(app);
   
   // Register additional PIN authentication routes
   registerAuthRoutes(app);
@@ -212,7 +212,7 @@ export async function registerRoutes(
       fs.writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
       
       // Update version references in files
-      const filesToUpdate = ['client/src/pages/login.tsx', 'replit.md'];
+      const filesToUpdate = ['client/src/pages/login.tsx', 'render.md'];
       for (const file of filesToUpdate) {
         const fullPath = path.resolve(process.cwd(), file);
         if (fs.existsSync(fullPath)) {
@@ -761,7 +761,7 @@ export async function registerRoutes(
       
       const resend = new Resend(process.env.RESEND_API_KEY);
       const baseUrl = process.env.REPL_SLUG 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.onrender.com`
         : 'http://localhost:5000';
       const viewUrl = `${baseUrl}/presentation/${presentation.shareableLink}`;
       

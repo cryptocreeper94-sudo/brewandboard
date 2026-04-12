@@ -10,13 +10,13 @@ import { authStorage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
-    if (!process.env.REPL_ID) {
-      console.log("[auth] REPL_ID not set, skipping Replit OIDC discovery (running on Render)");
+    if (!process.env.APP_ID) {
+      console.log("[auth] APP_ID not set, skipping OIDC discovery (running on Render)");
       return null;
     }
     return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      new URL(process.env.ISSUER_URL ?? "https://auth.trustlayer.io/oidc"),
+      process.env.APP_ID!
     );
   },
   { maxAge: 3600 * 1000 }
@@ -73,7 +73,7 @@ export async function setupAuth(app: Express) {
   const config = await getOidcConfig();
 
   if (!config) {
-    console.log("[auth] Replit OIDC not available, auth routes will use session-only mode");
+    console.log("[auth] OIDC not available, auth routes will use session-only mode");
     app.get("/api/login", (_req, res) => res.redirect("/"));
     app.get("/api/callback", (_req, res) => res.redirect("/"));
     app.get("/api/logout", (req, res) => { req.logout(() => res.redirect("/")); });
@@ -95,7 +95,7 @@ export async function setupAuth(app: Express) {
 
   // Helper function to ensure strategy exists for a domain
   const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
+    const strategyName = `trustlayerauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const strategy = new Strategy(
         {
@@ -116,7 +116,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    passport.authenticate(`trustlayerauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
@@ -124,7 +124,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    passport.authenticate(`trustlayerauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
@@ -134,7 +134,7 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: process.env.APP_ID!,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );

@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ========================
-// USERS (Business Account Holders + Replit Auth)
+// USERS (Business Account Holders + OIDC Auth)
 // ========================
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -1196,12 +1196,12 @@ function VersionTrackingPanel() {
  * - Full CRUD API for releases
  * 
  * HOW IT WORKS:
- * When user clicks "Publish" in Replit, the build process (script/build.ts) automatically:
+ * When user clicks "Publish" in render, the build process (script/build.ts) automatically:
  * 1. Bumps version (patch increment: 1.2.7 → 1.2.8)
  * 2. Generates unique build hash (SHA-256, 16 chars)
  * 3. Submits transaction to Solana mainnet via Memo program
  * 4. Updates version.json with new version, hash, tx signature, slot
- * 5. Updates login.tsx and replit.md with new version
+ * 5. Updates login.tsx and render.md with new version
  * 6. Builds and deploys the app
  * 
  * FILES INVOLVED:
@@ -4514,7 +4514,7 @@ export default function DevelopersPage() {
                     <div className="ml-16 space-y-3">
                       <div className="flex items-center gap-3 text-sm">
                         <Circle className="h-4 w-4 text-gray-400" />
-                        <span>Enable Google Calendar integration via Replit</span>
+                        <span>Enable Google Calendar integration via render</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <Circle className="h-4 w-4 text-gray-400" />

@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 export type UpsertUser = InsertUser & { id?: string };
 
 // Interface for auth storage operations
-// (IMPORTANT) These user operations are mandatory for Replit Auth.
+// (IMPORTANT) These user operations are mandatory for Trust Layer Auth.
 export interface IAuthStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser & { id: string }): Promise<User>;

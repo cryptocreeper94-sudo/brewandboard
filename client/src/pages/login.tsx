@@ -717,7 +717,7 @@ export default function LandingPage() {
             >
               Darkwave Studios, LLC
             </a>
-            {' '}• <span className="text-amber-400/60 font-medium">v1.2.8</span>
+            {' '}• <span className="text-amber-400/60 font-medium">v1.2.9</span>
           </p>
         </div>
       </footer>

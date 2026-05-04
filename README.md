@@ -40,5 +40,6 @@ npm run dev
 - U.S. Pat. App. No. 64/047,467 — Axiom
 - U.S. Pat. App. No. 64/047,496 — Lume-X
 - U.S. Pat. App. No. 64/047,536 — Synthetic Organisms
+- U.S. Pat. App. No. 64/056,378 — Meridian Wireless Energy Routing
 
 © 2026 DarkWave Studios LLC. All rights reserved.

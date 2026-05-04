@@ -46,6 +46,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  
+    <!-- DarkWave Studios Ecosystem Analytics -->
+    <script>
+      (function(){
+        var appId = document.querySelector('meta[name="dw-app-id"]');
+        var id = appId ? appId.content : window.location.hostname;
+        function track(type, data) {
+          try {
+            navigator.sendBeacon('https://darkwavestudios.io/api/analytics', JSON.stringify({
+              app: id, type: type, url: window.location.href,
+              ref: document.referrer, ts: Date.now(), ...data
+            }));
+          } catch(e) {}
+        }
+        track('pageview');
+        window.addEventListener('popstate', function(){ track('navigate'); });
+        var origPush = history.pushState;
+        history.pushState = function(){ origPush.apply(this, arguments); track('navigate'); };
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

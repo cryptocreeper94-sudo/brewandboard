@@ -892,7 +892,7 @@ function Compliance1099Portal() {
           <AccordionItem value="filing" className="border rounded-xl bg-white/50 backdrop-blur px-4">
             <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-1099-filing">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center shadow-lg">
                   <FileCheck className="h-6 w-6 text-white" />
                 </div>
                 <div className="text-left">
@@ -908,7 +908,7 @@ function Compliance1099Portal() {
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50">
+                <div className="p-4 border rounded-lg bg-gradient-to-r from-indigo-50 to-sky-50">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-indigo-600" />
                     1099-NEC Filing Requirements
@@ -1072,12 +1072,12 @@ function VersionTrackingPanel() {
                 <p className="font-bold text-2xl text-cyan-700">{versionData.version.startsWith('v') ? versionData.version : `v${versionData.version}`}</p>
               </div>
               
-              <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200" data-testid="version-build">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-2">
+              <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-200" data-testid="version-build">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center mb-2">
                   <Hash className="h-6 w-6 text-white" />
                 </div>
                 <p className="text-sm text-muted-foreground">Build Number</p>
-                <p className="font-bold text-2xl text-purple-700">#{versionData.buildNumber}</p>
+                <p className="font-bold text-2xl text-sky-700">#{versionData.buildNumber}</p>
               </div>
               
               <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200" data-testid="version-published">
@@ -1292,19 +1292,19 @@ function ReleaseManagerPanel() {
 
   return (
     <Card className="premium-card border-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-fuchsia-500/5" />
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-sky-500/5 to-teal-500/5" />
       <CardHeader className="relative pb-3">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 font-serif text-2xl">
-              <Rocket className="h-6 w-6 text-violet-600" />
+              <Rocket className="h-6 w-6 text-cyan-600" />
               Release Manager
             </CardTitle>
             <CardDescription className="flex items-center gap-2 mt-1">
               Automated version control with Solana blockchain verification
             </CardDescription>
           </div>
-          <Badge className="bg-violet-100 text-violet-700 border-violet-200">
+          <Badge className="bg-cyan-100 text-cyan-700 border-cyan-200">
             DevOps
           </Badge>
         </div>
@@ -1317,11 +1317,11 @@ function ReleaseManagerPanel() {
         ) : (
           <>
             {/* Current Version */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-200">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Current Version</p>
-                  <p className="font-bold text-3xl text-violet-700">v{versionData?.version || '1.0.0'}</p>
+                  <p className="font-bold text-3xl text-cyan-700">v{versionData?.version || '1.0.0'}</p>
                   <p className="text-xs text-muted-foreground mt-1">Build #{versionData?.buildNumber || 0}</p>
                 </div>
                 {latestHallmark?.solanaTx && (
@@ -1342,7 +1342,7 @@ function ReleaseManagerPanel() {
             <div className="grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-1 h-auto py-3 border-violet-200 hover:bg-violet-50"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-cyan-200 hover:bg-cyan-50"
                 onClick={() => createRelease('patch')}
                 disabled={isReleasing}
                 data-testid="button-release-patch"
@@ -1352,7 +1352,7 @@ function ReleaseManagerPanel() {
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-1 h-auto py-3 border-purple-200 hover:bg-purple-50"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-sky-200 hover:bg-sky-50"
                 onClick={() => createRelease('minor')}
                 disabled={isReleasing}
                 data-testid="button-release-minor"
@@ -1362,7 +1362,7 @@ function ReleaseManagerPanel() {
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-1 h-auto py-3 border-fuchsia-200 hover:bg-fuchsia-50"
+                className="flex flex-col items-center gap-1 h-auto py-3 border-teal-200 hover:bg-teal-50"
                 onClick={() => createRelease('major')}
                 disabled={isReleasing}
                 data-testid="button-release-major"
@@ -1388,8 +1388,8 @@ function ReleaseManagerPanel() {
 
             {/* Technical Reference */}
             <Accordion type="single" collapsible>
-              <AccordionItem value="technical" className="border-violet-200">
-                <AccordionTrigger className="text-sm font-medium text-violet-700">
+              <AccordionItem value="technical" className="border-cyan-200">
+                <AccordionTrigger className="text-sm font-medium text-cyan-700">
                   <div className="flex items-center gap-2">
                     <Terminal className="h-4 w-4" />
                     Technical Reference
@@ -1493,10 +1493,10 @@ function DarkwaveHubBrowser() {
 
   return (
     <Card className="premium-card border-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-indigo-500/5 to-blue-500/5" />
+      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-indigo-500/5 to-blue-500/5" />
       <CardHeader className="relative pb-4">
         <CardTitle className="flex items-center gap-2 font-serif text-2xl">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600">
             <Database className="h-5 w-5 text-white" />
           </div>
           Darkwave Dev Hub Browser
@@ -1519,7 +1519,7 @@ function DarkwaveHubBrowser() {
               data-testid="input-hub-search"
             />
           </div>
-          <Button onClick={searchByName} className="bg-gradient-to-r from-purple-500 to-indigo-600" data-testid="button-hub-search">
+          <Button onClick={searchByName} className="bg-gradient-to-r from-sky-500 to-indigo-600" data-testid="button-hub-search">
             <Search className="h-4 w-4 mr-2" />
             Search
           </Button>
@@ -1560,15 +1560,15 @@ function DarkwaveHubBrowser() {
               {filteredSnippets.map(snippet => (
                 <div 
                   key={snippet.id} 
-                  className="p-4 rounded-xl bg-white border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer"
+                  className="p-4 rounded-xl bg-white border border-gray-100 hover:border-sky-200 hover:shadow-md transition-all cursor-pointer"
                   onClick={() => setSelectedSnippet(selectedSnippet === snippet.id ? null : snippet.id)}
                   data-testid={`snippet-${snippet.id}`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-purple-600" />
-                        <span className="font-semibold text-purple-800">{snippet.name}</span>
+                        <FileText className="h-4 w-4 text-sky-600" />
+                        <span className="font-semibold text-sky-800">{snippet.name}</span>
                         {snippet.version && (
                           <Badge variant="outline" className="text-xs">{snippet.version}</Badge>
                         )}
@@ -1630,7 +1630,7 @@ function DarkwaveHubBrowser() {
         )}
 
         {/* Agent Retrieval Instructions */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-200">
           <p className="font-semibold text-indigo-800 mb-2 flex items-center gap-2">
             <Terminal className="h-4 w-4" />
             Agent Retrieval Instructions
@@ -1961,8 +1961,8 @@ function AnalyticsPanel() {
                 <p className="text-xs text-blue-600">Conversion</p>
               </div>
               <div className="text-center" data-testid="metric-avg-order">
-                <p className="text-2xl font-bold text-violet-700">${businessMetrics.avgOrderValue}</p>
-                <p className="text-xs text-violet-600">Avg Order</p>
+                <p className="text-2xl font-bold text-cyan-700">${businessMetrics.avgOrderValue}</p>
+                <p className="text-xs text-cyan-600">Avg Order</p>
               </div>
             </div>
             {businessMetrics.topVendors?.length > 0 && (
@@ -1994,7 +1994,7 @@ function AnalyticsPanel() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200" data-testid="metric-page-views">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-200" data-testid="metric-page-views">
             <div className="flex items-center gap-2 mb-2">
               <Eye className="h-4 w-4 text-indigo-600" />
               <span className="text-xs text-indigo-700 font-medium">Page Views</span>
@@ -2068,8 +2068,8 @@ function AnalyticsPanel() {
                         <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -2095,7 +2095,7 @@ function AnalyticsPanel() {
                     <Area 
                       type="monotone" 
                       dataKey="pageViews" 
-                      stroke="#8b5cf6" 
+                      stroke="#0ea5e9" 
                       fillOpacity={1} 
                       fill="url(#colorPageViews)" 
                       strokeWidth={2}
@@ -2260,7 +2260,7 @@ function AnalyticsPanel() {
           <AccordionItem value="pages" className="border rounded-xl bg-white/50 backdrop-blur overflow-hidden" data-testid="accordion-pages">
             <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-white/30" data-testid="accordion-trigger-pages">
               <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-violet-600" />
+                <Globe className="h-5 w-5 text-cyan-600" />
                 <span className="font-semibold">Top Pages</span>
               </div>
             </AccordionTrigger>
@@ -2269,10 +2269,10 @@ function AnalyticsPanel() {
                 {topPages.map((page, i) => (
                   <div key={page.page} className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-100" data-testid={`top-page-${i}`}>
                     <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                      <span className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white text-xs font-bold">
                         {i + 1}
                       </span>
-                      <code className="text-sm font-mono text-violet-700">{page.page}</code>
+                      <code className="text-sm font-mono text-cyan-700">{page.page}</code>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <span className="text-muted-foreground">{page.views.toLocaleString()} views</span>
@@ -2591,13 +2591,13 @@ function PartnerApiPortal() {
 
   return (
     <Card className="premium-card border-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-blue-500/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-indigo-500/5 to-blue-500/10" />
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <motion.div
-                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg"
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg"
                 whileHover={{ rotate: 10, scale: 1.05 }}
               >
                 <Key className="h-6 w-6 text-white" />
@@ -2608,7 +2608,7 @@ function PartnerApiPortal() {
               </div>
             </div>
           </div>
-          <Badge className="bg-purple-500/10 text-purple-700 border-purple-200">
+          <Badge className="bg-sky-500/10 text-sky-700 border-sky-200">
             <Shield className="h-3 w-3 mr-1" /> Secure API
           </Badge>
         </div>
@@ -2647,12 +2647,12 @@ function PartnerApiPortal() {
             {/* Bento Grid - API Stats */}
             <div className="grid grid-cols-4 gap-4">
               <motion.div
-                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200 hover-3d"
+                className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-sky-100 to-indigo-100 border border-sky-200 hover-3d"
                 whileHover={{ scale: 1.02 }}
               >
-                <Key className="h-5 w-5 text-purple-600 mb-2" />
-                <p className="text-2xl font-bold text-purple-800">{credentials.length}</p>
-                <p className="text-xs text-purple-600">API Keys</p>
+                <Key className="h-5 w-5 text-sky-600 mb-2" />
+                <p className="text-2xl font-bold text-sky-800">{credentials.length}</p>
+                <p className="text-xs text-sky-600">API Keys</p>
               </motion.div>
               <motion.div
                 className="col-span-1 p-4 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 border border-blue-200 hover-3d"
@@ -2718,7 +2718,7 @@ function PartnerApiPortal() {
               <AccordionItem value="credentials">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
-                    <Key className="h-5 w-5 text-purple-600" />
+                    <Key className="h-5 w-5 text-sky-600" />
                     <span className="font-semibold">API Credentials</span>
                     <Badge variant="outline">{credentials.length}</Badge>
                   </div>
@@ -2774,7 +2774,7 @@ function PartnerApiPortal() {
                     ))}
 
                     {showNewCredForm ? (
-                      <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
+                      <div className="p-4 rounded-xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200">
                         <div className="space-y-3">
                           <div>
                             <Label>Key Name</Label>
@@ -2819,7 +2819,7 @@ function PartnerApiPortal() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button onClick={createCredential} className="bg-purple-600" data-testid="button-create-cred">
+                            <Button onClick={createCredential} className="bg-sky-600" data-testid="button-create-cred">
                               <Key className="h-4 w-4 mr-2" /> Create Key
                             </Button>
                             <Button variant="outline" onClick={() => setShowNewCredForm(false)}>Cancel</Button>
@@ -2916,7 +2916,7 @@ function PartnerApiPortal() {
         )}
 
         {/* Quick Start Guide */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-200">
           <div className="flex items-start gap-3">
             <Lightbulb className="h-5 w-5 text-indigo-600 mt-0.5" />
             <div>
@@ -3483,7 +3483,7 @@ export default function DevelopersPage() {
                 
                 {/* Database */}
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-db-top">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-500 to-pink-600 flex items-center justify-center mb-2">
                     <Database className="h-5 w-5 text-white" />
                   </div>
                   <p className="font-medium text-sm">Database</p>
@@ -3495,7 +3495,7 @@ export default function DevelopersPage() {
                 
                 {/* Stripe */}
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100" data-testid="health-stripe-top">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center mb-2">
                     <CreditCard className="h-5 w-5 text-white" />
                   </div>
                   <p className="font-medium text-sm">Stripe</p>
@@ -3551,7 +3551,7 @@ export default function DevelopersPage() {
           className="mb-8"
         >
           <Card className="premium-card border-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-purple-500/5 to-indigo-500/5" />
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-sky-500/5 to-indigo-500/5" />
             <CardHeader className="relative pb-3">
               <CardTitle className="flex items-center gap-2 font-serif text-2xl">
                 <Shield className="h-6 w-6 text-rose-600" />
@@ -3705,19 +3705,19 @@ export default function DevelopersPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-200">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center">
                       <Code2 className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-purple-800">Developer</p>
-                      <p className="text-xs text-purple-600">Full system access</p>
+                      <p className="font-semibold text-sky-800">Developer</p>
+                      <p className="text-xs text-sky-600">Full system access</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-purple-100">
+                  <div className="flex items-center justify-between bg-white/70 rounded-lg p-3 border border-sky-100">
                     <span className="text-sm text-muted-foreground">Initial PIN:</span>
-                    <code className="font-mono text-lg font-bold text-purple-700 tracking-widest">0424</code>
+                    <code className="font-mono text-lg font-bold text-sky-700 tracking-widest">0424</code>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">Access: Developer Hub, Admin Portal</p>
                 </div>
@@ -3893,7 +3893,7 @@ export default function DevelopersPage() {
           {[
             { icon: Shield, title: "Secure", desc: "PIN-based auth", color: "from-emerald-500 to-teal-600" },
             { icon: Clock, title: "2hr Lead Time", desc: "Order validation", color: "from-blue-500 to-indigo-600" },
-            { icon: Database, title: "PostgreSQL", desc: "Reliable storage", color: "from-purple-500 to-pink-600" },
+            { icon: Database, title: "PostgreSQL", desc: "Reliable storage", color: "from-sky-500 to-pink-600" },
             { icon: Webhook, title: "Webhooks", desc: "Coming soon", color: "from-amber-500 to-orange-600" },
           ].map((item, i) => (
             <motion.div
@@ -3928,7 +3928,7 @@ export default function DevelopersPage() {
           className="mb-12"
         >
           <Card className="premium-card border-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-purple-500/5" />
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-sky-500/5" />
             <CardHeader className="relative">
               <div className="flex items-center justify-between">
                 <div>
@@ -3992,10 +3992,10 @@ export default function DevelopersPage() {
                 
                 <motion.div 
                   whileHover={{ scale: 1.02, y: -2 }}
-                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-purple-200 hover:shadow-lg transition-all"
+                  className="bento-span-3 p-4 rounded-xl bg-white/50 backdrop-blur border border-gray-100 hover:border-sky-200 hover:shadow-lg transition-all"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-500 to-pink-600 flex items-center justify-center shadow-lg">
                       <Hash className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs text-muted-foreground">Subscriber</span>
@@ -4408,7 +4408,7 @@ export default function DevelopersPage() {
                 <AccordionItem value="stripe" className="border rounded-xl bg-white/50 backdrop-blur px-4">
                   <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-stripe">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center shadow-lg">
                         <CreditCard className="h-6 w-6 text-white" />
                       </div>
                       <div className="text-left">
@@ -4452,7 +4452,7 @@ export default function DevelopersPage() {
                 <AccordionItem value="stripe-tax" className="border rounded-xl bg-white/50 backdrop-blur px-4">
                   <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-stripe-tax">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center shadow-lg">
                         <Percent className="h-6 w-6 text-white" />
                       </div>
                       <div className="text-left">
@@ -4613,13 +4613,13 @@ export default function DevelopersPage() {
                 <AccordionItem value="mobile-app" className="border rounded-xl bg-white/50 backdrop-blur px-4">
                   <AccordionTrigger className="hover:no-underline py-4" data-testid="accordion-mobile-app">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center shadow-lg">
                         <Zap className="h-6 w-6 text-white" />
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-lg">Mobile App (iOS/Android)</span>
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200">Coming Soon</Badge>
+                          <Badge className="bg-sky-100 text-sky-700 border-sky-200">Coming Soon</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">Native mobile experience for on-the-go ordering</p>
                       </div>
@@ -4702,13 +4702,13 @@ export default function DevelopersPage() {
                   <p className="text-2xl font-bold text-blue-700">$500K - $2M</p>
                   <p className="text-sm text-blue-600">MVP Stage</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-sky-50 to-cyan-50 border border-sky-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                    <span className="font-semibold text-purple-800">Market Size</span>
+                    <Building2 className="h-5 w-5 text-sky-600" />
+                    <span className="font-semibold text-sky-800">Market Size</span>
                   </div>
-                  <p className="text-2xl font-bold text-purple-700">$60B</p>
-                  <p className="text-sm text-purple-600">Corporate Catering</p>
+                  <p className="text-2xl font-bold text-sky-700">$60B</p>
+                  <p className="text-sm text-sky-600">Corporate Catering</p>
                 </div>
                 <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
                   <div className="flex items-center gap-2 mb-2">
@@ -4770,7 +4770,7 @@ export default function DevelopersPage() {
                         <td className="py-2 px-3">$50M+</td>
                         <td className="py-2 px-3">10x+</td>
                         <td className="py-2 px-3 font-semibold">$500M+</td>
-                        <td className="py-2 px-3"><Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Aspirational</Badge></td>
+                        <td className="py-2 px-3"><Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">Aspirational</Badge></td>
                       </tr>
                     </tbody>
                   </table>
@@ -4872,7 +4872,7 @@ export default function DevelopersPage() {
                 <p className="text-xs text-muted-foreground mt-3">Plus: 15% service fees on one-off orders, hallmark minting fees ($4.99), franchise licensing fees</p>
               </div>
 
-              <div className="border rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
+              <div className="border rounded-xl bg-gradient-to-br from-indigo-50 to-sky-50 p-4">
                 <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
                   <Target className="h-5 w-5 text-indigo-600" />
                   Key Metrics to Track

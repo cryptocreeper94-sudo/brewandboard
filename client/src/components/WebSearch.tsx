@@ -171,7 +171,7 @@ export function WebSearch() {
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     webResult.type === "url" 
-                      ? "bg-gradient-to-br from-blue-500 to-purple-500" 
+                      ? "bg-gradient-to-br from-blue-500 to-sky-500" 
                       : "bg-gradient-to-br from-amber-500 to-orange-500"
                   }`}>
                     {webResult.type === "url" ? (

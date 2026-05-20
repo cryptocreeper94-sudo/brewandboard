@@ -203,9 +203,9 @@ export default function VerifyPage() {
         )}
         
         {blockchain && (
-          <div className="bg-purple-950/30 border border-purple-600/30 rounded-xl p-4 mb-6">
+          <div className="bg-sky-950/30 border border-sky-600/30 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <Shield className="w-5 h-5 text-purple-400" />
+              <Shield className="w-5 h-5 text-sky-400" />
               <span className="font-semibold text-white">Blockchain Verification</span>
             </div>
             
@@ -225,7 +225,7 @@ export default function VerifyPage() {
                     href={`https://solscan.io/tx/${hallmark.solanaTxSignature}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 transition-colors mt-2"
+                    className="inline-flex items-center gap-1 text-sm text-sky-400 hover:text-sky-300 transition-colors mt-2"
                     data-testid="link-blockchain-tx"
                   >
                     View Transaction on Solscan <ExternalLink className="w-3 h-3" />

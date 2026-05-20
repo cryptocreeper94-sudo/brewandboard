@@ -150,7 +150,7 @@ export default function PricingPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100">
+                  <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-100">
                     <div className="flex items-center gap-3">
                       <div className="flex gap-2">
                         <CreditCard className="h-5 w-5 text-blue-600" />

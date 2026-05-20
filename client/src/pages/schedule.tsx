@@ -88,7 +88,7 @@ interface ScheduledOrder {
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   pending_payment: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" },
   scheduled: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
-  confirmed: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+  confirmed: { bg: "bg-sky-100", text: "text-sky-700", border: "border-sky-200" },
   preparing: { bg: "bg-stone-100", text: "text-stone-700", border: "border-stone-200" },
   out_for_delivery: { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" },
   delivered: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" },

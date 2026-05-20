@@ -12,7 +12,7 @@ const TIER_COLORS: Record<string, string> = {
   silver: "text-gray-300 bg-gray-700/30 border-gray-500/40",
   gold: "text-yellow-300 bg-yellow-900/30 border-yellow-600/40",
   platinum: "text-cyan-300 bg-cyan-900/30 border-cyan-600/40",
-  diamond: "text-purple-300 bg-purple-900/30 border-purple-500/40",
+  diamond: "text-sky-300 bg-sky-900/30 border-sky-500/40",
 };
 
 const TIER_TABLE = [

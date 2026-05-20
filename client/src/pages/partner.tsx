@@ -342,7 +342,7 @@ export default function PartnerHub() {
     { label: "New Order", icon: ShoppingCart, href: "/schedule", color: "from-amber-500 to-orange-600" },
     { label: "View Vendors", icon: Store, href: "/vendors", color: "from-emerald-500 to-green-600" },
     { label: "Portfolio", icon: FileText, href: "/portfolio", color: "from-blue-500 to-indigo-600" },
-    { label: "Scanner", icon: Scan, href: "/scan", color: "from-purple-500 to-violet-600" },
+    { label: "Scanner", icon: Scan, href: "/scan", color: "from-sky-500 to-cyan-600" },
     { label: "Virtual Host", icon: Users, href: "/virtual-host", color: "from-pink-500 to-rose-600" },
     { label: "Presentations", icon: Presentation, href: "/meeting-presentations", color: "from-cyan-500 to-teal-600" },
     { label: "Dev Hub", icon: Shield, href: "/developers", color: "from-slate-500 to-zinc-600" },
@@ -644,7 +644,7 @@ export default function PartnerHub() {
               </Badge>
             )}
             {sandboxMode && (
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+              <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/30">
                 <FlaskConical className="h-3 w-3 mr-1" />
                 Sandbox
               </Badge>
@@ -779,11 +779,11 @@ export default function PartnerHub() {
           {/* Admin Controls - 6 columns */}
           <BentoCard span={6} variant="3d" className="overflow-visible">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/30 to-indigo-600/30">
-                <Settings className="h-5 w-5 text-purple-400" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-sky-500/30 to-indigo-600/30">
+                <Settings className="h-5 w-5 text-sky-400" />
               </div>
               <h3 className="font-semibold text-white">Admin Controls</h3>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 ml-auto">
+              <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/30 ml-auto">
                 Full Access
               </Badge>
             </div>
@@ -798,7 +798,7 @@ export default function PartnerHub() {
               </Link>
               <Link href="/developers">
                 <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
-                  <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
+                  <div className="bg-gradient-to-br from-sky-500 to-indigo-600 p-3 rounded-xl shadow-lg cursor-pointer w-[100px] h-[80px] flex flex-col items-center justify-center gap-1 text-white">
                     <Database className="h-5 w-5" />
                     <span className="text-xs font-medium text-center">Dev Hub</span>
                   </div>

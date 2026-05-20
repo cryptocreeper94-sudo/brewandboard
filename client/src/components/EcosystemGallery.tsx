@@ -91,7 +91,7 @@ const categoryIcons: Record<string, any> = {
 
 const categoryColors: Record<string, string> = {
   security: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30",
-  blockchain: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
+  blockchain: "from-sky-500/20 to-sky-600/10 border-sky-500/30",
   business: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
   communication: "from-amber-500/20 to-amber-600/10 border-amber-500/30",
   utilities: "from-gray-500/20 to-gray-600/10 border-gray-500/30",
@@ -168,12 +168,12 @@ export function EcosystemGallery() {
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-[#1a0f09]/95 to-[#2d1810]/95 border-amber-900/30 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-purple-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-sky-500/5" />
         
         <CardHeader className="relative border-b border-amber-900/20 pb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-sky-500/20 border border-amber-500/30">
                 <Globe className="w-8 h-8 text-amber-400" />
               </div>
               <div>
@@ -189,7 +189,7 @@ export function EcosystemGallery() {
                 <FileJson className="w-3 h-3 mr-1" />
                 v{registry.version}
               </Badge>
-              <Badge variant="outline" className="border-purple-500/30 text-purple-300 px-3 py-1">
+              <Badge variant="outline" className="border-sky-500/30 text-sky-300 px-3 py-1">
                 <Package className="w-3 h-3 mr-1" />
                 {Object.keys(registry.modules).length} Modules
               </Badge>
@@ -372,7 +372,7 @@ export function EcosystemGallery() {
                   <Badge variant="outline" className="border-blue-500/30 text-blue-300">
                     {selectedModule.language}
                   </Badge>
-                  <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                  <Badge variant="outline" className="border-sky-500/30 text-sky-300">
                     {selectedModule.framework}
                   </Badge>
                   {selectedModule.isPublic && (

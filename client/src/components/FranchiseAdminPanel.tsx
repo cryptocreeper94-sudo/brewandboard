@@ -183,7 +183,7 @@ export function FranchiseAdminPanel() {
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
-      owner: "bg-purple-100 text-purple-800",
+      owner: "bg-sky-100 text-sky-800",
       manager: "bg-blue-100 text-blue-800",
       staff: "bg-gray-100 text-gray-800",
       customer: "bg-amber-100 text-amber-800",
@@ -301,13 +301,13 @@ export function FranchiseAdminPanel() {
                         </CardContent>
                       </Card>
                       
-                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
+                      <Card className="bg-gradient-to-br from-sky-50 to-sky-100">
                         <CardContent className="p-4">
-                          <div className="flex items-center gap-2 text-purple-600">
+                          <div className="flex items-center gap-2 text-sky-600">
                             <Check className="w-4 h-4" />
                             <span className="text-xs font-medium">Completed</span>
                           </div>
-                          <p className="text-2xl font-bold text-purple-900 mt-1">
+                          <p className="text-2xl font-bold text-sky-900 mt-1">
                             {analytics?.completedOrders || 0}
                           </p>
                         </CardContent>

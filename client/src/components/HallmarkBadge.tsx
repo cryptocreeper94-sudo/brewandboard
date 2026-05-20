@@ -101,7 +101,7 @@ export function HallmarkBadge({
               href={solanaExplorerUrl || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 mt-2 transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 mt-2 transition-colors"
               data-testid="link-solana-explorer"
             >
               <span>View on Solana</span>
@@ -156,7 +156,7 @@ export function CompactHallmarkBadge({
           href={`https://solscan.io/tx/${solanaTx}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-purple-400 hover:text-purple-300"
+          className="text-sky-400 hover:text-sky-300"
         >
           <ExternalLink className="w-3 h-3" />
         </a>

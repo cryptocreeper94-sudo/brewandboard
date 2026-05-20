@@ -177,7 +177,7 @@ export function TeamChat() {
                             <span className="text-xs font-medium text-stone-300">{msg.senderName}</span>
                             {msg.senderRole && (
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                msg.senderRole === 'Developer' ? 'bg-purple-500/20 text-purple-300' :
+                                msg.senderRole === 'Developer' ? 'bg-sky-500/20 text-sky-300' :
                                 msg.senderRole === 'Partner' ? 'bg-amber-500/20 text-amber-300' :
                                 msg.senderRole === 'Regional Manager' ? 'bg-emerald-500/20 text-emerald-300' :
                                 'bg-stone-500/20 text-stone-400'

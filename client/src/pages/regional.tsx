@@ -868,7 +868,7 @@ export default function RegionalDashboard() {
       {(manager?.role === "partner" || manager?.role === "demo_partner") && (
         <div className="max-w-7xl mx-auto px-4 pb-8">
           <Card className="border-0 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+            <CardHeader className="bg-gradient-to-r from-sky-600 to-indigo-700 text-white">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Users className="h-6 w-6" />
@@ -878,7 +878,7 @@ export default function RegionalDashboard() {
                     Team Overview 
                     <Sparkles className="h-4 w-4 text-yellow-300" />
                   </CardTitle>
-                  <CardDescription className="text-purple-200">
+                  <CardDescription className="text-sky-200">
                     All regional managers across territories
                   </CardDescription>
                 </div>
@@ -910,7 +910,7 @@ export default function RegionalDashboard() {
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold">{mgr.name}</span>
                                 {mgr.role === "partner" && (
-                                  <Badge className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs">
+                                  <Badge className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-xs">
                                     <Star className="h-3 w-3 mr-1" /> Partner
                                   </Badge>
                                 )}
@@ -1019,13 +1019,13 @@ export default function RegionalDashboard() {
                   <p className="text-2xl font-bold text-blue-700">$500K - $2M</p>
                   <p className="text-sm text-blue-600">MVP Stage</p>
                 </motion.div>
-                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 stat-shimmer">
+                <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-sky-50 to-cyan-50 border border-sky-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                    <span className="font-semibold text-purple-800">Market Size</span>
+                    <Building2 className="h-5 w-5 text-sky-600" />
+                    <span className="font-semibold text-sky-800">Market Size</span>
                   </div>
-                  <p className="text-2xl font-bold text-purple-700">$60B</p>
-                  <p className="text-sm text-purple-600">Corporate Catering</p>
+                  <p className="text-2xl font-bold text-sky-700">$60B</p>
+                  <p className="text-sm text-sky-600">Corporate Catering</p>
                 </motion.div>
                 <motion.div variants={staggerItem} className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 stat-shimmer">
                   <div className="flex items-center gap-2 mb-2">
@@ -1087,7 +1087,7 @@ export default function RegionalDashboard() {
                         <td className="py-2 px-3">$50M+</td>
                         <td className="py-2 px-3">10x+</td>
                         <td className="py-2 px-3 font-semibold">$500M+</td>
-                        <td className="py-2 px-3"><Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Aspirational</Badge></td>
+                        <td className="py-2 px-3"><Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">Aspirational</Badge></td>
                       </tr>
                     </tbody>
                   </table>
@@ -1169,7 +1169,7 @@ export default function RegionalDashboard() {
                 </div>
               </div>
 
-              <div className="border rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
+              <div className="border rounded-xl bg-gradient-to-br from-indigo-50 to-sky-50 p-4">
                 <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
                   <Target className="h-5 w-5 text-indigo-600" />
                   Key Metrics to Track
@@ -1309,11 +1309,11 @@ export default function RegionalDashboard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", duration: 0.6 }}
-                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-2xl mb-4 shadow-2xl"
+                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-sky-500 via-pink-500 to-orange-500 rounded-2xl mb-4 shadow-2xl"
               >
                 <Sparkles className="h-10 w-10 text-white" />
               </motion.div>
-              <DialogTitle className="text-3xl font-serif bg-gradient-to-r from-purple-600 to-orange-600 bg-clip-text text-transparent">
+              <DialogTitle className="text-3xl font-serif bg-gradient-to-r from-sky-600 to-orange-600 bg-clip-text text-transparent">
                 Welcome to the Team, Sid!
               </DialogTitle>
               <DialogDescription className="text-lg mt-2">
@@ -1324,9 +1324,9 @@ export default function RegionalDashboard() {
           
           <div className="space-y-6">
             {/* Vision Section */}
-            <div className="bg-gradient-to-r from-slate-50 to-purple-50 rounded-xl p-6 border border-purple-100">
+            <div className="bg-gradient-to-r from-slate-50 to-sky-50 rounded-xl p-6 border border-sky-100">
               <h3 className="font-serif text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
-                <Target className="h-5 w-5 text-purple-600" />
+                <Target className="h-5 w-5 text-sky-600" />
                 Our Vision
               </h3>
               <p className="text-slate-600 leading-relaxed">
@@ -1412,7 +1412,7 @@ export default function RegionalDashboard() {
                   <p className="text-xs text-slate-500">Service Fee</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">$29-199</p>
+                  <p className="text-2xl font-bold text-sky-600">$29-199</p>
                   <p className="text-xs text-slate-500">Subscriptions</p>
                 </div>
                 <div>
@@ -1426,7 +1426,7 @@ export default function RegionalDashboard() {
           <div className="mt-6 pt-4 border-t">
             <Button 
               onClick={acknowledgeWelcome}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-6 text-lg"
+              className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 py-6 text-lg"
               data-testid="button-acknowledge-welcome"
             >
               <Sparkles className="h-5 w-5 mr-2" />

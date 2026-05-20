@@ -129,7 +129,7 @@ export default function AdminView() {
       desc: "API keys, blockchain verification, analytics", 
       icon: Shield, 
       href: "/developers",
-      color: "from-purple-500 to-violet-600"
+      color: "from-sky-500 to-cyan-600"
     },
     { 
       title: "Virtual Host", 
@@ -285,26 +285,26 @@ export default function AdminView() {
             </div>
 
             {/* Revenue Model */}
-            <div className="bg-gradient-to-r from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-xl p-5 shadow-lg">
-              <h4 className="font-semibold text-purple-400 mb-3 flex items-center gap-2 text-lg">
+            <div className="bg-gradient-to-r from-sky-900/30 to-cyan-900/30 border border-sky-500/30 rounded-xl p-5 shadow-lg">
+              <h4 className="font-semibold text-sky-400 mb-3 flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5" />
                 Revenue Streams
               </h4>
               <div className="grid grid-cols-2 gap-3 text-gray-300 text-sm">
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-purple-400 font-semibold">15% Service Fee</p>
+                  <p className="text-sky-400 font-semibold">15% Service Fee</p>
                   <p className="text-xs text-gray-400">On every one-off order</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-purple-400 font-semibold">Subscriptions</p>
+                  <p className="text-sky-400 font-semibold">Subscriptions</p>
                   <p className="text-xs text-gray-400">Monthly recurring revenue</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-purple-400 font-semibold">Franchise Fees</p>
+                  <p className="text-sky-400 font-semibold">Franchise Fees</p>
                   <p className="text-xs text-gray-400">License + royalties</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-purple-400 font-semibold">Delivery Margin</p>
+                  <p className="text-sky-400 font-semibold">Delivery Margin</p>
                   <p className="text-xs text-gray-400">Distance-based fees</p>
                 </div>
               </div>
@@ -440,7 +440,7 @@ export default function AdminView() {
             { label: "Active Orders", value: "12", icon: Package, color: "text-amber-400" },
             { label: "Vendors", value: "37+", icon: Store, color: "text-emerald-400" },
             { label: "Database Tables", value: "54", icon: Database, color: "text-blue-400" },
-            { label: "Regions", value: "Nashville", icon: MapPin, color: "text-purple-400" },
+            { label: "Regions", value: "Nashville", icon: MapPin, color: "text-sky-400" },
           ].map((stat, i) => (
             <motion.div
               key={i}

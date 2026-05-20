@@ -244,12 +244,12 @@ export function AppEcosystemHub() {
   return (
     <>
       <Card className="premium-card border-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/5 to-pink-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-sky-500/5 to-pink-500/5" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2 font-serif text-2xl">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-sky-600">
                   <Globe className="h-5 w-5 text-white" />
                 </div>
                 App Ecosystem Hub
@@ -275,7 +275,7 @@ export function AppEcosystemHub() {
               <Button
                 size="sm"
                 onClick={() => setShowAddModal(true)}
-                className="gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                className="gap-2 bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700"
                 data-testid="button-add-app"
               >
                 <Plus className="h-4 w-4" />
@@ -313,7 +313,7 @@ export function AppEcosystemHub() {
                     <div className="flex items-center gap-4 flex-1">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
                         app.isActive 
-                          ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
+                          ? 'bg-gradient-to-br from-blue-500 to-sky-600' 
                           : 'bg-gray-400'
                       }`}>
                         <Globe className="h-6 w-6 text-white" />
@@ -436,7 +436,7 @@ export function AppEcosystemHub() {
                         variant="outline"
                         className={log.direction === 'inbound' 
                           ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                          : 'bg-purple-50 text-purple-700 border-purple-200'
+                          : 'bg-sky-50 text-sky-700 border-sky-200'
                         }
                       >
                         {log.direction === 'inbound' ? '←' : '→'}
@@ -464,9 +464,9 @@ export function AppEcosystemHub() {
           {/* Shared Code Snippets Section */}
           <div className="mt-6 pt-6 border-t">
             <h4 className="font-semibold flex items-center gap-2 mb-3">
-              <Code2 className="h-4 w-4 text-purple-600" />
+              <Code2 className="h-4 w-4 text-sky-600" />
               Shared Code Snippets
-              <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+              <Badge className="bg-sky-100 text-sky-700 border-sky-200 text-xs">
                 {snippets.length} available
               </Badge>
             </h4>
@@ -598,7 +598,7 @@ export function AppEcosystemHub() {
             </div>
             <Button
               onClick={handleAddApp}
-              className="w-full gap-2 bg-gradient-to-r from-blue-500 to-purple-600"
+              className="w-full gap-2 bg-gradient-to-r from-blue-500 to-sky-600"
               data-testid="button-confirm-add-app"
             >
               <Sparkles className="h-4 w-4" />

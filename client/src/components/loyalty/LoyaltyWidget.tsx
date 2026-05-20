@@ -60,9 +60,9 @@ const tierConfig = {
     perks: ["15% off all orders", "Free delivery always", "Exclusive vendor access", "Priority scheduling"]
   },
   platinum: { 
-    color: "from-purple-400 to-purple-700", 
-    textColor: "text-purple-600",
-    bgColor: "bg-purple-100",
+    color: "from-sky-400 to-sky-700", 
+    textColor: "text-sky-600",
+    bgColor: "bg-sky-100",
     threshold: 5000,
     nextThreshold: null,
     perks: ["20% off all orders", "Dedicated account manager", "Custom catering options", "VIP events access"]

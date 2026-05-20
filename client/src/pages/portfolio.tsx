@@ -142,7 +142,7 @@ const colorThemes: { id: string; name: string; gradient: string; text: string }[
   { id: "midnight", name: "Midnight", gradient: "from-slate-900 via-slate-800 to-slate-700", text: "text-slate-100" },
   { id: "forest", name: "Forest", gradient: "from-emerald-900 via-emerald-800 to-emerald-700", text: "text-emerald-100" },
   { id: "ocean", name: "Ocean", gradient: "from-blue-900 via-blue-800 to-blue-700", text: "text-blue-100" },
-  { id: "berry", name: "Berry", gradient: "from-purple-900 via-purple-800 to-purple-700", text: "text-purple-100" },
+  { id: "berry", name: "Berry", gradient: "from-sky-900 via-sky-800 to-sky-700", text: "text-sky-100" },
 ];
 
 export default function PortfolioPage() {

@@ -216,7 +216,7 @@ export function AdminDashboard() {
         <Card data-testid="card-system-health">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">System Health</CardTitle>
-            <Activity className="h-4 w-4 text-purple-600" />
+            <Activity className="h-4 w-4 text-sky-600" />
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">

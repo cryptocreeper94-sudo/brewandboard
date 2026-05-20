@@ -578,7 +578,7 @@ const getWeatherIcon = (icon: string, className: string = "h-4 w-4") => {
     case 'cloud': return <Cloud className={`${className} text-gray-400`} />;
     case 'cloud-rain': return <CloudRain className={`${className} text-blue-400`} />;
     case 'cloud-drizzle': return <CloudDrizzle className={`${className} text-blue-300`} />;
-    case 'cloud-lightning': return <CloudLightning className={`${className} text-purple-500`} />;
+    case 'cloud-lightning': return <CloudLightning className={`${className} text-sky-500`} />;
     case 'snowflake': return <Snowflake className={`${className} text-cyan-300`} />;
     default: return <Cloud className={`${className} text-gray-400`} />;
   }

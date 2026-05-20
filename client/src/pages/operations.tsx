@@ -68,7 +68,7 @@ const ORDER_STATUS_CONFIG = {
   scheduled: { label: 'Scheduled', color: 'bg-blue-500', textColor: 'text-blue-700', bgLight: 'bg-blue-50', Icon: Clock },
   confirmed: { label: 'Confirmed', color: 'bg-emerald-500', textColor: 'text-emerald-700', bgLight: 'bg-emerald-50', Icon: CheckCircle },
   preparing: { label: 'Preparing', color: 'bg-amber-500', textColor: 'text-amber-700', bgLight: 'bg-amber-50', Icon: ChefHat },
-  picked_up: { label: 'Picked Up', color: 'bg-purple-500', textColor: 'text-purple-700', bgLight: 'bg-purple-50', Icon: Package },
+  picked_up: { label: 'Picked Up', color: 'bg-sky-500', textColor: 'text-sky-700', bgLight: 'bg-sky-50', Icon: Package },
   out_for_delivery: { label: 'Out for Delivery', color: 'bg-orange-500', textColor: 'text-orange-700', bgLight: 'bg-orange-50', Icon: Truck },
   delivered: { label: 'Delivered', color: 'bg-green-600', textColor: 'text-green-700', bgLight: 'bg-green-50', Icon: CheckCircle2 },
   cancelled: { label: 'Cancelled', color: 'bg-red-500', textColor: 'text-red-700', bgLight: 'bg-red-50', Icon: XCircle },
@@ -313,8 +313,8 @@ export default function OperationsPage() {
           </div>
           {order.assignedDriverName && (
             <div className="flex items-center gap-2 text-sm">
-              <Truck className="h-4 w-4 text-purple-500" />
-              <span className="text-xs font-medium text-purple-700">{order.assignedDriverName}</span>
+              <Truck className="h-4 w-4 text-sky-500" />
+              <span className="text-xs font-medium text-sky-700">{order.assignedDriverName}</span>
             </div>
           )}
         </div>
@@ -626,11 +626,11 @@ export default function OperationsPage() {
               )}
 
               {selectedOrder.assignedDriverName && (
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                  <p className="text-xs text-purple-800 dark:text-purple-200 font-medium mb-1">Assigned Driver</p>
+                <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-3">
+                  <p className="text-xs text-sky-800 dark:text-sky-200 font-medium mb-1">Assigned Driver</p>
                   <p className="text-sm font-medium">{selectedOrder.assignedDriverName}</p>
                   {selectedOrder.driverPhone && (
-                    <a href={`tel:${selectedOrder.driverPhone}`} className="text-purple-600 text-sm hover:underline">
+                    <a href={`tel:${selectedOrder.driverPhone}`} className="text-sky-600 text-sm hover:underline">
                       {selectedOrder.driverPhone}
                     </a>
                   )}

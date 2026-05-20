@@ -54,7 +54,7 @@ interface CompanyAccount {
 }
 
 const roleConfig = {
-  admin: { label: "Admin", color: "bg-purple-100 text-purple-700", icon: Crown },
+  admin: { label: "Admin", color: "bg-sky-100 text-sky-700", icon: Crown },
   manager: { label: "Manager", color: "bg-blue-100 text-blue-700", icon: Shield },
   member: { label: "Member", color: "bg-gray-100 text-gray-700", icon: Users }
 };

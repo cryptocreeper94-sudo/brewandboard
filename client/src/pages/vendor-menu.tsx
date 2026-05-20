@@ -34,11 +34,11 @@ const TYPE_ICONS: Record<string, { icon: typeof Coffee; label: string; color: st
   coffee: { icon: Coffee, label: "Coffee", color: "from-amber-500 to-orange-600" },
   chain: { icon: Coffee, label: "Chain", color: "from-green-500 to-emerald-600" },
   smoothie: { icon: Sparkles, label: "Smoothies", color: "from-pink-500 to-rose-600" },
-  both: { icon: Coffee, label: "Coffee & Smoothies", color: "from-purple-500 to-violet-600" },
+  both: { icon: Coffee, label: "Coffee & Smoothies", color: "from-sky-500 to-cyan-600" },
   bakery: { icon: UtensilsCrossed, label: "Bakery", color: "from-yellow-500 to-amber-600" },
   donut: { icon: UtensilsCrossed, label: "Donuts", color: "from-pink-400 to-rose-500" },
   juice: { icon: Sparkles, label: "Juice", color: "from-green-400 to-emerald-500" },
-  boba: { icon: Coffee, label: "Bubble Tea", color: "from-purple-400 to-pink-500" },
+  boba: { icon: Coffee, label: "Bubble Tea", color: "from-sky-400 to-pink-500" },
   breakfast: { icon: UtensilsCrossed, label: "Breakfast", color: "from-orange-400 to-red-500" },
 };
 

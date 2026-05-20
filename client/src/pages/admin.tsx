@@ -482,9 +482,9 @@ export default function AdminPage() {
         >
           {[
             { name: 'API', key: 'api', status: health.api, icon: Server, color: 'from-blue-500 to-indigo-600' },
-            { name: 'Database', key: 'database', status: health.database, icon: Database, color: 'from-purple-500 to-pink-600' },
+            { name: 'Database', key: 'database', status: health.database, icon: Database, color: 'from-sky-500 to-pink-600' },
             { name: 'Blockchain', key: 'blockchain', status: health.blockchain, icon: Shield, color: 'from-emerald-500 to-teal-600' },
-            { name: 'Stripe', key: 'stripe', status: health.stripe, icon: CreditCard, color: 'from-violet-500 to-purple-600' },
+            { name: 'Stripe', key: 'stripe', status: health.stripe, icon: CreditCard, color: 'from-cyan-500 to-sky-600' },
             { name: 'Coinbase', key: 'coinbase', status: health.coinbase, icon: Bitcoin, color: 'from-amber-500 to-orange-600' },
           ].map((service) => (
             <Card 
@@ -545,7 +545,7 @@ export default function AdminPage() {
             <Card className="bg-slate-800/50 border-slate-700">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Wallet className="h-5 w-5 text-purple-500" />
+                  <Wallet className="h-5 w-5 text-sky-500" />
                   <span className="text-slate-400 text-sm">Wallet Balance</span>
                 </div>
                 <p className="text-3xl font-bold text-white">
@@ -768,9 +768,9 @@ export default function AdminPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-white">
                 {selectedHealthService === 'api' && <Server className="h-5 w-5 text-blue-500" />}
-                {selectedHealthService === 'database' && <Database className="h-5 w-5 text-purple-500" />}
+                {selectedHealthService === 'database' && <Database className="h-5 w-5 text-sky-500" />}
                 {selectedHealthService === 'blockchain' && <Shield className="h-5 w-5 text-emerald-500" />}
-                {selectedHealthService === 'stripe' && <CreditCard className="h-5 w-5 text-violet-500" />}
+                {selectedHealthService === 'stripe' && <CreditCard className="h-5 w-5 text-cyan-500" />}
                 {selectedHealthService === 'coinbase' && <Bitcoin className="h-5 w-5 text-amber-500" />}
                 {selectedHealthService?.charAt(0).toUpperCase()}{selectedHealthService?.slice(1)} Details
               </DialogTitle>
@@ -818,7 +818,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                     <p className="text-xs text-slate-400 mb-1">Tables</p>
-                    <p className="text-2xl font-bold text-purple-400">{healthDetails.database.tables}</p>
+                    <p className="text-2xl font-bold text-sky-400">{healthDetails.database.tables}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                     <p className="text-xs text-slate-400 mb-1">Connections</p>
@@ -839,7 +839,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                     <p className="text-xs text-slate-400 mb-1">Transactions</p>
-                    <p className="text-2xl font-bold text-violet-400">{healthDetails.stripe.transactions}</p>
+                    <p className="text-2xl font-bold text-cyan-400">{healthDetails.stripe.transactions}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                     <p className="text-xs text-slate-400 mb-1">Total Revenue</p>

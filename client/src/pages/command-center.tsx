@@ -46,8 +46,8 @@ const glowMap: Record<string, string> = {
   "shadow-orange-500/20": "hover:shadow-[0_0_25px_rgba(249,115,22,0.2)]",
   "shadow-yellow-500/20": "hover:shadow-[0_0_25px_rgba(234,179,8,0.2)]",
   "shadow-amber-500/30": "hover:shadow-[0_0_30px_rgba(245,158,11,0.3)]",
-  "shadow-purple-500/30": "hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]",
-  "shadow-violet-500/20": "hover:shadow-[0_0_25px_rgba(139,92,246,0.2)]",
+  "shadow-sky-500/30": "hover:shadow-[0_0_30px_rgba(14,165,233,0.3)]",
+  "shadow-cyan-500/20": "hover:shadow-[0_0_25px_rgba(14,165,233,0.2)]",
   "shadow-indigo-500/20": "hover:shadow-[0_0_25px_rgba(99,102,241,0.2)]",
   "shadow-green-500/20": "hover:shadow-[0_0_25px_rgba(34,197,94,0.2)]",
   "shadow-emerald-500/30": "hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]",
@@ -58,7 +58,7 @@ const glowMap: Record<string, string> = {
   "shadow-green-500/30": "hover:shadow-[0_0_30px_rgba(34,197,94,0.3)]",
   "shadow-cyan-500/30": "hover:shadow-[0_0_30px_rgba(6,182,212,0.3)]",
   "shadow-blue-500/20": "hover:shadow-[0_0_25px_rgba(59,130,246,0.2)]",
-  "shadow-violet-500/30": "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]",
+  "shadow-cyan-500/30": "hover:shadow-[0_0_30px_rgba(14,165,233,0.3)]",
   "shadow-slate-500/20": "hover:shadow-[0_0_25px_rgba(100,116,139,0.2)]",
   "shadow-gray-500/20": "hover:shadow-[0_0_25px_rgba(107,114,128,0.2)]",
 };
@@ -170,7 +170,7 @@ const categories: Category[] = [
   {
     title: "Administration",
     icon: <Shield className="size-4" />,
-    gradient: "from-purple-500 to-violet-500",
+    gradient: "from-sky-500 to-cyan-500",
     description: "Full system administration including user management, platform settings, and regional oversight. Control every aspect of the platform.",
     cards: [
       {
@@ -179,7 +179,7 @@ const categories: Category[] = [
         href: "/admin",
         icon: <Shield className="size-5" />,
         image: ccAdmin,
-        glowColor: "shadow-purple-500/30",
+        glowColor: "shadow-sky-500/30",
         featured: true,
       },
       {
@@ -188,7 +188,7 @@ const categories: Category[] = [
         href: "/admin-view",
         icon: <Eye className="size-5" />,
         image: ccAdmin,
-        glowColor: "shadow-violet-500/20",
+        glowColor: "shadow-cyan-500/20",
       },
       {
         label: "Regional Manager",
@@ -322,7 +322,7 @@ const categories: Category[] = [
   {
     title: "Developer Tools",
     icon: <Code className="size-4" />,
-    gradient: "from-violet-500 to-purple-500",
+    gradient: "from-cyan-500 to-sky-500",
     description: "Technical tools for developers and system integrators. API access, app ecosystem management, and system diagnostics.",
     cards: [
       {
@@ -331,7 +331,7 @@ const categories: Category[] = [
         href: "/developers",
         icon: <Code className="size-5" />,
         image: ccDevelopers,
-        glowColor: "shadow-violet-500/30",
+        glowColor: "shadow-cyan-500/30",
         featured: true,
       },
     ],

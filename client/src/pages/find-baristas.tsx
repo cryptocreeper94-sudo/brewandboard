@@ -50,7 +50,7 @@ function getTypeBadge(type: Shop['type']) {
     chain: { label: 'National Chain', className: 'bg-blue-700/80 text-blue-100' },
     donut: { label: 'Donuts', className: 'bg-rose-700/80 text-rose-100' },
     juice: { label: 'Juice Bar', className: 'bg-lime-700/80 text-lime-100' },
-    boba: { label: 'Bubble Tea', className: 'bg-purple-700/80 text-purple-100' },
+    boba: { label: 'Bubble Tea', className: 'bg-sky-700/80 text-sky-100' },
     breakfast: { label: 'Breakfast', className: 'bg-orange-700/80 text-orange-100' },
   };
   return badges[type] || { label: type, className: 'bg-gray-700/80 text-gray-100' };

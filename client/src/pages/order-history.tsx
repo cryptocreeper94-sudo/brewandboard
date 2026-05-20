@@ -79,7 +79,7 @@ interface Order {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   pending_payment: { label: "Awaiting Payment", color: "text-yellow-700", bg: "bg-yellow-100", icon: Clock },
   scheduled: { label: "Scheduled", color: "text-blue-700", bg: "bg-blue-100", icon: Calendar },
-  confirmed: { label: "Confirmed", color: "text-purple-700", bg: "bg-purple-100", icon: CheckCircle2 },
+  confirmed: { label: "Confirmed", color: "text-sky-700", bg: "bg-sky-100", icon: CheckCircle2 },
   preparing: { label: "Preparing", color: "text-stone-700", bg: "bg-stone-100", icon: Coffee },
   picked_up: { label: "Picked Up", color: "text-amber-700", bg: "bg-amber-100", icon: Package },
   out_for_delivery: { label: "On the Way", color: "text-orange-700", bg: "bg-orange-100", icon: Truck },

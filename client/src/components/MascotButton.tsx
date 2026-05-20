@@ -297,7 +297,7 @@ export function MascotButton({
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={onChatOpen}
-                  className="rounded-full w-14 h-14 shadow-lg bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                  className="rounded-full w-14 h-14 shadow-lg bg-gradient-to-br from-sky-500 to-pink-600 hover:from-sky-600 hover:to-pink-700"
                   data-testid="button-chat"
                 >
                   <MessageCircle className="h-6 w-6 text-white" />

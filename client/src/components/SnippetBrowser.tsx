@@ -144,7 +144,7 @@ export function SnippetBrowser() {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       documentation: "bg-blue-100 text-blue-700 border-blue-200",
-      api: "bg-purple-100 text-purple-700 border-purple-200",
+      api: "bg-sky-100 text-sky-700 border-sky-200",
       schema: "bg-emerald-100 text-emerald-700 border-emerald-200",
       component: "bg-amber-100 text-amber-700 border-amber-200",
       utility: "bg-cyan-100 text-cyan-700 border-cyan-200",
@@ -154,13 +154,13 @@ export function SnippetBrowser() {
 
   return (
     <Card className="premium-card border-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-pink-500/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-sky-500/5 to-pink-500/10" />
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <motion.div
-                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg"
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center shadow-lg"
                 whileHover={{ rotate: 10, scale: 1.05 }}
               >
                 <Code2 className="h-6 w-6 text-white" />
@@ -445,7 +445,7 @@ export function SnippetBrowser() {
         </Dialog>
 
         {/* Quick Access Guide */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-200">
           <div className="flex items-start gap-3">
             <Sparkles className="h-5 w-5 text-indigo-600 mt-0.5" />
             <div>

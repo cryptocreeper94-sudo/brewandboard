@@ -28,8 +28,8 @@ export default function BlockchainTutorialPage() {
         <div className="space-y-8">
           <section className="bg-slate-900/50 rounded-2xl p-6 border border-slate-700/50">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center flex-shrink-0">
-                <Database className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 rounded-xl bg-sky-600/20 flex items-center justify-center flex-shrink-0">
+                <Database className="w-6 h-6 text-sky-400" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-white mb-2">What is a Blockchain?</h2>
@@ -38,7 +38,7 @@ export default function BlockchainTutorialPage() {
                   but nobody can change. When something is written in this book, it stays there forever and can never be erased or altered.
                 </p>
                 <p className="text-slate-400 text-sm mt-3">
-                  We use the <strong className="text-purple-400">Solana blockchain</strong> - one of the fastest and most 
+                  We use the <strong className="text-sky-400">Solana blockchain</strong> - one of the fastest and most 
                   efficient blockchain networks, processing thousands of verifications per second.
                 </p>
               </div>

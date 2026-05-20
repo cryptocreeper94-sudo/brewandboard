@@ -128,13 +128,13 @@ export function AIRecommendations({
 
   if (loading) {
     return (
-      <Card className="p-4 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 border-purple-500/20">
+      <Card className="p-4 bg-gradient-to-br from-sky-500/5 to-indigo-500/5 border-sky-500/20">
         <div className="flex items-center gap-2 mb-4">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
-            <Sparkles className="h-5 w-5 text-purple-500" />
+            <Sparkles className="h-5 w-5 text-sky-500" />
           </motion.div>
           <h3 className="font-serif text-lg">Generating Smart Picks...</h3>
         </div>
@@ -148,18 +148,18 @@ export function AIRecommendations({
   }
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-br from-purple-500/5 to-indigo-500/5 border-purple-500/20">
-      <div className="p-4 border-b border-purple-500/10">
+    <Card className="overflow-hidden bg-gradient-to-br from-sky-500/5 to-indigo-500/5 border-sky-500/20">
+      <div className="p-4 border-b border-sky-500/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Sparkles className="h-5 w-5 text-purple-500" />
+              <Sparkles className="h-5 w-5 text-sky-500" />
             </motion.div>
             <h3 className="font-serif text-lg">Smart Picks</h3>
-            <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-700">
+            <Badge variant="secondary" className="text-[10px] bg-sky-100 text-sky-700">
               AI
             </Badge>
           </div>
@@ -184,7 +184,7 @@ export function AIRecommendations({
               >
                 <Link href={`/schedule?recommendation=${rec.id}`}>
                   <div 
-                    className="w-[200px] bg-card border rounded-xl p-3 hover:shadow-lg transition-all hover:border-purple-500/30 cursor-pointer group"
+                    className="w-[200px] bg-card border rounded-xl p-3 hover:shadow-lg transition-all hover:border-sky-500/30 cursor-pointer group"
                     data-testid={`card-recommendation-${rec.id}`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -195,7 +195,7 @@ export function AIRecommendations({
                             variant="secondary" 
                             className={`text-[9px] px-1.5 py-0 ${
                               tag === "AI Pick" 
-                                ? "bg-purple-100 text-purple-700" 
+                                ? "bg-sky-100 text-sky-700" 
                                 : tag === "Best Seller"
                                 ? "bg-amber-100 text-amber-700"
                                 : "bg-muted"
@@ -205,7 +205,7 @@ export function AIRecommendations({
                           </Badge>
                         ))}
                       </div>
-                      <div className="flex items-center gap-0.5 text-[10px] text-purple-600">
+                      <div className="flex items-center gap-0.5 text-[10px] text-sky-600">
                         <Zap className="h-3 w-3" />
                         {Math.round(rec.confidence * 100)}%
                       </div>

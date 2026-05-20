@@ -54,7 +54,7 @@ const DOCUMENT_TEMPLATES: Record<DocumentType, { title: string; sections: string
     title: "Product Roadmap",
     sections: ["Vision & Goals", "Q1 Milestones", "Q2 Milestones", "Q3 Milestones", "Q4 Milestones", "Key Dependencies"],
     icon: Map,
-    color: "from-purple-500 to-pink-600"
+    color: "from-sky-500 to-pink-600"
   },
   executive_summary: {
     title: "Executive Summary",
